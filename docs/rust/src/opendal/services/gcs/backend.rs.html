@@ -648,6 +648,8 @@
 <a href="#648" id="648">648</a>
 <a href="#649" id="649">649</a>
 <a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1001,12 +1003,14 @@
         <span class="kw">let </span>signer = GoogleSigner::new(<span class="string">&quot;storage&quot;</span>);
 
         <span class="kw">let </span>write_fixed_size = <span class="self">self</span>.write_fixed_size.unwrap_or(DEFAULT_WRITE_FIXED_SIZE);
-        <span class="kw">if </span>write_fixed_size.checked_rem_euclid(<span class="number">256 </span>* <span class="number">1024</span>).is_some() {
+        <span class="comment">// GCS requires write must align with 256 KiB.
+        </span><span class="kw">if </span>write_fixed_size % (<span class="number">256 </span>* <span class="number">1024</span>) != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::ConfigInvalid,
                 <span class="string">&quot;The write fixed buffer size is misconfigured&quot;</span>,
             )
-            .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Gcs));
+            .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Gcs)
+            .with_context(<span class="string">&quot;write_fixed_size&quot;</span>, write_fixed_size.to_string()));
         }
 
         <span class="kw">let </span>backend = GcsBackend {
