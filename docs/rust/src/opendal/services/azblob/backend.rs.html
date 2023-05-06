@@ -857,15 +857,6 @@
 <a href="#857" id="857">857</a>
 <a href="#858" id="858">858</a>
 <a href="#859" id="859">859</a>
-<a href="#860" id="860">860</a>
-<a href="#861" id="861">861</a>
-<a href="#862" id="862">862</a>
-<a href="#863" id="863">863</a>
-<a href="#864" id="864">864</a>
-<a href="#865" id="865">865</a>
-<a href="#866" id="866">866</a>
-<a href="#867" id="867">867</a>
-<a href="#868" id="868">868</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1346,6 +1337,8 @@
                 batch: <span class="bool-val">true</span>,
                 batch_delete: <span class="bool-val">true</span>,
                 batch_max_operations: <span class="prelude-val">Some</span>(AZBLOB_BATCH_LIMIT),
+
+                list_with_delimiter_slash: <span class="bool-val">true</span>,
                 ..Default::default()
             });
 
@@ -1461,22 +1454,11 @@
         <span class="kw">let </span>op = AzblobPager::new(
             <span class="self">self</span>.core.clone(),
             path.to_string(),
-            <span class="string">&quot;/&quot;</span>.to_string(),
+            args.delimiter().to_string(),
             args.limit(),
         );
 
         <span class="prelude-val">Ok</span>((RpList::default(), op))
-    }
-
-    <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::Pager)&gt; {
-        <span class="kw">let </span>op = AzblobPager::new(
-            <span class="self">self</span>.core.clone(),
-            path.to_string(),
-            <span class="string">&quot;&quot;</span>.to_string(),
-            args.limit(),
-        );
-
-        <span class="prelude-val">Ok</span>((RpScan::default(), op))
     }
 
     <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {

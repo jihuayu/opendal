@@ -575,6 +575,10 @@
 <a href="#575" id="575">575</a>
 <a href="#576" id="576">576</a>
 <a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -800,12 +804,16 @@
     ///
     /// Require [`Capability::scan`]
     </span><span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::Pager)&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
+        <span class="kw">let </span><span class="kw-2">mut </span>op_list = OpList::new().with_delimiter(<span class="string">&quot;&quot;</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = args.limit() {
+            op_list = op_list.with_limit(limit)
+        }
+        <span class="kw">let </span>result = <span class="self">self</span>.list(path, op_list).<span class="kw">await</span>;
 
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">&quot;operation is not supported&quot;</span>,
-        ))
+        <span class="kw">return match </span>result {
+            <span class="prelude-val">Ok</span>(r) =&gt; <span class="prelude-val">Ok</span>((RpScan::default(), r.<span class="number">1</span>)),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
+        };
     }
 
     <span class="doccomment">/// Invoke the `presign` operation on the specified path.
