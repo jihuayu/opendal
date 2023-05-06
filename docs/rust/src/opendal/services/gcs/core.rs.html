@@ -537,6 +537,8 @@
 <a href="#537" id="537">537</a>
 <a href="#538" id="538">538</a>
 <a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -593,6 +595,8 @@
 
     <span class="kw">pub </span>predefined_acl: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="kw">pub </span>default_storage_class: <span class="prelude-ty">Option</span>&lt;String&gt;,
+
+    <span class="kw">pub </span>write_fixed_size: usize,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>GcsCore {

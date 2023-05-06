@@ -651,6 +651,28 @@
 <a href="#651" id="651">651</a>
 <a href="#652" id="652">652</a>
 <a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -691,6 +713,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
+<span class="kw">const </span>DEFAULT_WRITE_MIN_SIZE: usize = <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
 <span class="doccomment">/// Aliyun Object Storage Service (OSS) support
 ///
 /// # Capabilities
@@ -776,6 +799,8 @@
     access_key_secret: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
+    <span class="doccomment">/// the size of each part, and the range is 5MB ~ 5 GB.
+    </span>write_min_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>OssBuilder {
@@ -945,6 +970,14 @@
         }
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// set the minimum size of unsized write, it should be greater than 5 MB.
+    /// Reference: [OSS Multipart upload](https://www.alibabacloud.com/help/en/object-storage-service/latest/multipart-upload-6)
+    </span><span class="kw">pub fn </span>write_min_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, write_min_size: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.write_min_size = <span class="prelude-val">Some</span>(write_min_size);
+
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>OssBuilder {
@@ -966,6 +999,8 @@
             .map(|v| builder.server_side_encryption(v));
         map.get(<span class="string">&quot;server_side_encryption_key_id&quot;</span>)
             .map(|v| builder.server_side_encryption_key_id(v));
+        map.get(<span class="string">&quot;write_min_size&quot;</span>)
+            .map(|v| builder.write_min_size(v.parse::&lt;usize&gt;().unwrap()));
         builder
     }
 
@@ -1037,6 +1072,14 @@
 
         <span class="kw">let </span>signer = AliyunOssSigner::new(bucket);
 
+        <span class="kw">let </span>write_min_size = <span class="self">self</span>.write_min_size.unwrap_or(DEFAULT_WRITE_MIN_SIZE);
+        <span class="kw">if </span>write_min_size &lt; <span class="number">5 </span>* <span class="number">1024 </span>* <span class="number">1024 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::ConfigInvalid,
+                <span class="string">&quot;The write minimum buffer size is misconfigured&quot;</span>,
+            )
+            .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Oss));
+        }
         <span class="macro">debug!</span>(<span class="string">&quot;Backend build finished&quot;</span>);
 
         <span class="prelude-val">Ok</span>(OssBackend {
@@ -1051,6 +1094,7 @@
                 client,
                 server_side_encryption,
                 server_side_encryption_key_id,
+                write_min_size,
             }),
         })
     }
