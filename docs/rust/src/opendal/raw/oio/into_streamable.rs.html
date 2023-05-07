@@ -164,11 +164,11 @@
 // under the License.
 
 </span><span class="kw">use </span>std::io::SeekFrom;
+<span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>futures::ready;
 <span class="kw">use </span>tokio::io::ReadBuf;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;

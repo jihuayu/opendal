@@ -140,12 +140,12 @@
 
 </span><span class="kw">use </span>std::io;
 <span class="kw">use </span>std::pin::Pin;
+<span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>bb8::PooledConnection;
 <span class="kw">use </span>futures::future::BoxFuture;
-<span class="kw">use </span>futures::ready;
 <span class="kw">use </span>futures::AsyncRead;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>suppaftp::Status;

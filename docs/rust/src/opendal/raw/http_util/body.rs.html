@@ -218,13 +218,13 @@
 </span><span class="kw">use </span>std::cmp::min;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::io;
+<span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>bytes::BufMut;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>futures::ready;
 <span class="kw">use </span>futures::Stream;
 <span class="kw">use </span>futures::StreamExt;
 
