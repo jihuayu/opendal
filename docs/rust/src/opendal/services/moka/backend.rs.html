@@ -233,12 +233,6 @@
 <a href="#233" id="233">233</a>
 <a href="#234" id="234">234</a>
 <a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a>
-<a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -265,7 +259,7 @@
 <span class="kw">use </span>moka::sync::CacheBuilder;
 <span class="kw">use </span>moka::sync::SegmentedCache;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
+<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::typed_kv;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// [moka](https://github.com/moka-rs/moka) backend support.
@@ -392,11 +386,11 @@
     <span class="kw">fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Accessor&gt; {
         <span class="macro">debug!</span>(<span class="string">&quot;backend build started: {:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>builder: CacheBuilder&lt;String, Vec&lt;u8&gt;, <span class="kw">_</span>&gt; =
+        <span class="kw">let </span><span class="kw-2">mut </span>builder: CacheBuilder&lt;String, typed_kv::Value, <span class="kw">_</span>&gt; =
             SegmentedCache::builder(<span class="self">self</span>.num_segments.unwrap_or(<span class="number">1</span>))
                 .thread_pool_enabled(<span class="self">self</span>.thread_pool_enabled.unwrap_or(<span class="bool-val">false</span>));
         <span class="comment">// Use entries&#39; bytes as capacity weigher.
-        </span>builder = builder.weigher(|k, v| (k.len() + v.len()) <span class="kw">as </span>u32);
+        </span>builder = builder.weigher(|k, v| (k.len() + v.size()) <span class="kw">as </span>u32);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span><span class="self">self</span>.name {
             builder = builder.name(v);
         }
@@ -418,11 +412,11 @@
 }
 
 <span class="doccomment">/// Backend is used to serve `Accessor` support in moka.
-</span><span class="kw">pub type </span>MokaBackend = kv::Backend&lt;Adapter&gt;;
+</span><span class="kw">pub type </span>MokaBackend = typed_kv::Backend&lt;Adapter&gt;;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Adapter {
-    inner: SegmentedCache&lt;String, Vec&lt;u8&gt;&gt;,
+    inner: SegmentedCache&lt;String, typed_kv::Value&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>Adapter {
@@ -435,37 +429,31 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>kv::Adapter <span class="kw">for </span>Adapter {
-    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; kv::Metadata {
-        kv::Metadata::new(
+</span><span class="kw">impl </span>typed_kv::Adapter <span class="kw">for </span>Adapter {
+    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (Scheme, String) {
+        (
             Scheme::Moka,
-            <span class="self">self</span>.inner.name().unwrap_or(<span class="string">&quot;moka&quot;</span>),
-            Capability {
-                read: <span class="bool-val">true</span>,
-                write: <span class="bool-val">true</span>,
-
-                ..Default::default()
-            },
+            <span class="self">self</span>.inner.name().unwrap_or(<span class="string">&quot;moka&quot;</span>).to_string(),
         )
     }
 
-    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;typed_kv::Value&gt;&gt; {
         <span class="self">self</span>.blocking_get(path)
     }
 
-    <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+    <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;typed_kv::Value&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.get(path) {
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             <span class="prelude-val">Some</span>(bs) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(bs)),
         }
     }
 
-    <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: typed_kv::Value) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.blocking_set(path, value)
     }
 
-    <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.insert(path.to_string(), value.to_vec());
+    <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: typed_kv::Value) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.inner.insert(path.to_string(), value);
 
         <span class="prelude-val">Ok</span>(())
     }
