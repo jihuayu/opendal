@@ -233,6 +233,12 @@
 <a href="#233" id="233">233</a>
 <a href="#234" id="234">234</a>
 <a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -430,10 +436,16 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>typed_kv::Adapter <span class="kw">for </span>Adapter {
-    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (Scheme, String) {
-        (
+    <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; typed_kv::Info {
+        typed_kv::Info::new(
             Scheme::Moka,
-            <span class="self">self</span>.inner.name().unwrap_or(<span class="string">&quot;moka&quot;</span>).to_string(),
+            <span class="self">self</span>.inner.name().unwrap_or(<span class="string">&quot;moka&quot;</span>),
+            typed_kv::Capability {
+                get: <span class="bool-val">true</span>,
+                set: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
+                ..Default::default()
+            },
         )
     }
 

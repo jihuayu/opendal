@@ -174,7 +174,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>dashmap::DashMap;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
+<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::typed_kv;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// [dashmap](https://github.com/xacrimon/dashmap) backend support.
@@ -223,45 +223,45 @@
 }
 
 <span class="doccomment">/// Backend is used to serve `Accessor` support in dashmap.
-</span><span class="kw">pub type </span>DashmapBackend = kv::Backend&lt;Adapter&gt;;
+</span><span class="kw">pub type </span>DashmapBackend = typed_kv::Backend&lt;Adapter&gt;;
 
 <span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Adapter {
-    inner: DashMap&lt;String, Vec&lt;u8&gt;&gt;,
+    inner: DashMap&lt;String, typed_kv::Value&gt;,
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>kv::Adapter <span class="kw">for </span>Adapter {
-    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; kv::Metadata {
-        kv::Metadata::new(
+</span><span class="kw">impl </span>typed_kv::Adapter <span class="kw">for </span>Adapter {
+    <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; typed_kv::Info {
+        typed_kv::Info::new(
             Scheme::Dashmap,
             <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>),
-            Capability {
-                read: <span class="bool-val">true</span>,
-                write: <span class="bool-val">true</span>,
+            typed_kv::Capability {
+                get: <span class="bool-val">true</span>,
+                set: <span class="bool-val">true</span>,
                 scan: <span class="bool-val">true</span>,
-                ..Default::default()
+                delete: <span class="bool-val">true</span>,
             },
         )
     }
 
-    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;typed_kv::Value&gt;&gt; {
         <span class="self">self</span>.blocking_get(path)
     }
 
-    <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+    <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;typed_kv::Value&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.get(path) {
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Some</span>(bs) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(bs.to_vec())),
+            <span class="prelude-val">Some</span>(bs) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(bs.value().to_owned())),
         }
     }
 
-    <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: typed_kv::Value) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.blocking_set(path, value)
     }
 
-    <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.insert(path.to_string(), value.to_vec());
+    <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: typed_kv::Value) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.inner.insert(path.to_string(), value);
 
         <span class="prelude-val">Ok</span>(())
     }
