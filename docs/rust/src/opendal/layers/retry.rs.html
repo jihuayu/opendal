@@ -2095,7 +2095,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_retry_read() {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>builder = MockBuilder::default();
         <span class="kw">let </span>op = Operator::new(builder.clone())
@@ -2117,7 +2117,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_retry_list() {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>builder = MockBuilder::default();
         <span class="kw">let </span>op = Operator::new(builder.clone())
@@ -2141,7 +2141,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_retry_batch() {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>builder = MockBuilder::default();
         <span class="comment">// set to a lower delay to make it run faster

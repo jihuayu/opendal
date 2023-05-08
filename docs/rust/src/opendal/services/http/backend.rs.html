@@ -974,7 +974,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_read() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>mock_server = MockServer::start().<span class="kw">await</span>;
         Mock::given(method(<span class="string">&quot;GET&quot;</span>))
@@ -1000,7 +1000,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_read_via_basic_auth() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>(username, password) = (<span class="string">&quot;your_username&quot;</span>, <span class="string">&quot;your_password&quot;</span>);
 
@@ -1030,7 +1030,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_read_via_bearer_auth() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>token = <span class="string">&quot;your_token&quot;</span>;
 
@@ -1060,7 +1060,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_stat() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>mock_server = MockServer::start().<span class="kw">await</span>;
         Mock::given(method(<span class="string">&quot;HEAD&quot;</span>))
@@ -1082,7 +1082,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_read_with() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>mock_server = MockServer::start().<span class="kw">await</span>;
         Mock::given(method(<span class="string">&quot;GET&quot;</span>))
@@ -1111,7 +1111,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_stat_with() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::builder().is_test(<span class="bool-val">true</span>).try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>mock_server = MockServer::start().<span class="kw">await</span>;
         Mock::given(method(<span class="string">&quot;HEAD&quot;</span>))

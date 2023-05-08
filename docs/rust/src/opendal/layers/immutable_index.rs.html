@@ -751,7 +751,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_list() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span><span class="kw-2">mut </span>iil = ImmutableIndexLayer::default();
         <span class="kw">for </span>i <span class="kw">in </span>[<span class="string">&quot;file&quot;</span>, <span class="string">&quot;dir/&quot;</span>, <span class="string">&quot;dir/file&quot;</span>, <span class="string">&quot;dir_without_prefix/file&quot;</span>] {
@@ -789,7 +789,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_scan() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span><span class="kw-2">mut </span>iil = ImmutableIndexLayer::default();
         <span class="kw">for </span>i <span class="kw">in </span>[<span class="string">&quot;file&quot;</span>, <span class="string">&quot;dir/&quot;</span>, <span class="string">&quot;dir/file&quot;</span>, <span class="string">&quot;dir_without_prefix/file&quot;</span>] {
@@ -829,7 +829,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_list_dir() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span><span class="kw-2">mut </span>iil = ImmutableIndexLayer::default();
         <span class="kw">for </span>i <span class="kw">in </span>[
@@ -890,7 +890,7 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_walk_top_down_dir() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span><span class="kw-2">mut </span>iil = ImmutableIndexLayer::default();
         <span class="kw">for </span>i <span class="kw">in </span>[

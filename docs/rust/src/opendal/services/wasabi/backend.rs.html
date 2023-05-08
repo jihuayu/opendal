@@ -2331,7 +2331,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_build_endpoint() {
-        <span class="kw">let _ </span>= env_logger::try_init();
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().with_test_writer().try_init();
 
         <span class="kw">let </span>endpoint_cases = <span class="macro">vec!</span>[
             <span class="prelude-val">Some</span>(<span class="string">&quot;s3.wasabisys.com&quot;</span>),
