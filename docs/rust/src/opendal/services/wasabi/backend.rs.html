@@ -2024,7 +2024,7 @@
         </span><span class="kw">let </span>endpoint = <span class="self">self</span>.build_endpoint(<span class="kw-2">&amp;</span>region);
         <span class="macro">debug!</span>(<span class="string">&quot;backend use endpoint: {endpoint}&quot;</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>loader = AwsLoader::new(client.client(), cfg).with_allow_anonymous();
+        <span class="kw">let </span><span class="kw-2">mut </span>loader = AwsLoader::new(client.client(), cfg);
         <span class="kw">if </span><span class="self">self</span>.disable_ec2_metadata {
             loader = loader.with_disable_ec2_metadata();
         }

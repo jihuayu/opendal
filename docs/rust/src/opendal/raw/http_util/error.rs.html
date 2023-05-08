@@ -110,6 +110,7 @@
 <a href="#110" id="110">110</a>
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -212,6 +213,7 @@
         ErrorKind::Unexpected,
         <span class="string">&quot;loading credentail to sign http request&quot;</span>,
     )
+    .set_temporary()
     .with_operation(<span class="string">&quot;reqsign::LoadCredential&quot;</span>)
     .set_source(err)
 }

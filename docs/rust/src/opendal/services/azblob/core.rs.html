@@ -388,6 +388,7 @@
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
 <a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -409,6 +410,7 @@
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
+<span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>http::header::HeaderName;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
@@ -473,7 +475,7 @@
         <span class="kw">let </span>cred = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="self">self</span>.signer
-            .sign_query(req, <span class="kw-2">&amp;</span>cred)
+            .sign_query(req, Duration::from_secs(<span class="number">3600</span>), <span class="kw-2">&amp;</span>cred)
             .map_err(new_request_sign_error)
     }
 

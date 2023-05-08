@@ -1227,6 +1227,18 @@
 <a href="#1227" id="1227">1227</a>
 <a href="#1228" id="1228">1228</a>
 <a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1531,6 +1543,7 @@
 
     disable_config_load: bool,
     disable_ec2_metadata: bool,
+    allow_anonymous: bool,
     enable_virtual_host_style: bool,
 
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
@@ -1855,6 +1868,13 @@
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Allow anonymous will allow opendal to send request without signing
+    /// when credentail is not loaded.
+    </span><span class="kw">pub fn </span>allow_anonymous(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.allow_anonymous = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
+
     <span class="doccomment">/// Enable virtual host style so that opendal will send API requests
     /// in virtual host style instead of path style.
     ///
@@ -1985,6 +2005,9 @@
         map.get(<span class="string">&quot;enable_virtual_host_style&quot;</span>)
             .filter(|v| <span class="kw-2">*</span>v == <span class="string">&quot;on&quot; </span>|| <span class="kw-2">*</span>v == <span class="string">&quot;true&quot;</span>)
             .map(|<span class="kw">_</span>| builder.enable_virtual_host_style());
+        map.get(<span class="string">&quot;allow_anonymous&quot;</span>)
+            .filter(|v| <span class="kw-2">*</span>v == <span class="string">&quot;on&quot; </span>|| <span class="kw-2">*</span>v == <span class="string">&quot;true&quot;</span>)
+            .map(|<span class="kw">_</span>| builder.allow_anonymous());
         map.get(<span class="string">&quot;default_storage_class&quot;</span>)
             .map(|v| builder.default_storage_class(v));
 
@@ -2105,7 +2128,7 @@
         </span><span class="kw">let </span>endpoint = <span class="self">self</span>.build_endpoint(<span class="kw-2">&amp;</span>region);
         <span class="macro">debug!</span>(<span class="string">&quot;backend use endpoint: {endpoint}&quot;</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>loader = AwsLoader::new(client.client(), cfg).with_allow_anonymous();
+        <span class="kw">let </span><span class="kw-2">mut </span>loader = AwsLoader::new(client.client(), cfg);
         <span class="kw">if </span><span class="self">self</span>.disable_ec2_metadata {
             loader = loader.with_disable_ec2_metadata();
         }
@@ -2135,6 +2158,7 @@
                 server_side_encryption_customer_key,
                 server_side_encryption_customer_key_md5,
                 default_storage_class,
+                allow_anonymous: <span class="self">self</span>.allow_anonymous,
                 signer,
                 loader,
                 client,
