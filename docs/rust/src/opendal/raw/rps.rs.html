@@ -255,10 +255,6 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -280,9 +276,9 @@
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Reply for `create` operation
+<span class="doccomment">/// Reply for `create_dir` operation
 </span><span class="attr">#[derive(Debug, Clone, Default)]
-</span><span class="kw">pub struct </span>RpCreate {}
+</span><span class="kw">pub struct </span>RpCreateDir {}
 
 <span class="doccomment">/// Reply for `delete` operation
 </span><span class="attr">#[derive(Debug, Clone, Default)]
@@ -291,10 +287,6 @@
 <span class="doccomment">/// Reply for `list` operation.
 </span><span class="attr">#[derive(Debug, Clone, Default)]
 </span><span class="kw">pub struct </span>RpList {}
-
-<span class="doccomment">/// Reply for `scan` operation.
-</span><span class="attr">#[derive(Debug, Clone, Default)]
-</span><span class="kw">pub struct </span>RpScan {}
 
 <span class="doccomment">/// Reply for `presign` operation.
 </span><span class="attr">#[derive(Debug, Clone)]

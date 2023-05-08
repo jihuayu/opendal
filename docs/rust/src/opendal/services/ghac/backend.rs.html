@@ -981,10 +981,10 @@
         am
     }
 
-    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="comment">// ignore creation of dir.
         </span><span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpCreate::default());
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpCreateDir::default());
         }
         <span class="kw">if </span>!<span class="self">self</span>.enable_create_simulation {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
@@ -1004,7 +1004,7 @@
             reserve_resp.cache_id
         } <span class="kw">else if </span>resp.status().as_u16() == StatusCode::CONFLICT {
             <span class="comment">// If the file is already exist, just return Ok.
-            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(RpCreate::default());
+            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(RpCreateDir::default());
         } <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp)
                 .<span class="kw">await
@@ -1031,7 +1031,7 @@
 
         <span class="kw">if </span>resp.status().is_success() {
             resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(RpCreate::default())
+            <span class="prelude-val">Ok</span>(RpCreateDir::default())
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(parse_error(resp)
                 .<span class="kw">await

@@ -562,7 +562,7 @@
         am
     }
 
-    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req =
             <span class="self">self</span>.core
                 .supabase_upload_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, AsyncBody::Empty)<span class="question-mark">?</span>;
@@ -575,12 +575,12 @@
 
         <span class="kw">if </span>status.is_success() {
             resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(RpCreate::default())
+            <span class="prelude-val">Ok</span>(RpCreateDir::default())
         } <span class="kw">else </span>{
             <span class="comment">// create duplicate dir is ok
             </span><span class="kw">let </span>e = parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">if </span>e.kind() == ErrorKind::AlreadyExists {
-                <span class="prelude-val">Ok</span>(RpCreate::default())
+                <span class="prelude-val">Ok</span>(RpCreateDir::default())
             } <span class="kw">else </span>{
                 <span class="prelude-val">Err</span>(e)
             }

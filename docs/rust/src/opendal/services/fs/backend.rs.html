@@ -1061,12 +1061,12 @@
         am
     }
 
-    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = <span class="self">self</span>.root.join(path.trim_end_matches(<span class="string">&#39;/&#39;</span>));
 
         fs::create_dir_all(<span class="kw-2">&amp;</span>p).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(RpCreate::default())
+        <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
     <span class="doccomment">/// # Notes
@@ -1259,12 +1259,12 @@
         <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">Some</span>(rd)))
     }
 
-    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = <span class="self">self</span>.root.join(path.trim_end_matches(<span class="string">&#39;/&#39;</span>));
 
         std::fs::create_dir_all(p).map_err(parse_io_error)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(RpCreate::default())
+        <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
     <span class="kw">fn </span>blocking_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::BlockingReader)&gt; {

@@ -338,6 +338,24 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -423,20 +441,24 @@
             cap.delete = <span class="bool-val">true</span>;
         }
 
+        <span class="kw">if </span>cap.list {
+            cap.list_without_delimiter = <span class="bool-val">true</span>;
+        }
+
         am
     }
 
-    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="self">self</span>.kv.set(<span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>[]).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(RpCreate::default())
+        <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
-    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="self">self</span>.kv.blocking_set(<span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(RpCreate::default())
+        <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
@@ -537,20 +559,34 @@
         <span class="prelude-val">Ok</span>(RpDelete::default())
     }
 
-    <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+        <span class="kw">if </span>!args.delimiter().is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::Unsupported,
+                <span class="string">&quot;kv doesn&#39;t support delimiter&quot;</span>,
+            ));
+        }
+
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="kw">let </span>res = <span class="self">self</span>.kv.scan(<span class="kw-2">&amp;</span>p).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>pager = KvPager::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root, res);
 
-        <span class="prelude-val">Ok</span>((RpScan::default(), pager))
+        <span class="prelude-val">Ok</span>((RpList::default(), pager))
     }
 
-    <span class="kw">fn </span>blocking_scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+        <span class="kw">if </span>!args.delimiter().is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::Unsupported,
+                <span class="string">&quot;kv doesn&#39;t support delimiter&quot;</span>,
+            ));
+        }
+
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="kw">let </span>res = <span class="self">self</span>.kv.blocking_scan(<span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
         <span class="kw">let </span>pager = KvPager::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root, res);
 
-        <span class="prelude-val">Ok</span>((RpScan::default(), pager))
+        <span class="prelude-val">Ok</span>((RpList::default(), pager))
     }
 }
 

@@ -802,12 +802,12 @@
         am
     }
 
-    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="self">self</span>.client.create_dir(<span class="kw-2">&amp;</span>p).map_err(parse_io_error)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(RpCreate::default())
+        <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
@@ -940,12 +940,12 @@
         <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">Some</span>(rd)))
     }
 
-    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="self">self</span>.client.create_dir(<span class="kw-2">&amp;</span>p).map_err(parse_io_error)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(RpCreate::default())
+        <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
     <span class="kw">fn </span>blocking_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::BlockingReader)&gt; {

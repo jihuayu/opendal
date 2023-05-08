@@ -618,6 +618,12 @@
 <a href="#618" id="618">618</a>
 <a href="#619" id="619">619</a>
 <a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1069,7 +1075,7 @@
                 }
             }
             StatusCode::NOT_FOUND =&gt; {
-                <span class="self">self</span>.create_dir(<span class="string">&quot;/&quot;</span>, OpCreate::new()).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="self">self</span>.create_dir(<span class="string">&quot;/&quot;</span>, OpCreateDir::new()).<span class="kw">await</span><span class="question-mark">?</span>;
             }
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
@@ -1102,7 +1108,6 @@
                 delete: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
-                list_without_delimiter: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
 
                 ..Default::default()
@@ -1111,7 +1116,7 @@
     }
 
     <span class="doccomment">/// Create a file or directory
-    </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>req = <span class="self">self
             </span>.webhdfs_create_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, AsyncBody::Empty)
             .<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1132,7 +1137,7 @@
                     .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
 
                 <span class="kw">if </span>resp.boolean {
-                    <span class="prelude-val">Ok</span>(RpCreate::default())
+                    <span class="prelude-val">Ok</span>(RpCreateDir::default())
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(Error::new(
                         ErrorKind::Unexpected,
@@ -1214,7 +1219,14 @@
         }
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+        <span class="kw">if </span>args.delimiter() != <span class="string">&quot;/&quot; </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::Unsupported,
+                <span class="string">&quot;webhdfs only support delimiter `/`&quot;</span>,
+            ));
+        }
+
         <span class="kw">let </span>path = path.trim_end_matches(<span class="string">&#39;/&#39;</span>);
         <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_list_status_request(path)<span class="question-mark">?</span>;
 

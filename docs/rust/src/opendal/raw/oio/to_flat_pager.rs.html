@@ -315,9 +315,6 @@
 <a href="#315" id="315">315</a>
 <a href="#316" id="316">316</a>
 <a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -350,11 +347,7 @@
     </span>{
         <span class="kw">let </span>meta = acc.info();
         <span class="macro">debug_assert!</span>(
-            !meta.capability().scan,
-            <span class="string">&quot;service already supports scan, call to_flat_pager must be a mistake&quot;
-        </span>);
-        <span class="macro">debug_assert!</span>(
-            meta.capability().list,
+            meta.capability().list_with_delimiter_slash,
             <span class="string">&quot;service doesn&#39;t support list hierarchy, it must be a bug&quot;
         </span>);
     }
@@ -579,6 +572,7 @@
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
             am.capability_mut().list = <span class="bool-val">true</span>;
+            am.capability_mut().list_with_delimiter_slash = <span class="bool-val">true</span>;
 
             am
         }

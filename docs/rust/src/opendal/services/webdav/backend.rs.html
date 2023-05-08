@@ -683,6 +683,12 @@
 <a href="#683" id="683">683</a>
 <a href="#684" id="684">684</a>
 <a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -968,7 +974,6 @@
                 rename: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
-                list_without_delimiter: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
 
                 ..Default::default()
@@ -977,7 +982,7 @@
         ma
     }
 
-    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="self">self</span>.ensure_parent_path(path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>abs_path = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -1090,7 +1095,14 @@
         }
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+        <span class="kw">if </span>args.delimiter() != <span class="string">&quot;/&quot; </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::Unsupported,
+                <span class="string">&quot;webdav only support delimiter `/`&quot;</span>,
+            ));
+        }
+
         <span class="kw">let </span><span class="kw-2">mut </span>header_map = HeaderMap::new();
         header_map.insert(<span class="string">&quot;Depth&quot;</span>, <span class="string">&quot;1&quot;</span>.parse().unwrap());
         header_map.insert(header::CONTENT_TYPE, <span class="string">&quot;application/xml&quot;</span>.parse().unwrap());
@@ -1318,7 +1330,7 @@
         <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>create_internal(<span class="kw-2">&amp;</span><span class="self">self</span>, abs_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    <span class="kw">async fn </span>create_internal(<span class="kw-2">&amp;</span><span class="self">self</span>, abs_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>resp = <span class="kw">if </span>abs_path.ends_with(<span class="string">&#39;/&#39;</span>) {
             <span class="self">self</span>.webdav_mkcol(abs_path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, AsyncBody::Empty)
                 .<span class="kw">await</span><span class="question-mark">?
@@ -1339,7 +1351,7 @@
             <span class="comment">// create existing file will return no_content
             </span>| StatusCode::NO_CONTENT =&gt; {
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(RpCreate::default())
+                <span class="prelude-val">Ok</span>(RpCreateDir::default())
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }

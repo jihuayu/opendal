@@ -378,21 +378,6 @@
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -546,7 +531,7 @@
     }
 
     <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
-    </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="self">self</span>.inner.create_dir(path, args).<span class="kw">await
     </span>}
 
@@ -595,14 +580,6 @@
     </span>}
 
     <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
-    </span><span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::Pager)&gt; {
-        <span class="self">self</span>.inner
-            .scan(path, args)
-            .map(|v| v.map(|(rp, s)| (rp, TracingWrapper::new(Span::current(), s))))
-            .<span class="kw">await
-    </span>}
-
-    <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
     </span><span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
         <span class="self">self</span>.inner.presign(path, args).<span class="kw">await
     </span>}
@@ -613,7 +590,7 @@
     </span>}
 
     <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
-    </span><span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreate) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreate&gt; {
+    </span><span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="self">self</span>.inner.blocking_create_dir(path, args)
     }
 
@@ -655,13 +632,6 @@
     </span><span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
         <span class="self">self</span>.inner
             .blocking_list(path, args)
-            .map(|(rp, it)| (rp, TracingWrapper::new(Span::current(), it)))
-    }
-
-    <span class="attr">#[tracing::instrument(level = <span class="string">&quot;debug&quot;</span>, skip(<span class="self">self</span>))]
-    </span><span class="kw">fn </span>blocking_scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::BlockingPager)&gt; {
-        <span class="self">self</span>.inner
-            .blocking_scan(path, args)
             .map(|(rp, it)| (rp, TracingWrapper::new(Span::current(), it)))
     }
 }

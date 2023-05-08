@@ -646,9 +646,6 @@
 <a href="#646" id="646">646</a>
 <a href="#647" id="647">647</a>
 <a href="#648" id="648">648</a>
-<a href="#649" id="649">649</a>
-<a href="#650" id="650">650</a>
-<a href="#651" id="651">651</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -876,23 +873,48 @@
         path: <span class="kw-2">&amp;</span>str,
         args: OpList,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompletePager&lt;A, A::Pager&gt;)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
-        <span class="kw">let </span>(can_list, can_scan) = (capability.list, capability.scan);
-
-        <span class="kw">if </span>can_list {
-            <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
-        } <span class="kw">else if </span>can_scan {
-            <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.scan(path, OpScan::new()).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">let </span>p = to_hierarchy_pager(p, path);
-            <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(
+        <span class="kw">let </span>cap = <span class="self">self</span>.meta.capability();
+        <span class="kw">if </span>!cap.list {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(
                 Error::new(ErrorKind::Unsupported, <span class="string">&quot;operation is not supported&quot;</span>)
                     .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
                     .with_operation(<span class="string">&quot;list&quot;</span>),
-            )
+            );
         }
+
+        <span class="kw">let </span>delimiter = args.delimiter();
+
+        <span class="kw">if </span>delimiter.is_empty() {
+            <span class="kw">return if </span>cap.list_without_delimiter {
+                <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>p = to_flat_pager(
+                    <span class="self">self</span>.inner.clone(),
+                    path,
+                    args.with_delimiter(<span class="string">&quot;/&quot;</span>).limit().unwrap_or(<span class="number">1000</span>),
+                );
+                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedFlat(p)))
+            };
+        }
+
+        <span class="kw">if </span>delimiter == <span class="string">&quot;/&quot; </span>{
+            <span class="kw">return if </span>cap.list_with_delimiter_slash {
+                <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.list(path, args.with_delimiter(<span class="string">&quot;&quot;</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>p = to_hierarchy_pager(p, path);
+                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
+            };
+        }
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">&quot;list with other delimiter is not supported&quot;</span>,
+        )
+        .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
+        .with_context(<span class="string">&quot;delimiter&quot;</span>, delimiter))
     }
 
     <span class="kw">fn </span>complete_blocking_list(
@@ -900,69 +922,49 @@
         path: <span class="kw-2">&amp;</span>str,
         args: OpList,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompletePager&lt;A, A::BlockingPager&gt;)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
-        <span class="kw">let </span>(can_list, can_scan) = (capability.list, capability.scan);
-
-        <span class="kw">if </span>can_list {
-            <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_list(path, args)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
-        } <span class="kw">else if </span>can_scan {
-            <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.blocking_scan(path, OpScan::new())<span class="question-mark">?</span>;
-            <span class="kw">let </span>p = to_hierarchy_pager(p, path);
-            <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(
+        <span class="kw">let </span>cap = <span class="self">self</span>.meta.capability();
+        <span class="kw">if </span>!cap.list {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(
                 Error::new(ErrorKind::Unsupported, <span class="string">&quot;operation is not supported&quot;</span>)
                     .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
                     .with_operation(<span class="string">&quot;list&quot;</span>),
-            )
+            );
         }
-    }
 
-    <span class="kw">async fn </span>complete_scan(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        path: <span class="kw-2">&amp;</span>str,
-        args: OpScan,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, CompletePager&lt;A, A::Pager&gt;)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
-        <span class="kw">let </span>(can_list, can_scan) = (capability.list, capability.scan);
+        <span class="kw">let </span>delimiter = args.delimiter();
 
-        <span class="kw">if </span>can_scan {
-            <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.scan(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
-        } <span class="kw">else if </span>can_list {
-            <span class="kw">let </span>p = to_flat_pager(<span class="self">self</span>.inner.clone(), path, args.limit().unwrap_or(<span class="number">1000</span>));
-            <span class="prelude-val">Ok</span>((RpScan::default(), CompletePager::NeedFlat(p)))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::Unsupported, <span class="string">&quot;operation is not supported&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
-                    .with_operation(<span class="string">&quot;scan&quot;</span>),
-            )
+        <span class="kw">if </span>delimiter.is_empty() {
+            <span class="kw">return if </span>cap.list_without_delimiter {
+                <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_list(path, args)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>p = to_flat_pager(
+                    <span class="self">self</span>.inner.clone(),
+                    path,
+                    args.with_delimiter(<span class="string">&quot;/&quot;</span>).limit().unwrap_or(<span class="number">1000</span>),
+                );
+                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedFlat(p)))
+            };
         }
-    }
 
-    <span class="kw">fn </span>complete_blocking_scan(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        path: <span class="kw-2">&amp;</span>str,
-        args: OpScan,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, CompletePager&lt;A, A::BlockingPager&gt;)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
-        <span class="kw">let </span>(can_list, can_scan) = (capability.list, capability.scan);
-
-        <span class="kw">if </span>can_scan {
-            <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_scan(path, args)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
-        } <span class="kw">else if </span>can_list {
-            <span class="kw">let </span>p = to_flat_pager(<span class="self">self</span>.inner.clone(), path, args.limit().unwrap_or(<span class="number">1000</span>));
-            <span class="prelude-val">Ok</span>((RpScan::default(), CompletePager::NeedFlat(p)))
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::Unsupported, <span class="string">&quot;operation is not supported&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
-                    .with_operation(<span class="string">&quot;scan&quot;</span>),
-            )
+        <span class="kw">if </span>delimiter == <span class="string">&quot;/&quot; </span>{
+            <span class="kw">return if </span>cap.list_with_delimiter_slash {
+                <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_list(path, args)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.blocking_list(path, args.with_delimiter(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>;
+                <span class="kw">let </span>p: ToHierarchyPager&lt;&lt;A <span class="kw">as </span>Accessor&gt;::BlockingPager&gt; =
+                    to_hierarchy_pager(p, path);
+                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
+            };
         }
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">&quot;list with other delimiter is not supported&quot;</span>,
+        )
+        .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.meta.scheme())
+        .with_context(<span class="string">&quot;delimiter&quot;</span>, delimiter))
     }
 }
 
@@ -1027,14 +1029,6 @@
 
     <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
         <span class="self">self</span>.complete_blocking_list(path, args)
-    }
-
-    <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::Pager)&gt; {
-        <span class="self">self</span>.complete_scan(path, args).<span class="kw">await
-    </span>}
-
-    <span class="kw">fn </span>blocking_scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpScan) -&gt; <span class="prelude-ty">Result</span>&lt;(RpScan, <span class="self">Self</span>::BlockingPager)&gt; {
-        <span class="self">self</span>.complete_blocking_scan(path, args)
     }
 }
 
