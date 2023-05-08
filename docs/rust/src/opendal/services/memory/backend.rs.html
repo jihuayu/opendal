@@ -157,10 +157,6 @@
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -185,7 +181,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>parking_lot::Mutex;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
+<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::typed_kv;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// In memory service support. (BTreeMap Based)
@@ -194,12 +190,10 @@
 ///
 /// This service can be used to:
 ///
-/// - [x] read
-/// - [x] write
-/// - [ ] ~~list~~
+/// - [x] get
+/// - [x] set
+/// - [x] delete
 /// - [x] scan
-/// - [ ] ~~presign~~
-/// - [x] blocking
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>MemoryBuilder {
     root: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -235,47 +229,45 @@
 }
 
 <span class="doccomment">/// Backend is used to serve `Accessor` support in memory.
-</span><span class="kw">pub type </span>MemoryBackend = kv::Backend&lt;Adapter&gt;;
+</span><span class="kw">pub type </span>MemoryBackend = typed_kv::Backend&lt;Adapter&gt;;
 
 <span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Adapter {
-    inner: Arc&lt;Mutex&lt;BTreeMap&lt;String, Vec&lt;u8&gt;&gt;&gt;&gt;,
+    inner: Arc&lt;Mutex&lt;BTreeMap&lt;String, typed_kv::Value&gt;&gt;&gt;,
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>kv::Adapter <span class="kw">for </span>Adapter {
-    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; kv::Metadata {
-        kv::Metadata::new(
+</span><span class="kw">impl </span>typed_kv::Adapter <span class="kw">for </span>Adapter {
+    <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; typed_kv::Info {
+        typed_kv::Info::new(
             Scheme::Memory,
             <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>),
-            Capability {
-                read: <span class="bool-val">true</span>,
-                write: <span class="bool-val">true</span>,
-                create_dir: <span class="bool-val">true</span>,
+            typed_kv::Capability {
+                get: <span class="bool-val">true</span>,
+                set: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
                 scan: <span class="bool-val">true</span>,
-
-                ..Default::default()
             },
         )
     }
 
-    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+    <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;typed_kv::Value&gt;&gt; {
         <span class="self">self</span>.blocking_get(path)
     }
 
-    <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
+    <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;typed_kv::Value&gt;&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.lock().get(path) {
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Some</span>(bs) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(bs.to_vec())),
+            <span class="prelude-val">Some</span>(bs) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(bs.to_owned())),
         }
     }
 
-    <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: typed_kv::Value) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.blocking_set(path, value)
     }
 
-    <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.inner.lock().insert(path.to_string(), value.to_vec());
+    <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: typed_kv::Value) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.inner.lock().insert(path.to_string(), value);
 
         <span class="prelude-val">Ok</span>(())
     }
