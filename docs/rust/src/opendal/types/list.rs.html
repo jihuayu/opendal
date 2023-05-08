@@ -214,6 +214,16 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -262,6 +272,11 @@
     </span><span class="attr">#[allow(clippy::type_complexity)]
     </span>fut: <span class="prelude-ty">Option</span>&lt;BoxFuture&lt;<span class="lifetime">&#39;static</span>, (oio::Pager, <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt;)&gt;&gt;,
 }
+
+<span class="doccomment">/// # Safety
+///
+/// Lister will only be accessed by `&amp;mut Self`
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Lister {}
 
 <span class="kw">impl </span>Lister {
     <span class="doccomment">/// Create a new lister.
@@ -381,6 +396,11 @@
     pager: oio::BlockingPager,
     buf: VecDeque&lt;oio::Entry&gt;,
 }
+
+<span class="doccomment">/// # Safety
+///
+/// BlockingLister will only be accessed by `&amp;mut Self`
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>BlockingLister {}
 
 <span class="kw">impl </span>BlockingLister {
     <span class="doccomment">/// Create a new lister.
