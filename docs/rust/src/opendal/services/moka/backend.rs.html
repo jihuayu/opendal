@@ -237,6 +237,13 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -272,10 +279,17 @@
 ///
 /// This service can be used to:
 ///
-/// - [x] get
-/// - [x] set
+/// - [x] stat
+/// - [x] read
+/// - [x] write
+/// - [x] create_dir
 /// - [x] delete
-/// - [ ] ~~ scan ~~
+/// - [ ] copy
+/// - [ ] rename
+/// - [ ] list
+/// - [ ] ~~scan~~
+/// - [ ] presign
+/// - [ ] blocking
 </span><span class="attr">#[derive(Default, Debug)]
 </span><span class="kw">pub struct </span>MokaBuilder {
     <span class="doccomment">/// Name for this cache instance.

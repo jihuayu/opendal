@@ -606,6 +606,18 @@
 <a href="#606" id="606">606</a>
 <a href="#607" id="607">607</a>
 <a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -659,8 +671,13 @@
 ///
 /// This service can be used to:
 ///
+/// - [x] stat
 /// - [x] read
 /// - [x] write
+/// - [x] create_dir
+/// - [x] delete
+/// - [ ] copy
+/// - [ ] rename
 /// - [x] list
 /// - [ ] ~~scan~~
 /// - [ ] ~~presign~~
@@ -1074,13 +1091,20 @@
         am.set_scheme(Scheme::Webhdfs)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .set_capability(Capability {
+                stat: <span class="bool-val">true</span>,
+
                 read: <span class="bool-val">true</span>,
                 read_can_next: <span class="bool-val">true</span>,
                 read_with_range: <span class="bool-val">true</span>,
+
                 write: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
+
                 list: <span class="bool-val">true</span>,
                 list_without_delimiter: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
+
                 ..Default::default()
             });
         am

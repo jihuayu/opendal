@@ -673,6 +673,16 @@
 <a href="#673" id="673">673</a>
 <a href="#674" id="674">674</a>
 <a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -717,8 +727,11 @@
 ///
 /// This service can be used to:
 ///
+/// - [x] stat
 /// - [x] read
 /// - [x] write
+/// - [x] create_dir
+/// - [x] delete
 /// - [x] copy
 /// - [x] rename
 /// - [x] list
@@ -942,15 +955,22 @@
         ma.set_scheme(Scheme::Webdav)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .set_capability(Capability {
+                stat: <span class="bool-val">true</span>,
+
                 read: <span class="bool-val">true</span>,
                 read_can_next: <span class="bool-val">true</span>,
                 read_with_range: <span class="bool-val">true</span>,
+
                 write: <span class="bool-val">true</span>,
-                list: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
                 rename: <span class="bool-val">true</span>,
+
+                list: <span class="bool-val">true</span>,
                 list_without_delimiter: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
+
                 ..Default::default()
             });
 

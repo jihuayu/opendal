@@ -1171,6 +1171,16 @@
 <a href="#1171" id="1171">1171</a>
 <a href="#1172" id="1172">1172</a>
 <a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1233,13 +1243,16 @@
 ///
 /// This service can be used to:
 ///
+/// - [x] stat
 /// - [x] read
 /// - [x] write
+/// - [x] create_dir
+/// - [x] delete
 /// - [x] copy
+/// - [x] rename
 /// - [x] list
 /// - [x] scan
 /// - [x] presign
-/// - [x] rename
 /// - [ ] blocking
 ///
 /// # Configuration
@@ -2084,15 +2097,22 @@
                 read_with_range: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
-                list: <span class="bool-val">true</span>,
-                scan: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
-                presign: <span class="bool-val">true</span>,
-                batch: <span class="bool-val">true</span>,
                 rename: <span class="bool-val">true</span>,
 
+                scan: <span class="bool-val">true</span>,
+                list: <span class="bool-val">true</span>,
                 list_without_delimiter: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
+
+                presign: <span class="bool-val">true</span>,
+                presign_stat: <span class="bool-val">true</span>,
+                presign_read: <span class="bool-val">true</span>,
+                presign_write: <span class="bool-val">true</span>,
+
+                batch: <span class="bool-val">true</span>,
 
                 ..Default::default()
             });

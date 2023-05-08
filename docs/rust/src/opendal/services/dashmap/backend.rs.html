@@ -149,6 +149,13 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -181,10 +188,17 @@
 ///
 /// This service can be used to:
 ///
-/// - [x] get
-/// - [x] set
+/// - [x] stat
+/// - [x] read
+/// - [x] write
+/// - [x] create_dir
 /// - [x] delete
+/// - [ ] copy
+/// - [ ] rename
+/// - [ ] list
 /// - [x] scan
+/// - [ ] presign
+/// - [ ] blocking
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>DashmapBuilder {
     root: <span class="prelude-ty">Option</span>&lt;String&gt;,

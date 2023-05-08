@@ -17,6 +17,8 @@
     pub write_with_cache_control: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub create_dir: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub delete: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
+    pub copy: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
+    pub rename: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub list: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub list_with_limit: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub list_with_start_after: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
@@ -24,8 +26,6 @@
     pub list_without_delimiter: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub scan: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub scan_with_limit: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
-    pub copy: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
-    pub rename: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub presign: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub presign_read: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
     pub presign_stat: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a>,
@@ -55,7 +55,7 @@ returned by services.</p>
 <li>Operation with sub operations should be named like <code>presign_read</code>.</li>
 <li>Operation with variants should be named like <code>read_can_seek</code>.</li>
 <li>Operation with arguments should be named like <code>read_with_range</code>.</li>
-<li>Operation with limtations should be named like <code>batch_max_operations</code>.</li>
+<li>Operation with limitations should be named like <code>batch_max_operations</code>.</li>
 </ul>
 </div></details><h2 id="fields" class="fields small-section-header">Fields<a href="#fields" class="anchor">§</a></h2><span id="structfield.stat" class="structfield small-section-header"><a href="#structfield.stat" class="anchor field">§</a><code>stat: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports stat natively, it will be true.</p>
 </div><span id="structfield.stat_with_if_match" class="structfield small-section-header"><a href="#structfield.stat_with_if_match" class="anchor field">§</a><code>stat_with_if_match: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports stat with if match natively, it will be true.</p>
@@ -79,6 +79,8 @@ be true.</p>
 </div><span id="structfield.write_with_cache_control" class="structfield small-section-header"><a href="#structfield.write_with_cache_control" class="anchor field">§</a><code>write_with_cache_control: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports write with cache control natively, it will be true.</p>
 </div><span id="structfield.create_dir" class="structfield small-section-header"><a href="#structfield.create_dir" class="anchor field">§</a><code>create_dir: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports create dir natively, it will be true.</p>
 </div><span id="structfield.delete" class="structfield small-section-header"><a href="#structfield.delete" class="anchor field">§</a><code>delete: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports delete natively, it will be true.</p>
+</div><span id="structfield.copy" class="structfield small-section-header"><a href="#structfield.copy" class="anchor field">§</a><code>copy: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports copy natively, it will be true.</p>
+</div><span id="structfield.rename" class="structfield small-section-header"><a href="#structfield.rename" class="anchor field">§</a><code>rename: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports rename natively, it will be true.</p>
 </div><span id="structfield.list" class="structfield small-section-header"><a href="#structfield.list" class="anchor field">§</a><code>list: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports list natively, it will be true.</p>
 </div><span id="structfield.list_with_limit" class="structfield small-section-header"><a href="#structfield.list_with_limit" class="anchor field">§</a><code>list_with_limit: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If backend supports list with limit, it will be true.</p>
 </div><span id="structfield.list_with_start_after" class="structfield small-section-header"><a href="#structfield.list_with_start_after" class="anchor field">§</a><code>list_with_start_after: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If backend supports list with start after, it will be true.</p>
@@ -86,8 +88,6 @@ be true.</p>
 </div><span id="structfield.list_without_delimiter" class="structfield small-section-header"><a href="#structfield.list_without_delimiter" class="anchor field">§</a><code>list_without_delimiter: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If backend supports list without delimiter.</p>
 </div><span id="structfield.scan" class="structfield small-section-header"><a href="#structfield.scan" class="anchor field">§</a><code>scan: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports scan natively, it will be true.</p>
 </div><span id="structfield.scan_with_limit" class="structfield small-section-header"><a href="#structfield.scan_with_limit" class="anchor field">§</a><code>scan_with_limit: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If backend supports scan with limit, it will be true.</p>
-</div><span id="structfield.copy" class="structfield small-section-header"><a href="#structfield.copy" class="anchor field">§</a><code>copy: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports copy natively, it will be true.</p>
-</div><span id="structfield.rename" class="structfield small-section-header"><a href="#structfield.rename" class="anchor field">§</a><code>rename: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports rename natively, it will be true.</p>
 </div><span id="structfield.presign" class="structfield small-section-header"><a href="#structfield.presign" class="anchor field">§</a><code>presign: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports presign natively, it will be true.</p>
 </div><span id="structfield.presign_read" class="structfield small-section-header"><a href="#structfield.presign_read" class="anchor field">§</a><code>presign_read: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports presign read natively, it will be true.</p>
 </div><span id="structfield.presign_stat" class="structfield small-section-header"><a href="#structfield.presign_stat" class="anchor field">§</a><code>presign_stat: <a class="primitive" href="https://doc.rust-lang.org/1.69.0/std/primitive.bool.html">bool</a></code></span><div class="docblock"><p>If operator supports presign stat natively, it will be true.</p>

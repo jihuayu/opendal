@@ -721,6 +721,16 @@
 <a href="#721" id="721">721</a>
 <a href="#722" id="722">722</a>
 <a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -765,8 +775,11 @@
 ///
 /// This service can be used to:
 ///
+/// - [x] stat
 /// - [x] read
 /// - [x] write
+/// - [x] create_dir
+/// - [x] delete
 /// - [x] copy
 /// - [x] rename
 /// - [x] list
@@ -1024,17 +1037,24 @@
         am.set_scheme(Scheme::Fs)
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root.to_string_lossy())
             .set_capability(Capability {
+                stat: <span class="bool-val">true</span>,
+
                 read: <span class="bool-val">true</span>,
                 read_can_seek: <span class="bool-val">true</span>,
                 read_with_range: <span class="bool-val">true</span>,
+
                 write: <span class="bool-val">true</span>,
                 write_without_content_length: <span class="bool-val">true</span>,
                 create_dir: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
+
                 list: <span class="bool-val">true</span>,
+                list_with_delimiter_slash: <span class="bool-val">true</span>,
+
                 copy: <span class="bool-val">true</span>,
                 rename: <span class="bool-val">true</span>,
                 blocking: <span class="bool-val">true</span>,
-                list_with_delimiter_slash: <span class="bool-val">true</span>,
+
                 ..Default::default()
             });
 

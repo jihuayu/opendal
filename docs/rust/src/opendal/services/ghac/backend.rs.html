@@ -651,6 +651,14 @@
 <a href="#651" id="651">651</a>
 <a href="#652" id="652">652</a>
 <a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -720,13 +728,17 @@
 ///
 /// This service can be used to:
 ///
+/// - [x] stat
 /// - [x] read
 /// - [x] write
+/// - [x] create_dir
+/// - [x] delete
+/// - [x] copy
+/// - [ ] rename
 /// - [ ] list
-/// - [ ] ~~scan~~
-/// - [ ] ~~presign~~
+/// - [ ] scan
+/// - [ ] presign
 /// - [ ] blocking
-///
 /// # Notes
 ///
 /// This service is mainly provided by github actions.
@@ -954,11 +966,15 @@
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.version)
             .set_capability(Capability {
+                stat: <span class="bool-val">true</span>,
+
                 read: <span class="bool-val">true</span>,
                 read_can_next: <span class="bool-val">true</span>,
                 read_with_range: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
+                create_dir: <span class="bool-val">true</span>,
+                delete: <span class="bool-val">true</span>,
 
                 ..Default::default()
             });

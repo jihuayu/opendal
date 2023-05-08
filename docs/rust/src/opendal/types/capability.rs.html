@@ -222,7 +222,7 @@
 /// - Operation with sub operations should be named like `presign_read`.
 /// - Operation with variants should be named like `read_can_seek`.
 /// - Operation with arguments should be named like `read_with_range`.
-/// - Operation with limtations should be named like `batch_max_operations`.
+/// - Operation with limitations should be named like `batch_max_operations`.
 </span><span class="attr">#[derive(Copy, Clone, Default)]
 </span><span class="kw">pub struct </span>Capability {
     <span class="doccomment">/// If operator supports stat natively, it will be true.
@@ -271,6 +271,12 @@
     <span class="doccomment">/// If operator supports delete natively, it will be true.
     </span><span class="kw">pub </span>delete: bool,
 
+    <span class="doccomment">/// If operator supports copy natively, it will be true.
+    </span><span class="kw">pub </span>copy: bool,
+
+    <span class="doccomment">/// If operator supports rename natively, it will be true.
+    </span><span class="kw">pub </span>rename: bool,
+
     <span class="doccomment">/// If operator supports list natively, it will be true.
     </span><span class="kw">pub </span>list: bool,
     <span class="doccomment">/// If backend supports list with limit, it will be true.
@@ -285,12 +291,6 @@
     </span><span class="kw">pub </span>scan: bool,
     <span class="doccomment">/// If backend supports scan with limit, it will be true.
     </span><span class="kw">pub </span>scan_with_limit: bool,
-
-    <span class="doccomment">/// If operator supports copy natively, it will be true.
-    </span><span class="kw">pub </span>copy: bool,
-
-    <span class="doccomment">/// If operator supports rename natively, it will be true.
-    </span><span class="kw">pub </span>rename: bool,
 
     <span class="doccomment">/// If operator supports presign natively, it will be true.
     </span><span class="kw">pub </span>presign: bool,
@@ -316,11 +316,11 @@
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
         <span class="kw">let </span><span class="kw-2">mut </span>s = <span class="macro">vec!</span>[];
 
-        <span class="kw">if </span><span class="self">self</span>.read {
-            s.push(<span class="string">&quot;Read&quot;</span>);
-        }
         <span class="kw">if </span><span class="self">self</span>.stat {
             s.push(<span class="string">&quot;Stat&quot;</span>);
+        }
+        <span class="kw">if </span><span class="self">self</span>.read {
+            s.push(<span class="string">&quot;Read&quot;</span>);
         }
         <span class="kw">if </span><span class="self">self</span>.write {
             s.push(<span class="string">&quot;Write&quot;</span>);
@@ -331,17 +331,17 @@
         <span class="kw">if </span><span class="self">self</span>.delete {
             s.push(<span class="string">&quot;Delete&quot;</span>);
         }
-        <span class="kw">if </span><span class="self">self</span>.list {
-            s.push(<span class="string">&quot;List&quot;</span>);
-        }
-        <span class="kw">if </span><span class="self">self</span>.scan {
-            s.push(<span class="string">&quot;Scan&quot;</span>);
-        }
         <span class="kw">if </span><span class="self">self</span>.copy {
             s.push(<span class="string">&quot;Copy&quot;</span>);
         }
         <span class="kw">if </span><span class="self">self</span>.rename {
             s.push(<span class="string">&quot;Rename&quot;</span>);
+        }
+        <span class="kw">if </span><span class="self">self</span>.list {
+            s.push(<span class="string">&quot;List&quot;</span>);
+        }
+        <span class="kw">if </span><span class="self">self</span>.scan {
+            s.push(<span class="string">&quot;Scan&quot;</span>);
         }
         <span class="kw">if </span><span class="self">self</span>.presign {
             s.push(<span class="string">&quot;Presign&quot;</span>);
