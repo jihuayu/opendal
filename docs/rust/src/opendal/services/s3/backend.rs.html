@@ -1255,6 +1255,8 @@
 <a href="#1255" id="1255">1255</a>
 <a href="#1256" id="1256">1256</a>
 <a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1628,10 +1630,12 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Region represent the signing region of this endpoint.
+    <span class="doccomment">/// Region represent the signing region of this endpoint. This is required
+    /// if you are using the default AWS S3 endpoint.
     ///
+    /// If using a custom endpoint,
     /// - If region is set, we will take user&#39;s input first.
-    /// - If not, we will use `us-east-1` as default.
+    /// - If not, the default `us-east-1` will be used.
     </span><span class="kw">pub fn </span>region(<span class="kw-2">&amp;mut </span><span class="self">self</span>, region: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!region.is_empty() {
             <span class="self">self</span>.region = <span class="prelude-val">Some</span>(region.to_string())
