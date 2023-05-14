@@ -83,22 +83,6 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -116,35 +100,32 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>async_trait::async_trait;
+</span><span class="kw">use </span>std::pin::Pin;
+
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::StreamExt;
 <span class="kw">use </span>openssh_sftp_client::fs::DirEntry;
+<span class="kw">use </span>openssh_sftp_client::fs::ReadDir;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
 
 <span class="kw">pub struct </span>SftpPager {
-    dir: Box&lt;[DirEntry]&gt;,
-    path: String,
-    limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    complete: bool,
+    dir: Pin&lt;Box&lt;ReadDir&gt;&gt;,
+    prefix: String,
+    limit: usize,
 }
 
 <span class="kw">impl </span>SftpPager {
-    <span class="kw">pub fn </span>new(dir: Box&lt;[DirEntry]&gt;, path: String, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            dir,
-            path,
-            limit,
-            complete: <span class="bool-val">false</span>,
-        }
-    }
+    <span class="kw">pub fn </span>new(dir: ReadDir, path: String, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>prefix = <span class="kw">if </span>path == <span class="string">&quot;/&quot; </span>{ <span class="string">&quot;&quot;</span>.to_owned() } <span class="kw">else </span>{ path };
 
-    <span class="kw">pub fn </span>empty() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            dir: Box::new([]),
-            path: String::new(),
-            limit: <span class="prelude-val">None</span>,
-            complete: <span class="bool-val">true</span>,
+        <span class="kw">let </span>limit = limit.unwrap_or(usize::MAX);
+
+        SftpPager {
+            dir: Box::pin(dir),
+            prefix,
+            limit,
         }
     }
 }
@@ -152,41 +133,28 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>oio::Page <span class="kw">for </span>SftpPager {
     <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.complete {
+        <span class="kw">if </span><span class="self">self</span>.limit == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         }
 
-        <span class="comment">// when listing the root directory, the prefix should be empty
-        </span><span class="kw">if </span><span class="self">self</span>.path == <span class="string">&quot;/&quot; </span>{
-            <span class="self">self</span>.path = <span class="string">&quot;&quot;</span>.to_owned();
-        }
+        <span class="kw">let </span>item = <span class="self">self</span>.dir.next().<span class="kw">await</span>;
 
-        <span class="kw">let </span>iter = <span class="self">self
-            </span>.dir
-            .iter()
-            .filter(|e| {
-                <span class="comment">// filter out &quot;.&quot; and &quot;..&quot;
-                </span>e.filename().to_str().unwrap() != <span class="string">&quot;.&quot; </span>&amp;&amp; e.filename().to_str().unwrap() != <span class="string">&quot;..&quot;
-            </span>})
-            .map(|e| map_entry(<span class="self">self</span>.path.clone(), e.clone()));
-
-        <span class="kw">let </span>v: Vec&lt;oio::Entry&gt; = <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = <span class="self">self</span>.limit {
-            iter.take(limit).collect()
-        } <span class="kw">else </span>{
-            iter.collect()
-        };
-
-        <span class="self">self</span>.complete = <span class="bool-val">true</span>;
-
-        <span class="kw">if </span>v.is_empty() {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(v))
+        <span class="kw">match </span>item {
+            <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(e)) =&gt; {
+                <span class="kw">if </span>e.filename().to_str() == <span class="prelude-val">Some</span>(<span class="string">&quot;.&quot;</span>) || e.filename().to_str() == <span class="prelude-val">Some</span>(<span class="string">&quot;..&quot;</span>) {
+                    <span class="self">self</span>.next().<span class="kw">await
+                </span>} <span class="kw">else </span>{
+                    <span class="self">self</span>.limit -= <span class="number">1</span>;
+                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="macro">vec!</span>[map_entry(<span class="self">self</span>.prefix.as_str(), e.clone())]))
+                }
+            }
+            <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(e)) =&gt; <span class="prelude-val">Err</span>(e.into()),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
     }
 }
 
-<span class="kw">fn </span>map_entry(prefix: String, value: DirEntry) -&gt; oio::Entry {
+<span class="kw">fn </span>map_entry(prefix: <span class="kw-2">&amp;</span>str, value: DirEntry) -&gt; oio::Entry {
     <span class="kw">let </span>path = <span class="macro">format!</span>(
         <span class="string">&quot;{}{}{}&quot;</span>,
         prefix,

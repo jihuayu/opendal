@@ -106,6 +106,21 @@
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -124,19 +139,18 @@
 // under the License.
 
 </span><span class="kw">use </span>std::io::SeekFrom;
-<span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>async_compat::Compat;
-<span class="kw">use </span>bb8::PooledConnection;
-<span class="kw">use </span>futures::executor::block_on;
+<span class="kw">use </span>futures::AsyncBufRead;
+<span class="kw">use </span>futures::AsyncRead;
+<span class="kw">use </span>futures::AsyncSeek;
+<span class="kw">use </span>openssh_sftp_client::file::File;
 <span class="kw">use </span>openssh_sftp_client::file::TokioCompatFile;
 <span class="kw">use </span>openssh_sftp_client::metadata::MetaData <span class="kw">as </span>SftpMeta;
-<span class="kw">use </span>owning_ref::OwningHandle;
 
-<span class="kw">use </span><span class="kw">super</span>::backend::Manager;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_reader::FdReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::ReadExt;
@@ -144,45 +158,61 @@
 <span class="kw">use </span><span class="kw">crate</span>::Metadata;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
 
-<span class="kw">pub struct </span>SftpReader {
-    <span class="comment">// similar situation to connection struct
-    // We can make sure the file can live as long as the connection.
-    </span>file: OwningHandle&lt;
-        Box&lt;PooledConnection&lt;<span class="lifetime">&#39;static</span>, Manager&gt;&gt;,
-        Box&lt;FdReader&lt;Compat&lt;TokioCompatFile&lt;<span class="lifetime">&#39;static</span>&gt;&gt;&gt;&gt;,
-    &gt;,
+<span class="kw">pub struct </span>SftpReaderInner {
+    file: Pin&lt;Box&lt;Compat&lt;TokioCompatFile&gt;&gt;&gt;,
+}
+<span class="kw">pub type </span>SftpReader = FdReader&lt;SftpReaderInner&gt;;
+
+<span class="kw">impl </span>SftpReaderInner {
+    <span class="kw">pub async fn </span>new(file: File) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>file = Compat::new(file.into());
+        <span class="self">Self </span>{
+            file: Box::pin(file),
+        }
+    }
 }
 
 <span class="kw">impl </span>SftpReader {
-    <span class="kw">pub async fn </span>new(
-        conn: PooledConnection&lt;<span class="lifetime">&#39;static</span>, Manager&gt;,
-        path: PathBuf,
-        start: u64,
-        end: u64,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>file = OwningHandle::new_with_fn(Box::new(conn), |conn| <span class="kw">unsafe </span>{
-            <span class="kw">let </span>file = block_on((<span class="kw-2">*</span>conn).sftp.open(path)).unwrap();
-            <span class="kw">let </span>f = Compat::new(TokioCompatFile::from(file));
-            Box::new(oio::into_reader::from_fd(f, start, end))
-        });
-
-        file.seek(SeekFrom::Start(<span class="number">0</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(SftpReader { file })
+    <span class="doccomment">/// Create a new reader from a file, starting at the given offset and ending at the given offset.
+    </span><span class="kw">pub async fn </span>new(file: File, start: u64, end: u64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>file = SftpReaderInner::new(file).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>r = oio::into_reader::from_fd(file, start, end);
+        r.seek(SeekFrom::Start(<span class="number">0</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(r)
     }
 }
 
-<span class="kw">impl </span>oio::Read <span class="kw">for </span>SftpReader {
-    <span class="kw">fn </span>poll_read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
-        Pin::new(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.file).poll_read(cx, buf)
+<span class="kw">impl </span>AsyncRead <span class="kw">for </span>SftpReaderInner {
+    <span class="kw">fn </span>poll_read(
+        <span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
+        cx: <span class="kw-2">&amp;mut </span>Context,
+        buf: <span class="kw-2">&amp;mut </span>[u8],
+    ) -&gt; Poll&lt;std::io::Result&lt;usize&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.get_mut();
+        Pin::new(<span class="kw-2">&amp;mut </span>this.file).poll_read(cx, buf)
+    }
+}
+
+<span class="kw">impl </span>AsyncBufRead <span class="kw">for </span>SftpReaderInner {
+    <span class="kw">fn </span>poll_fill_buf(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context) -&gt; Poll&lt;std::io::Result&lt;<span class="kw-2">&amp;</span>[u8]&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.get_mut();
+        Pin::new(<span class="kw-2">&amp;mut </span>this.file).poll_fill_buf(cx)
     }
 
-    <span class="kw">fn </span>poll_seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, pos: SeekFrom) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;u64&gt;&gt; {
-        Pin::new(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.file).poll_seek(cx, pos)
+    <span class="kw">fn </span>consume(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, amt: usize) {
+        <span class="kw">let </span>this = <span class="self">self</span>.get_mut();
+        Pin::new(<span class="kw-2">&amp;mut </span>this.file).consume(amt)
     }
+}
 
-    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;bytes::Bytes&gt;&gt;&gt; {
-        Pin::new(<span class="kw-2">&amp;mut *</span><span class="self">self</span>.file).poll_next(cx)
+<span class="kw">impl </span>AsyncSeek <span class="kw">for </span>SftpReaderInner {
+    <span class="kw">fn </span>poll_seek(
+        <span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
+        cx: <span class="kw-2">&amp;mut </span>Context,
+        pos: SeekFrom,
+    ) -&gt; Poll&lt;std::io::Result&lt;u64&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.get_mut();
+        Pin::new(<span class="kw-2">&amp;mut </span>this.file).poll_seek(cx, pos)
     }
 }
 
