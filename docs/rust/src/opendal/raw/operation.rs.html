@@ -107,12 +107,6 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -156,8 +150,6 @@
     </span>Delete,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::list`]
     </span>List,
-    <span class="doccomment">/// Operation for [`crate::raw::Accessor::scan`]
-    </span>Scan,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::batch`]
     </span>Batch,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::presign`]
@@ -178,8 +170,6 @@
     </span>BlockingDelete,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::blocking_list`]
     </span>BlockingList,
-    <span class="doccomment">/// Operation for [`crate::raw::Accessor::blocking_scan`]
-    </span>BlockingScan,
 }
 
 <span class="kw">impl </span>Operation {
@@ -207,7 +197,6 @@
             Operation::Stat =&gt; <span class="string">&quot;stat&quot;</span>,
             Operation::Delete =&gt; <span class="string">&quot;delete&quot;</span>,
             Operation::List =&gt; <span class="string">&quot;list&quot;</span>,
-            Operation::Scan =&gt; <span class="string">&quot;scan&quot;</span>,
             Operation::Presign =&gt; <span class="string">&quot;presign&quot;</span>,
             Operation::Batch =&gt; <span class="string">&quot;batch&quot;</span>,
             Operation::BlockingCreateDir =&gt; <span class="string">&quot;blocking_create_dir&quot;</span>,
@@ -218,7 +207,6 @@
             Operation::BlockingStat =&gt; <span class="string">&quot;blocking_stat&quot;</span>,
             Operation::BlockingDelete =&gt; <span class="string">&quot;blocking_delete&quot;</span>,
             Operation::BlockingList =&gt; <span class="string">&quot;blocking_list&quot;</span>,
-            Operation::BlockingScan =&gt; <span class="string">&quot;blocking_scan&quot;</span>,
         }
     }
 }
