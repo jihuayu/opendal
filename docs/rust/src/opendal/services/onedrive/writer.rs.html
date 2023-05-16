@@ -191,14 +191,14 @@
 // under the License.
 
 </span><span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bytes::{Buf, Bytes};
+<span class="kw">use </span>bytes::Buf;
+<span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>http::StatusCode;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::OnedriveBackend;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::graph_model::{
-    OneDriveUploadSessionCreationRequestBody, OneDriveUploadSessionCreationResponseBody,
-};
+<span class="kw">use </span><span class="kw">super</span>::graph_model::OneDriveUploadSessionCreationRequestBody;
+<span class="kw">use </span><span class="kw">super</span>::graph_model::OneDriveUploadSessionCreationResponseBody;
 <span class="kw">use </span><span class="kw">crate</span>::ops::OpWrite;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;

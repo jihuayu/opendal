@@ -349,6 +349,11 @@
 <a href="#349" id="349">349</a>
 <a href="#350" id="350">350</a>
 <a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -424,6 +429,7 @@
     <span class="kw">type </span>BlockingReader = OtelTraceWrapper&lt;A::BlockingReader&gt;;
     <span class="kw">type </span>Writer = OtelTraceWrapper&lt;A::Writer&gt;;
     <span class="kw">type </span>BlockingWriter = OtelTraceWrapper&lt;A::BlockingWriter&gt;;
+    <span class="kw">type </span>Appender = A::Appender;
     <span class="kw">type </span>Pager = OtelTraceWrapper&lt;A::Pager&gt;;
     <span class="kw">type </span>BlockingPager = OtelTraceWrapper&lt;A::BlockingPager&gt;;
 
@@ -466,6 +472,10 @@
             .<span class="kw">await
             </span>.map(|(rp, r)| (rp, OtelTraceWrapper::new(span, r)))
     }
+
+    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
+        <span class="self">self</span>.inner.append(path, args).<span class="kw">await
+    </span>}
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
         <span class="kw">let </span>tracer = global::tracer(<span class="string">&quot;opendal&quot;</span>);

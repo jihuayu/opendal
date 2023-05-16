@@ -146,6 +146,8 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -164,12 +166,14 @@
 // under the License.
 
 </span><span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>std::fmt::{Debug, Formatter};
+<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
 
 <span class="kw">use </span>log::debug;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::GdriveBackend;
-<span class="kw">use </span><span class="kw">crate</span>::raw::{normalize_root, HttpClient};
+<span class="kw">use </span><span class="kw">crate</span>::raw::normalize_root;
+<span class="kw">use </span><span class="kw">crate</span>::raw::HttpClient;
 <span class="kw">use </span><span class="kw">crate</span>::Scheme;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 

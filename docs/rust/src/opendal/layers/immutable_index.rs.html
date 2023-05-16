@@ -458,6 +458,11 @@
 <a href="#458" id="458">458</a>
 <a href="#459" id="459">459</a>
 <a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -599,6 +604,7 @@
     <span class="kw">type </span>BlockingReader = A::BlockingReader;
     <span class="kw">type </span>Writer = A::Writer;
     <span class="kw">type </span>BlockingWriter = A::BlockingWriter;
+    <span class="kw">type </span>Appender = A::Appender;
     <span class="kw">type </span>Pager = ImmutableDir;
     <span class="kw">type </span>BlockingPager = ImmutableDir;
 
@@ -653,6 +659,10 @@
     <span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
         <span class="self">self</span>.inner.blocking_write(path, args)
     }
+
+    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
+        <span class="self">self</span>.inner.append(path, args).<span class="kw">await
+    </span>}
 
     <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>path = path;

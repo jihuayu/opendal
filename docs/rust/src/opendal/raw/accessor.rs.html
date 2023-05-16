@@ -544,6 +544,32 @@
 <a href="#544" id="544">544</a>
 <a href="#545" id="545">545</a>
 <a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -617,6 +643,8 @@
     <span class="doccomment">/// BlockingPager is the associated pager that could return in
     /// `blocking_list` operation.
     </span><span class="kw">type </span>BlockingPager: oio::BlockingPage;
+    <span class="doccomment">/// Appender is the associated appender that could return in `append` operation.
+    </span><span class="kw">type </span>Appender: oio::Append;
 
     <span class="doccomment">/// Invoke the `info` operation to get metadata of accessor.
     ///
@@ -675,6 +703,23 @@
     ///
     /// - Input path MUST be file path, DON&#39;T NEED to check mode.
     </span><span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">&quot;operation is not supported&quot;</span>,
+        ))
+    }
+
+    <span class="doccomment">/// Invoke the `append` operation on the specified path, returns a
+    /// appended size if operate successful.
+    ///
+    ///  Require [`Capability::append`]
+    ///
+    /// # Behavior
+    ///
+    /// - Input path MUST be file path, DON&#39;T NEED to check mode.
+    </span><span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
 
         <span class="prelude-val">Err</span>(Error::new(
@@ -917,6 +962,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = ();
     <span class="kw">type </span>BlockingWriter = ();
+    <span class="kw">type </span>Appender = ();
     <span class="kw">type </span>Pager = ();
     <span class="kw">type </span>BlockingPager = ();
 
@@ -938,6 +984,7 @@
     <span class="kw">type </span>BlockingReader = T::BlockingReader;
     <span class="kw">type </span>Writer = T::Writer;
     <span class="kw">type </span>BlockingWriter = T::BlockingWriter;
+    <span class="kw">type </span>Appender = T::Appender;
     <span class="kw">type </span>Pager = T::Pager;
     <span class="kw">type </span>BlockingPager = T::BlockingPager;
 
@@ -954,6 +1001,10 @@
     </span>}
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="self">self</span>.as_ref().write(path, args).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
+        <span class="self">self</span>.as_ref().append(path, args).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
@@ -1018,6 +1069,7 @@
         BlockingReader = oio::BlockingReader,
         Writer = oio::Writer,
         BlockingWriter = oio::BlockingWriter,
+        Appender = oio::Appender,
         Pager = oio::Pager,
         BlockingPager = oio::BlockingPager,
     &gt;,

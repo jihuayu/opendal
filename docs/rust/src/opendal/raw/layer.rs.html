@@ -360,6 +360,20 @@
 <a href="#360" id="360">360</a>
 <a href="#361" id="361">361</a>
 <a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -425,6 +439,7 @@
 ///     type BlockingReader = A::BlockingReader;
 ///     type Writer = A::Writer;
 ///     type BlockingWriter = A::BlockingWriter;
+///     type Appender = A::Appender;
 ///     type Pager = A::Pager;
 ///     type BlockingPager = A::BlockingPager;
 ///
@@ -454,6 +469,10 @@
 ///         args: OpWrite,
 ///     ) -&gt; Result&lt;(RpWrite, Self::BlockingWriter)&gt; {
 ///         self.inner.blocking_write(path, args)
+///     }
+///
+///     async fn append(&amp;self, path: &amp;str, args: OpAppend) -&gt; Result&lt;(RpAppend, Self::Appender)&gt; {
+///        self.inner.append(path, args).await
 ///     }
 ///
 ///     async fn list(&amp;self, path: &amp;str, args: OpList) -&gt; Result&lt;(RpList, Self::Pager)&gt; {
@@ -496,6 +515,7 @@
     <span class="kw">type </span>BlockingReader: oio::BlockingRead;
     <span class="kw">type </span>Writer: oio::Write;
     <span class="kw">type </span>BlockingWriter: oio::BlockingWrite;
+    <span class="kw">type </span>Appender: oio::Append;
     <span class="kw">type </span>Pager: oio::Page;
     <span class="kw">type </span>BlockingPager: oio::BlockingPage;
 
@@ -512,6 +532,8 @@
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt;;
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt;;
+
+    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt;;
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
         <span class="self">self</span>.inner().copy(from, to, args).<span class="kw">await
@@ -572,6 +594,7 @@
     <span class="kw">type </span>BlockingReader = L::BlockingReader;
     <span class="kw">type </span>Writer = L::Writer;
     <span class="kw">type </span>BlockingWriter = L::BlockingWriter;
+    <span class="kw">type </span>Appender = L::Appender;
     <span class="kw">type </span>Pager = L::Pager;
     <span class="kw">type </span>BlockingPager = L::BlockingPager;
 
@@ -589,6 +612,10 @@
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).write(path, args).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
+        (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).append(path, args).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
@@ -685,6 +712,7 @@
         <span class="kw">type </span>BlockingReader = ();
         <span class="kw">type </span>Writer = ();
         <span class="kw">type </span>BlockingWriter = ();
+        <span class="kw">type </span>Appender = ();
         <span class="kw">type </span>Pager = ();
         <span class="kw">type </span>BlockingPager = ();
 

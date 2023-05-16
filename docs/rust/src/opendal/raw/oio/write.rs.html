@@ -178,6 +178,8 @@
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -303,8 +305,9 @@
     }
 }
 
-<span class="doccomment">/// `Box&lt;dyn Write&gt;` won&#39;t implement `Write` automatically. To make Writer
-/// work as expected, we must add this impl.
+<span class="doccomment">/// `Box&lt;dyn Write&gt;` won&#39;t implement `Write` automatically.
+///
+/// To make Writer work as expected, we must add this impl.
 </span><span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;T: Write + <span class="question-mark">?</span>Sized&gt; Write <span class="kw">for </span>Box&lt;T&gt; {
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -348,6 +351,7 @@
 }
 
 <span class="doccomment">/// `Box&lt;dyn BlockingWrite&gt;` won&#39;t implement `BlockingWrite` automatically.
+///
 /// To make BlockingWriter work as expected, we must add this impl.
 </span><span class="kw">impl</span>&lt;T: BlockingWrite + <span class="question-mark">?</span>Sized&gt; BlockingWrite <span class="kw">for </span>Box&lt;T&gt; {
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {

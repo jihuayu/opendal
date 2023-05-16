@@ -107,6 +107,9 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -140,6 +143,8 @@
     </span>Read,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::write`]
     </span>Write,
+    <span class="doccomment">/// Operation for [`crate::raw::Accessor::append`]
+    </span>Append,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::copy`]
     </span>Copy,
     <span class="doccomment">/// Operation for [`crate::raw::Accessor::rename`]
@@ -192,6 +197,7 @@
             Operation::CreateDir =&gt; <span class="string">&quot;create_dir&quot;</span>,
             Operation::Read =&gt; <span class="string">&quot;read&quot;</span>,
             Operation::Write =&gt; <span class="string">&quot;write&quot;</span>,
+            Operation::Append =&gt; <span class="string">&quot;append&quot;</span>,
             Operation::Copy =&gt; <span class="string">&quot;copy&quot;</span>,
             Operation::Rename =&gt; <span class="string">&quot;rename&quot;</span>,
             Operation::Stat =&gt; <span class="string">&quot;stat&quot;</span>,

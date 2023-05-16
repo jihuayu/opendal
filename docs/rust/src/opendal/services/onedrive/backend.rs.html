@@ -418,6 +418,27 @@
 <a href="#418" id="418">418</a>
 <a href="#419" id="419">419</a>
 <a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -452,19 +473,39 @@
 <span class="kw">use </span><span class="kw">super</span>::pager::OnedrivePager;
 <span class="kw">use </span><span class="kw">super</span>::writer::OneDriveWriter;
 <span class="kw">use </span><span class="kw">crate</span>::ops::OpCreateDir;
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpDelete;
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpList;
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpRead;
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpStat;
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpWrite;
+<span class="kw">use </span><span class="kw">crate</span>::raw::build_abs_path;
+<span class="kw">use </span><span class="kw">crate</span>::raw::build_rooted_abs_path;
+<span class="kw">use </span><span class="kw">crate</span>::raw::get_basename;
 <span class="kw">use </span><span class="kw">crate</span>::raw::get_parent;
+<span class="kw">use </span><span class="kw">crate</span>::raw::new_json_deserialize_error;
+<span class="kw">use </span><span class="kw">crate</span>::raw::new_json_serialize_error;
+<span class="kw">use </span><span class="kw">crate</span>::raw::new_request_build_error;
+<span class="kw">use </span><span class="kw">crate</span>::raw::parse_datetime_from_rfc3339;
+<span class="kw">use </span><span class="kw">crate</span>::raw::parse_into_metadata;
+<span class="kw">use </span><span class="kw">crate</span>::raw::parse_location;
+<span class="kw">use </span><span class="kw">crate</span>::raw::percent_encode_path;
+<span class="kw">use </span><span class="kw">crate</span>::raw::Accessor;
+<span class="kw">use </span><span class="kw">crate</span>::raw::AccessorInfo;
+<span class="kw">use </span><span class="kw">crate</span>::raw::AsyncBody;
+<span class="kw">use </span><span class="kw">crate</span>::raw::HttpClient;
+<span class="kw">use </span><span class="kw">crate</span>::raw::IncomingAsyncBody;
 <span class="kw">use </span><span class="kw">crate</span>::raw::RpCreateDir;
-<span class="kw">use crate</span>::{
-    ops::{OpDelete, OpList, OpRead, OpStat, OpWrite},
-    raw::{
-        build_abs_path, build_rooted_abs_path, get_basename, new_json_deserialize_error,
-        new_json_serialize_error, new_request_build_error, parse_datetime_from_rfc3339,
-        parse_into_metadata, parse_location, percent_encode_path, Accessor, AccessorInfo,
-        AsyncBody, HttpClient, IncomingAsyncBody, RpDelete, RpList, RpRead, RpStat, RpWrite,
-    },
-    types::Result,
-    Capability, EntryMode, Error, ErrorKind, Metadata,
-};
+<span class="kw">use </span><span class="kw">crate</span>::raw::RpDelete;
+<span class="kw">use </span><span class="kw">crate</span>::raw::RpList;
+<span class="kw">use </span><span class="kw">crate</span>::raw::RpRead;
+<span class="kw">use </span><span class="kw">crate</span>::raw::RpStat;
+<span class="kw">use </span><span class="kw">crate</span>::raw::RpWrite;
+<span class="kw">use </span><span class="kw">crate</span>::types::Result;
+<span class="kw">use </span><span class="kw">crate</span>::Capability;
+<span class="kw">use </span><span class="kw">crate</span>::EntryMode;
+<span class="kw">use </span><span class="kw">crate</span>::Error;
+<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
+<span class="kw">use </span><span class="kw">crate</span>::Metadata;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>OnedriveBackend {
@@ -498,6 +539,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = OneDriveWriter;
     <span class="kw">type </span>BlockingWriter = ();
+    <span class="kw">type </span>Appender = ();
     <span class="kw">type </span>Pager = OnedrivePager;
     <span class="kw">type </span>BlockingPager = ();
 
