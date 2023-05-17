@@ -573,6 +573,20 @@
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
 <a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -630,7 +644,7 @@
 /// - [x] write
 /// - [x] create_dir
 /// - [x] delete
-/// - [ ] copy
+/// - [x] copy
 /// - [x] rename
 /// - [x] list
 /// - [ ] ~~scan~~
@@ -644,6 +658,7 @@
 /// - `user`: Set the login user
 /// - `key`: Set the public key for login
 /// - `known_hosts_strategy`: Set the strategy for known hosts, default to `Strict`
+/// - `enable_copy`: Set whether the remote server has copy-file extension
 ///
 /// It doesn&#39;t support password login, you can use public key instead.
 ///
@@ -679,6 +694,7 @@
     user: <span class="prelude-ty">Option</span>&lt;String&gt;,
     key: <span class="prelude-ty">Option</span>&lt;String&gt;,
     known_hosts_strategy: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    enable_copy: bool,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>SftpBuilder {
@@ -749,6 +765,14 @@
 
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// set enable_copy for sftp backend.
+    /// It requires the server supports copy-file extension.
+    </span><span class="kw">pub fn </span>enable_copy(<span class="kw-2">&amp;mut </span><span class="self">self</span>, enable_copy: bool) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.enable_copy = enable_copy;
+
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>SftpBuilder {
@@ -800,6 +824,7 @@
             user,
             key: <span class="self">self</span>.key.clone(),
             known_hosts_strategy,
+            copyable: <span class="self">self</span>.enable_copy,
             client: tokio::sync::OnceCell::new(),
         })
     }
@@ -825,6 +850,7 @@
     user: String,
     key: <span class="prelude-ty">Option</span>&lt;String&gt;,
     known_hosts_strategy: KnownHosts,
+    copyable: bool,
     client: tokio::sync::OnceCell&lt;Sftp&gt;,
 }
 
@@ -853,6 +879,7 @@
 
                 read: <span class="bool-val">true</span>,
                 read_with_range: <span class="bool-val">true</span>,
+                read_can_seek: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
                 write_without_content_length: <span class="bool-val">true</span>,
@@ -863,6 +890,7 @@
                 list_with_limit: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
 
+                copy: <span class="self">self</span>.copyable,
                 rename: <span class="bool-val">true</span>,
 
                 ..Default::default()
