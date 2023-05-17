@@ -732,6 +732,8 @@
 <a href="#732" id="732">732</a>
 <a href="#733" id="733">733</a>
 <a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -751,7 +753,6 @@
 
 </span><span class="kw">use </span>std::cmp::min;
 <span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>std::io;
 <span class="kw">use </span>std::io::SeekFrom;
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::path::PathBuf;
@@ -760,7 +761,6 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>chrono::DateTime;
 <span class="kw">use </span>log::debug;
-<span class="kw">use </span>tokio::fs;
 <span class="kw">use </span>uuid::Uuid;
 
 <span class="kw">use </span><span class="kw">super</span>::error::parse_io_error;
@@ -891,7 +891,7 @@
 
         <span class="comment">// If root dir is not exist, we must create it.
         </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = std::fs::metadata(<span class="kw-2">&amp;</span>root) {
-            <span class="kw">if </span>e.kind() == io::ErrorKind::NotFound {
+            <span class="kw">if </span>e.kind() == std::io::ErrorKind::NotFound {
                 std::fs::create_dir_all(<span class="kw-2">&amp;</span>root).map_err(|e| {
                     Error::new(ErrorKind::Unexpected, <span class="string">&quot;create root dir failed&quot;</span>)
                         .with_operation(<span class="string">&quot;Builder::build&quot;</span>)
@@ -906,7 +906,7 @@
         <span class="comment">// If atomic write dir is not exist, we must create it.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(d) = <span class="kw-2">&amp;</span>atomic_write_dir {
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = std::fs::metadata(d) {
-                <span class="kw">if </span>e.kind() == io::ErrorKind::NotFound {
+                <span class="kw">if </span>e.kind() == std::io::ErrorKind::NotFound {
                     std::fs::create_dir_all(d).map_err(|e| {
                         Error::new(ErrorKind::Unexpected, <span class="string">&quot;create atomic write dir failed&quot;</span>)
                             .with_operation(<span class="string">&quot;Builder::build&quot;</span>)
@@ -1018,7 +1018,9 @@
             })<span class="question-mark">?
             </span>.to_path_buf();
 
-        fs::create_dir_all(<span class="kw-2">&amp;</span>parent).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
+        tokio::fs::create_dir_all(<span class="kw-2">&amp;</span>parent)
+            .<span class="kw">await
+            </span>.map_err(parse_io_error)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(p)
     }
@@ -1066,7 +1068,9 @@
     <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>p = <span class="self">self</span>.root.join(path.trim_end_matches(<span class="string">&#39;/&#39;</span>));
 
-        fs::create_dir_all(<span class="kw-2">&amp;</span>p).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
+        tokio::fs::create_dir_all(<span class="kw-2">&amp;</span>p)
+            .<span class="kw">await
+            </span>.map_err(parse_io_error)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
@@ -1085,7 +1089,7 @@
 
         <span class="kw">let </span>p = <span class="self">self</span>.root.join(path.trim_end_matches(<span class="string">&#39;/&#39;</span>));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>f = fs::OpenOptions::new()
+        <span class="kw">let </span><span class="kw-2">mut </span>f = tokio::fs::OpenOptions::new()
             .read(<span class="bool-val">true</span>)
             .open(<span class="kw-2">&amp;</span>p)
             .<span class="kw">await
@@ -1230,9 +1234,9 @@
         <span class="kw">match </span>meta {
             <span class="prelude-val">Ok</span>(meta) =&gt; {
                 <span class="kw">if </span>meta.is_dir() {
-                    fs::remove_dir(<span class="kw-2">&amp;</span>p).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
+                    tokio::fs::remove_dir(<span class="kw-2">&amp;</span>p).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
-                    fs::remove_file(<span class="kw-2">&amp;</span>p).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
+                    tokio::fs::remove_file(<span class="kw-2">&amp;</span>p).<span class="kw">await</span>.map_err(parse_io_error)<span class="question-mark">?</span>;
                 }
 
                 <span class="prelude-val">Ok</span>(RpDelete::default())
@@ -1248,7 +1252,7 @@
         <span class="kw">let </span>f = <span class="kw">match </span>tokio::fs::read_dir(<span class="kw-2">&amp;</span>p).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(rd) =&gt; rd,
             <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="kw">return if </span>e.kind() == io::ErrorKind::NotFound {
+                <span class="kw">return if </span>e.kind() == std::io::ErrorKind::NotFound {
                     <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">None</span>))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(parse_io_error(e))
@@ -1433,7 +1437,7 @@
         <span class="kw">let </span>f = <span class="kw">match </span>std::fs::read_dir(p) {
             <span class="prelude-val">Ok</span>(rd) =&gt; rd,
             <span class="prelude-val">Err</span>(e) =&gt; {
-                <span class="kw">return if </span>e.kind() == io::ErrorKind::NotFound {
+                <span class="kw">return if </span>e.kind() == std::io::ErrorKind::NotFound {
                     <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">None</span>))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(parse_io_error(e))
