@@ -542,6 +542,37 @@
 <a href="#542" id="542">542</a>
 <a href="#543" id="543">543</a>
 <a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -600,7 +631,7 @@
 /// - [x] create_dir
 /// - [x] delete
 /// - [ ] copy
-/// - [ ] rename
+/// - [x] rename
 /// - [x] list
 /// - [ ] ~~scan~~
 /// - [ ] ~~presign~~
@@ -821,14 +852,18 @@
                 stat: <span class="bool-val">true</span>,
 
                 read: <span class="bool-val">true</span>,
+                read_with_range: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
+                write_without_content_length: <span class="bool-val">true</span>,
                 create_dir: <span class="bool-val">true</span>,
                 delete: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
                 list_with_limit: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
+
+                rename: <span class="bool-val">true</span>,
 
                 ..Default::default()
             });
@@ -897,14 +932,7 @@
         <span class="prelude-val">Ok</span>((RpRead::new(end - start), r))
     }
 
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="kw">if </span>args.content_length().is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::Unsupported,
-                <span class="string">&quot;write without content length is not supported&quot;</span>,
-            ));
-        }
-
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>((dir, <span class="kw">_</span>)) = path.rsplit_once(<span class="string">&#39;/&#39;</span>) {
             <span class="self">self</span>.create_dir(dir, OpCreateDir::default()).<span class="kw">await</span><span class="question-mark">?</span>;
         }
@@ -918,6 +946,40 @@
         <span class="kw">let </span>file = client.create(<span class="kw-2">&amp;</span>path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>((RpWrite::new(), SftpWriter::new(file)))
+    }
+
+    <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="kw">let </span>client = <span class="self">self</span>.connect().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>fs = client.fs();
+        fs.set_cwd(<span class="kw-2">&amp;</span><span class="self">self</span>.root);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((dir, <span class="kw">_</span>)) = to.rsplit_once(<span class="string">&#39;/&#39;</span>) {
+            <span class="self">self</span>.create_dir(dir, OpCreateDir::default()).<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+
+        <span class="kw">let </span>src = fs.canonicalize(from).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>dst = fs.canonicalize(to).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>src_file = client.open(<span class="kw-2">&amp;</span>src).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>dst_file = client.create(dst).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        src_file.copy_all_to(<span class="kw-2">&amp;mut </span>dst_file).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(RpCopy::default())
+    }
+
+    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="kw">let </span>client = <span class="self">self</span>.connect().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>fs = client.fs();
+        fs.set_cwd(<span class="kw-2">&amp;</span><span class="self">self</span>.root);
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((dir, <span class="kw">_</span>)) = to.rsplit_once(<span class="string">&#39;/&#39;</span>) {
+            <span class="self">self</span>.create_dir(dir, OpCreateDir::default()).<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+        fs.rename(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(RpRename::default())
     }
 
     <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
