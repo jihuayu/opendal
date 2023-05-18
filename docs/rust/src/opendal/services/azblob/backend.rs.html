@@ -868,6 +868,7 @@
 <a href="#868" id="868">868</a>
 <a href="#869" id="869">869</a>
 <a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1258,6 +1259,7 @@
                 .or_else(|| infer_storage_name_from_endpoint(endpoint.as_str())),
             account_key: <span class="self">self</span>.account_key.clone(),
             sas_token: <span class="self">self</span>.sas_token.clone(),
+            ..Default::default()
         };
 
         <span class="kw">let </span>cred_loader = AzureStorageLoader::new(config_loader);
