@@ -72,21 +72,6 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -132,39 +117,24 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>oio::Write <span class="kw">for </span>WasabiWriter {
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">if </span><span class="self">self</span>.op.content_length().unwrap_or_default() == bs.len() <span class="kw">as </span>u64 {
-            <span class="kw">let </span>resp = <span class="self">self
-                </span>.core
-                .put_object(
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.path,
-                    <span class="prelude-val">Some</span>(bs.len()),
-                    <span class="self">self</span>.op.content_type(),
-                    <span class="self">self</span>.op.content_disposition(),
-                    <span class="self">self</span>.op.cache_control(),
-                    AsyncBody::Bytes(bs),
-                )
-                .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self
+            </span>.core
+            .put_object(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.path,
+                <span class="prelude-val">Some</span>(bs.len()),
+                <span class="self">self</span>.op.content_type(),
+                <span class="self">self</span>.op.content_disposition(),
+                <span class="self">self</span>.op.cache_control(),
+                AsyncBody::Bytes(bs),
+            )
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
-            <span class="kw">match </span>resp.status() {
-                StatusCode::CREATED | StatusCode::OK =&gt; {
-                    resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(())
-                }
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        <span class="kw">match </span>resp.status() {
+            StatusCode::CREATED | StatusCode::OK =&gt; {
+                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(())
             }
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>resp = <span class="self">self
-                </span>.core
-                .append_object(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="prelude-val">Some</span>(bs.len()), AsyncBody::Bytes(bs))
-                .<span class="kw">await</span><span class="question-mark">?</span>;
-
-            <span class="kw">match </span>resp.status() {
-                StatusCode::CREATED | StatusCode::OK | StatusCode::NO_CONTENT =&gt; {
-                    resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(())
-                }
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
 

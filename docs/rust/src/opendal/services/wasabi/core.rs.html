@@ -929,6 +929,7 @@
 <a href="#929" id="929">929</a>
 <a href="#930" id="930">930</a>
 <a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -967,6 +968,7 @@
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde::Serialize;
 
+<span class="kw">use </span><span class="kw">crate</span>::ops::OpStat;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -1138,11 +1140,7 @@
 }
 
 <span class="kw">impl </span>WasabiCore {
-    <span class="kw">pub fn </span>head_object_request(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        path: <span class="kw-2">&amp;</span>str,
-        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+    <span class="kw">pub fn </span>head_object_request(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: <span class="kw-2">&amp;</span>OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.endpoint, percent_encode_path(<span class="kw-2">&amp;</span>p));
@@ -1151,8 +1149,12 @@
 
         req = <span class="self">self</span>.insert_sse_headers(req, <span class="bool-val">false</span>);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(if_none_match) = if_none_match {
-            req = req.header(http::header::IF_NONE_MATCH, if_none_match);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = args.if_match() {
+            req = req.header(http::header::IF_MATCH, v);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = args.if_none_match() {
+            req = req.header(http::header::IF_NONE_MATCH, v);
         }
 
         <span class="kw">let </span>req = req
@@ -1277,9 +1279,9 @@
     <span class="kw">pub async fn </span>head_object(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
-        if_none_match: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        args: <span class="kw-2">&amp;</span>OpStat,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.head_object_request(path, if_none_match)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.head_object_request(path, args)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
 
