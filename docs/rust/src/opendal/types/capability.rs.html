@@ -173,6 +173,12 @@
 <a href="#173" id="173">173</a>
 <a href="#174" id="174">174</a>
 <a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -263,6 +269,12 @@
 
     <span class="doccomment">/// If operator supports append natively, it will be true.
     </span><span class="kw">pub </span>append: bool,
+    <span class="doccomment">/// If operator supports append with content type natively, it will be true.
+    </span><span class="kw">pub </span>append_with_content_type: bool,
+    <span class="doccomment">/// If operator supports append with content disposition natively, it will be true.
+    </span><span class="kw">pub </span>append_with_content_disposition: bool,
+    <span class="doccomment">/// If operator supports append with cache control natively, it will be true.
+    </span><span class="kw">pub </span>append_with_cache_control: bool,
 
     <span class="doccomment">/// If operator supports create dir natively, it will be true.
     </span><span class="kw">pub </span>create_dir: bool,
