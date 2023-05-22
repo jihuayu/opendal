@@ -172,13 +172,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>async_trait::async_trait;
+</span><span class="kw">use </span>std::fmt::Debug;
+
+<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>http::header;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
-<span class="kw">use </span>std::fmt::Debug;
 
+<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">super</span>::writer::VercelArtifactsWriter;
 <span class="kw">use </span><span class="kw">crate</span>::ops::OpRead;
 <span class="kw">use </span><span class="kw">crate</span>::ops::OpWrite;
 <span class="kw">use </span><span class="kw">crate</span>::raw::new_request_build_error;
@@ -194,9 +197,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::Capability;
 <span class="kw">use </span><span class="kw">crate</span>::Error;
 <span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
-
-<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::writer::VercelArtifactsWriter;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>VercelArtifactsBackend {

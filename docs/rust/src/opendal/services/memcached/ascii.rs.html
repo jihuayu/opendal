@@ -187,14 +187,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span><span class="kw">super</span>::backend::parse_io_error;
-<span class="kw">use </span>tokio::io::AsyncBufReadExt;
+</span><span class="kw">use </span>tokio::io::AsyncBufReadExt;
 <span class="kw">use </span>tokio::io::AsyncReadExt;
 <span class="kw">use </span>tokio::io::AsyncWriteExt;
 <span class="kw">use </span>tokio::io::BufReader;
 <span class="kw">use </span>tokio::net::TcpStream;
+
+<span class="kw">use </span><span class="kw">super</span>::backend::parse_io_error;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub struct </span>Connection {
     io: BufReader&lt;TcpStream&gt;,

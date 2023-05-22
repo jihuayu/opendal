@@ -154,7 +154,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::raw::build_rel_path;
+</span><span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>http::Response;
+
+<span class="kw">use </span><span class="kw">super</span>::backend::OnedriveBackend;
+<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">super</span>::graph_model::GraphApiOnedriveListResponse;
+<span class="kw">use </span><span class="kw">super</span>::graph_model::ItemType;
+<span class="kw">use </span><span class="kw">crate</span>::raw::build_rel_path;
 <span class="kw">use </span><span class="kw">crate</span>::raw::build_rooted_abs_path;
 <span class="kw">use </span><span class="kw">crate</span>::raw::new_json_deserialize_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::{<span class="self">self</span>};
@@ -162,14 +169,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::IncomingAsyncBody;
 <span class="kw">use </span><span class="kw">crate</span>::EntryMode;
 <span class="kw">use </span><span class="kw">crate</span>::Metadata;
-
-<span class="kw">use </span><span class="kw">super</span>::backend::OnedriveBackend;
-<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::graph_model::GraphApiOnedriveListResponse;
-<span class="kw">use </span><span class="kw">super</span>::graph_model::ItemType;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
-<span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>http::Response;
 
 <span class="kw">pub struct </span>OnedrivePager {
     root: String,

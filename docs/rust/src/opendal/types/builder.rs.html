@@ -60,32 +60,6 @@
 <a href="#60" id="60">60</a>
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
-<a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
-<a href="#68" id="68">68</a>
-<a href="#69" id="69">69</a>
-<a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -104,7 +78,6 @@
 // under the License.
 
 </span><span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>std::env;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -132,31 +105,6 @@
 
     <span class="doccomment">/// Construct a builder from given map which contains several parameters needed by underlying service.
     </span><span class="kw">fn </span>from_map(map: HashMap&lt;String, String&gt;) -&gt; <span class="self">Self</span>;
-
-    <span class="doccomment">/// Construct a builder from given iterator.
-    </span><span class="kw">fn </span>from_iter(iter: <span class="kw">impl </span>Iterator&lt;Item = (String, String)&gt;) -&gt; <span class="self">Self
-    </span><span class="kw">where
-        </span><span class="self">Self</span>: Sized,
-    {
-        <span class="self">Self</span>::from_map(iter.collect())
-    }
-
-    <span class="doccomment">/// Construct a builder from envs. Please note that the env should begin with `opendal_{schema_name}_`.
-    </span><span class="kw">fn </span>from_env() -&gt; <span class="self">Self
-    </span><span class="kw">where
-        </span><span class="self">Self</span>: Sized,
-    {
-        <span class="kw">let </span>prefix = <span class="macro">format!</span>(<span class="string">&quot;opendal_{}_&quot;</span>, <span class="self">Self</span>::SCHEME);
-        <span class="kw">let </span>envs = env::vars()
-            .filter_map(<span class="kw">move </span>|(k, v)| {
-                k.to_lowercase()
-                    .strip_prefix(<span class="kw-2">&amp;</span>prefix)
-                    .map(|k| (k.to_string(), v))
-            })
-            .collect();
-
-        <span class="self">Self</span>::from_map(envs)
-    }
 
     <span class="doccomment">/// Consume the accessor builder to build a service.
     </span><span class="kw">fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Accessor&gt;;
