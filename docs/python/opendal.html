@@ -156,7 +156,10 @@
                     <a class="class" href="#Metadata">Metadata</a>
                             <ul class="memberlist">
                         <li>
-                                <a class="variable" href="#Metadata.content_type">content_type</a>
+                                <a class="variable" href="#Metadata.content_length">content_length</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#Metadata.content_md5">content_md5</a>
                         </li>
                         <li>
                                 <a class="variable" href="#Metadata.etag">etag</a>
@@ -165,10 +168,7 @@
                                 <a class="variable" href="#Metadata.mode">mode</a>
                         </li>
                         <li>
-                                <a class="variable" href="#Metadata.content_length">content_length</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#Metadata.content_md5">content_md5</a>
+                                <a class="variable" href="#Metadata.content_type">content_type</a>
                         </li>
                 </ul>
 
@@ -852,15 +852,28 @@ The default value for whence is <code>SEEK_SET</code>. Values for <code>whence</
     
     
 
-                            <div id="Metadata.content_type" class="classattr">
+                            <div id="Metadata.content_length" class="classattr">
                                 <div class="attr variable">
-            <span class="name">content_type</span><span class="annotation">: Optional[str]</span>
+            <span class="name">content_length</span><span class="annotation">: int</span>
 
         
     </div>
-    <a class="headerlink" href="#Metadata.content_type"></a>
+    <a class="headerlink" href="#Metadata.content_length"></a>
     
-            <div class="docstring"><p>Content Type of this entry.</p>
+            <div class="docstring"><p>Content length of this entry.</p>
+</div>
+
+
+                            </div>
+                            <div id="Metadata.content_md5" class="classattr">
+                                <div class="attr variable">
+            <span class="name">content_md5</span><span class="annotation">: Optional[str]</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Metadata.content_md5"></a>
+    
+            <div class="docstring"><p>Content MD5 of this entry.</p>
 </div>
 
 
@@ -891,28 +904,15 @@ The default value for whence is <code>SEEK_SET</code>. Values for <code>whence</
 
 
                             </div>
-                            <div id="Metadata.content_length" class="classattr">
+                            <div id="Metadata.content_type" class="classattr">
                                 <div class="attr variable">
-            <span class="name">content_length</span><span class="annotation">: int</span>
+            <span class="name">content_type</span><span class="annotation">: Optional[str]</span>
 
         
     </div>
-    <a class="headerlink" href="#Metadata.content_length"></a>
+    <a class="headerlink" href="#Metadata.content_type"></a>
     
-            <div class="docstring"><p>Content length of this entry.</p>
-</div>
-
-
-                            </div>
-                            <div id="Metadata.content_md5" class="classattr">
-                                <div class="attr variable">
-            <span class="name">content_md5</span><span class="annotation">: Optional[str]</span>
-
-        
-    </div>
-    <a class="headerlink" href="#Metadata.content_md5"></a>
-    
-            <div class="docstring"><p>Content MD5 of this entry.</p>
+            <div class="docstring"><p>Content Type of this entry.</p>
 </div>
 
 
