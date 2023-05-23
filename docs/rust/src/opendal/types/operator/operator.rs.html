@@ -2554,9 +2554,9 @@
         }
 
         <span class="kw">let </span>bs = bs.into();
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = <span class="self">self</span>.inner().append(<span class="kw-2">&amp;</span>path, args).<span class="kw">await</span><span class="question-mark">?</span>;
-        w.append(bs).<span class="kw">await</span><span class="question-mark">?</span>;
-        w.close().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>a) = <span class="self">self</span>.inner().append(<span class="kw-2">&amp;</span>path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+        a.append(bs).<span class="kw">await</span><span class="question-mark">?</span>;
+        a.close().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
