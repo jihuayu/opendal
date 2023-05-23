@@ -71,6 +71,9 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -132,16 +135,19 @@
 <span class="comment">// Return the error kind and whether it is retryable
 </span><span class="kw">fn </span>parse_supabase_error(err: <span class="kw-2">&amp;</span>SupabaseError) -&gt; (ErrorKind, bool) {
     <span class="kw">let </span>code = err.status_code.parse::&lt;u16&gt;().unwrap();
-    <span class="kw">if </span>code == StatusCode::CONFLICT.as_u16() &amp;&amp; err.error == <span class="string">&quot;Duplicate&quot; </span>{
-        (ErrorKind::AlreadyExists, <span class="bool-val">false</span>)
-    } <span class="kw">else if </span>code == StatusCode::NOT_FOUND.as_u16() {
-        (ErrorKind::NotFound, <span class="bool-val">false</span>)
-    } <span class="kw">else if </span>code == StatusCode::FORBIDDEN.as_u16() {
-        (ErrorKind::PermissionDenied, <span class="bool-val">false</span>)
-    } <span class="kw">else if </span>code == StatusCode::PRECONDITION_FAILED.as_u16() {
-        (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>)
-    } <span class="kw">else </span>{
-        (ErrorKind::Unexpected, <span class="bool-val">false</span>)
+    <span class="kw">let </span>status_code = StatusCode::from_u16(code).unwrap();
+    <span class="kw">match </span>status_code {
+        StatusCode::CONFLICT =&gt; (ErrorKind::AlreadyExists, <span class="bool-val">false</span>),
+        StatusCode::NOT_FOUND =&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
+        StatusCode::FORBIDDEN =&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
+        StatusCode::PRECONDITION_FAILED | StatusCode::NOT_MODIFIED =&gt; {
+            (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>)
+        }
+        StatusCode::INTERNAL_SERVER_ERROR
+        | StatusCode::BAD_GATEWAY
+        | StatusCode::SERVICE_UNAVAILABLE
+        | StatusCode::GATEWAY_TIMEOUT =&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
+        <span class="kw">_ </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
     }
 }
 </code></pre></div>
