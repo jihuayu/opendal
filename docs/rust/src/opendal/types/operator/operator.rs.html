@@ -1558,6 +1558,19 @@
 <a href="#1558" id="1558">1558</a>
 <a href="#1559" id="1559">1559</a>
 <a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2496,7 +2509,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>appender(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Appender&gt; {
-        <span class="self">self</span>.appender_with(path, OpAppend::default()).<span class="kw">await
+        <span class="self">self</span>.appender_with(path).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Append multiple bytes into path with extra options.
@@ -2513,28 +2526,41 @@
     ///
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let args = OpAppend::new().with_content_type(&quot;application/octet-stream&quot;);
-    /// let mut a = op.appender_with(&quot;path/to/file&quot;, args).await?;
+    /// let mut a = op.appender_with(&quot;path/to/file&quot;).content_type(&quot;application/octet-stream&quot;).await?;
     /// a.append(vec![0; 4096]).await?;
     /// a.append(vec![1; 4096]).await?;
     /// a.close().await?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>appender_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;Appender&gt; {
+    </span><span class="kw">pub fn </span>appender_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FutureAppender {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;append path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;Operator::appender&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.inner().info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
+        <span class="kw">let </span>fut = FutureAppender(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpAppend::default(),
+            |inner, path, args| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            ErrorKind::IsADirectory,
+                            <span class="string">&quot;append path is a directory&quot;</span>,
+                        )
+                        .with_operation(<span class="string">&quot;Operator::appender&quot;</span>)
+                        .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                        .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
+                    }
+                    <span class="kw">let </span>ap = Appender::create(inner, <span class="kw-2">&amp;</span>path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(ap)
+                };
 
-        Appender::create(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
-    </span>}
+                Box::pin(fut)
+            },
+        ));
+
+        fut
+    }
 
     <span class="doccomment">/// Append bytes with extra options.
     ///

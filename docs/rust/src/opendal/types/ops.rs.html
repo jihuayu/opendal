@@ -906,7 +906,7 @@
         <span class="self">self</span>.cache_control.as_deref()
     }
 
-    <span class="doccomment">/// Set the content type of option
+    <span class="doccomment">/// Set the cache control of option
     </span><span class="kw">pub fn </span>with_cache_control(<span class="kw-2">mut </span><span class="self">self</span>, cache_control: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.cache_control = <span class="prelude-val">Some</span>(cache_control.to_string());
         <span class="self">self
