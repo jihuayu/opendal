@@ -785,6 +785,7 @@
 <a href="#785" id="785">785</a>
 <a href="#786" id="786">786</a>
 <a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -811,6 +812,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::ops::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
+
+<span class="kw">use </span><span class="kw">super</span>::operator_functions::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// BlockingOperator is the entry for all public blocking APIs.
 ///
@@ -1235,12 +1238,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>bs = bs.into();
-        <span class="self">self</span>.write_with(
-            path,
-            OpWrite::new().with_content_length(bs.len() <span class="kw">as </span>u64),
-            bs,
-        )
+        <span class="self">self</span>.write_with(path, bs).call()
     }
 
     <span class="doccomment">/// Copy a file from `from` to `to`.
@@ -1370,35 +1368,39 @@
     /// # use opendal::Result;
     /// # use opendal::BlockingOperator;
     /// use bytes::Bytes;
-    /// use opendal::ops::OpWrite;
     ///
     /// # async fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let bs = b&quot;hello, world!&quot;.to_vec();
-    /// let ow = OpWrite::new().with_content_type(&quot;text/plain&quot;);
-    /// let _ = op.write_with(&quot;hello.txt&quot;, ow, bs)?;
+    /// let _ = op.write_with(&quot;hello.txt&quot;, bs).content_type(&quot;text/plain&quot;).call()?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub fn </span>write_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">pub fn </span>write_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; FunctionWrite {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;write path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;BlockingOperator::write_with&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
-
         <span class="kw">let </span>bs = bs.into();
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = <span class="self">self
-            </span>.inner()
-            .blocking_write(<span class="kw-2">&amp;</span>path, args.with_content_length(bs.len() <span class="kw">as </span>u64))<span class="question-mark">?</span>;
-        w.write(bs)<span class="question-mark">?</span>;
-        w.close()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(())
+        FunctionWrite(OperatorFunction::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            (OpWrite::default().with_content_length(bs.len() <span class="kw">as </span>u64), bs),
+            |inner, path, (args, bs)| {
+                <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        Error::new(ErrorKind::IsADirectory, <span class="string">&quot;write path is a directory&quot;</span>)
+                            .with_operation(<span class="string">&quot;BlockingOperator::write_with&quot;</span>)
+                            .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
+                    );
+                }
+
+                <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = inner.blocking_write(<span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
+                w.write(bs)<span class="question-mark">?</span>;
+                w.close()<span class="question-mark">?</span>;
+
+                <span class="prelude-val">Ok</span>(())
+            },
+        ))
     }
 
     <span class="doccomment">/// Write multiple bytes into given path.
