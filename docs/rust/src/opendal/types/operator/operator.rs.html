@@ -1561,6 +1561,19 @@
 <a href="#1561" id="1561">1561</a>
 <a href="#1562" id="1562">1562</a>
 <a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2115,7 +2128,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>reader(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Reader&gt; {
-        <span class="self">self</span>.reader_with(path, OpRead::default()).<span class="kw">await
+        <span class="self">self</span>.reader_with(path).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Create a new reader which can read the specified range.
@@ -2137,8 +2150,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>range_reader(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, range: <span class="kw">impl </span>RangeBounds&lt;u64&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Reader&gt; {
-        <span class="self">self</span>.reader_with(path, OpRead::new().with_range(range.into()))
-            .<span class="kw">await
+        <span class="self">self</span>.reader_with(path).range(range).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Create a new reader with extra options
@@ -2154,25 +2166,39 @@
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let r = op
-    ///     .reader_with(&quot;path/to/file&quot;, OpRead::default().with_range((0..10).into()))
+    ///     .reader_with(&quot;path/to/file&quot;)
+    ///     .range((0..10))
     ///     .await?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>reader_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;Reader&gt; {
+    </span><span class="kw">pub fn </span>reader_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FutureReader {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;read path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;Operator::range_reader&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme())
-                    .with_context(<span class="string">&quot;path&quot;</span>, path),
-            );
-        }
+        <span class="kw">let </span>fut = FutureReader(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpRead::default(),
+            |inner, path, args| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            ErrorKind::IsADirectory,
+                            <span class="string">&quot;read path is a directory&quot;</span>,
+                        )
+                        .with_operation(<span class="string">&quot;Operator::range_reader&quot;</span>)
+                        .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme())
+                        .with_context(<span class="string">&quot;path&quot;</span>, path));
+                    }
 
-        Reader::create_dir(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
-    </span>}
+                    Reader::create_dir(inner.clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
+                </span>};
+
+                Box::pin(fut)
+            },
+        ));
+        fut
+    }
 
     <span class="doccomment">/// Write bytes into path.
     ///
