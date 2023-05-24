@@ -565,8 +565,6 @@
 <a href="#565" id="565">565</a>
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1127,9 +1125,7 @@
         builder.endpoint(<span class="kw-2">&amp;</span>mock_server.uri());
         builder.root(<span class="string">&quot;/&quot;</span>);
         <span class="kw">let </span>op = Operator::new(builder)<span class="question-mark">?</span>.finish();
-        <span class="kw">let </span>bs = op
-            .stat_with(<span class="string">&quot;hello&quot;</span>, OpStat::new().with_if_none_match(<span class="string">&quot;*&quot;</span>))
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>bs = op.stat_with(<span class="string">&quot;hello&quot;</span>).if_none_match(<span class="string">&quot;*&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="macro">assert_eq!</span>(bs.mode(), EntryMode::FILE);
         <span class="macro">assert_eq!</span>(bs.content_length(), <span class="number">128</span>);
