@@ -1558,6 +1558,9 @@
 <a href="#1558" id="1558">1558</a>
 <a href="#1559" id="1559">1559</a>
 <a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2194,12 +2197,7 @@
     /// ```
     </span><span class="kw">pub async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>bs = bs.into();
-        <span class="self">self</span>.write_with(
-            path,
-            OpWrite::new().with_content_length(bs.len() <span class="kw">as </span>u64),
-            bs,
-        )
-        .<span class="kw">await
+        <span class="self">self</span>.write_with(path, bs).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Append bytes into path.
@@ -2427,32 +2425,40 @@
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let bs = b&quot;hello, world!&quot;.to_vec();
-    /// let args = OpWrite::new().with_content_type(&quot;text/plain&quot;);
-    /// let _ = op.write_with(&quot;path/to/file&quot;, args, bs).await?;
+    /// let _ = op.write_with(&quot;path/to/file&quot;, bs).content_type(&quot;text/plain&quot;).await?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>write_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    </span><span class="kw">pub fn </span>write_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; FutureWrite {
         <span class="kw">let </span>path = normalize_path(path);
-
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;write path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;Operator::write_with&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
-
         <span class="kw">let </span>bs = bs.into();
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = <span class="self">self
-            </span>.inner()
-            .write(<span class="kw-2">&amp;</span>path, args.with_content_length(bs.len() <span class="kw">as </span>u64))
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
-        w.close().<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(())
+        <span class="kw">let </span>fut = FutureWrite(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            (OpWrite::default().with_content_length(bs.len() <span class="kw">as </span>u64), bs),
+            |inner, path, (args, bs)| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            ErrorKind::IsADirectory,
+                            <span class="string">&quot;write path is a directory&quot;</span>,
+                        )
+                        .with_operation(<span class="string">&quot;Operator::write_with&quot;</span>)
+                        .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                        .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
+                    }
+
+                    <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>w) = inner.write(<span class="kw-2">&amp;</span>path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+                    w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
+                    w.close().<span class="kw">await</span><span class="question-mark">?</span>;
+
+                    <span class="prelude-val">Ok</span>(())
+                };
+                Box::pin(fut)
+            },
+        ));
+        fut
     }
 
     <span class="doccomment">/// Append multiple bytes into path.
