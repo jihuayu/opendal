@@ -1574,6 +1574,24 @@
 <a href="#1574" id="1574">1574</a>
 <a href="#1575" id="1575">1575</a>
 <a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2392,7 +2410,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>writer(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Writer&gt; {
-        <span class="self">self</span>.writer_with(path, OpWrite::default()).<span class="kw">await
+        <span class="self">self</span>.writer_with(path).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Write multiple bytes into path with extra options.
@@ -2411,28 +2429,40 @@
     ///
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let args = OpWrite::new().with_content_type(&quot;application/octet-stream&quot;);
-    /// let mut w = op.writer_with(&quot;path/to/file&quot;, args).await?;
+    /// let mut w = op.writer_with(&quot;path/to/file&quot;).content_type(&quot;application/octet-stream&quot;).await?;
     /// w.write(vec![0; 4096]).await?;
     /// w.write(vec![1; 4096]).await?;
     /// w.close().await?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>writer_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;Writer&gt; {
+    </span><span class="kw">pub fn </span>writer_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FutureWriter {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;write path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;Operator::writer&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.inner().info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
+        <span class="kw">let </span>fut = FutureWriter(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpWrite::default(),
+            |inner, path, args| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            ErrorKind::IsADirectory,
+                            <span class="string">&quot;write path is a directory&quot;</span>,
+                        )
+                        .with_operation(<span class="string">&quot;Operator::writer&quot;</span>)
+                        .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                        .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
+                    }
 
-        Writer::create(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
-    </span>}
+                    Writer::create(inner, <span class="kw-2">&amp;</span>path, args).<span class="kw">await
+                </span>};
+                Box::pin(fut)
+            },
+        ));
+
+        fut
+    }
 
     <span class="doccomment">/// Write data with extra options.
     ///
@@ -3061,24 +3091,30 @@
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    ///     let args = OpRead::new()
-    ///         .with_override_content_disposition(&quot;attachment; filename=\&quot;othertext.txt\&quot;&quot;);
-    ///     let signed_req = op.presign_read_with(&quot;test.txt&quot;, args, Duration::from_secs(3600)).await?;
+    ///     let signed_req = op
+    ///         .presign_read_with(&quot;test.txt&quot;, Duration::from_secs(3600))
+    ///         .override_content_disposition(&quot;attachment; filename=\&quot;othertext.txt\&quot;&quot;)
+    ///         .await?;
     /// #    Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>presign_read_with(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        path: <span class="kw-2">&amp;</span>str,
-        op: OpRead,
-        expire: Duration,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;PresignedRequest&gt; {
+    </span><span class="kw">pub fn </span>presign_read_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, expire: Duration) -&gt; FuturePresignRead {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">let </span>op = OpPresign::new(op, expire);
-
-        <span class="kw">let </span>rp = <span class="self">self</span>.inner().presign(<span class="kw-2">&amp;</span>path, op).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(rp.into_presigned_request())
+        <span class="kw">let </span>fut = FuturePresignRead(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            (OpRead::default(), expire),
+            |inner, path, (args, dur)| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">let </span>op = OpPresign::new(args, dur);
+                    <span class="kw">let </span>rp = inner.presign(<span class="kw-2">&amp;</span>path, op).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(rp.into_presigned_request())
+                };
+                Box::pin(fut)
+            },
+        ));
+        fut
     }
 
     <span class="doccomment">/// Presign an operation for write.
