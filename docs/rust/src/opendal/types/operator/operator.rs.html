@@ -1592,6 +1592,11 @@
 <a href="#1592" id="1592">1592</a>
 <a href="#1593" id="1593">1593</a>
 <a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -3144,7 +3149,7 @@
     /// curl -X PUT &quot;https://s3.amazonaws.com/examplebucket/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=access_key_id/20130721/us-east-1/s3/aws4_request&amp;X-Amz-Date=20130721T201207Z&amp;X-Amz-Expires=86400&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=&lt;signature-value&gt;&quot; -d &quot;Hello, World!&quot;
     /// ```
     </span><span class="kw">pub async fn </span>presign_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, expire: Duration) -&gt; <span class="prelude-ty">Result</span>&lt;PresignedRequest&gt; {
-        <span class="self">self</span>.presign_write_with(path, OpWrite::new(), expire).<span class="kw">await
+        <span class="self">self</span>.presign_write_with(path, expire).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Presign an operation for write with option described in OpenDAL [rfc-0661](../../docs/rfcs/0661-path-in-accessor.md)
@@ -3162,8 +3167,8 @@
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    ///     let args = OpWrite::new().with_content_type(&quot;text/csv&quot;);
-    ///     let signed_req = op.presign_write_with(&quot;test&quot;, args, Duration::from_secs(3600)).await?;
+    ///     let signed_req = op.presign_write_with(&quot;test&quot;, Duration::from_secs(3600))
+    ///                        .content_type(&quot;text/csv&quot;).await?;
     ///     let req = http::Request::builder()
     ///         .method(signed_req.method())
     ///         .uri(signed_req.uri())
@@ -3172,18 +3177,23 @@
     /// #    Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>presign_write_with(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        path: <span class="kw-2">&amp;</span>str,
-        op: OpWrite,
-        expire: Duration,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;PresignedRequest&gt; {
+    </span><span class="kw">pub fn </span>presign_write_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, expire: Duration) -&gt; FuturePresignWrite {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">let </span>op = OpPresign::new(op, expire);
-
-        <span class="kw">let </span>rp = <span class="self">self</span>.inner().presign(<span class="kw-2">&amp;</span>path, op).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(rp.into_presigned_request())
+        <span class="kw">let </span>fut = FuturePresignWrite(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            (OpWrite::default(), expire),
+            |inner, path, (args, dur)| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">let </span>op = OpPresign::new(args, dur);
+                    <span class="kw">let </span>rp = inner.presign(<span class="kw-2">&amp;</span>path, op).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(rp.into_presigned_request())
+                };
+                Box::pin(fut)
+            },
+        ));
+        fut
     }
 }
 </code></pre></div>
