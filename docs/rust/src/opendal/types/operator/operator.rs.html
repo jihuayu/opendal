@@ -1588,15 +1588,6 @@
 <a href="#1588" id="1588">1588</a>
 <a href="#1589" id="1589">1589</a>
 <a href="#1590" id="1590">1590</a>
-<a href="#1591" id="1591">1591</a>
-<a href="#1592" id="1592">1592</a>
-<a href="#1593" id="1593">1593</a>
-<a href="#1594" id="1594">1594</a>
-<a href="#1595" id="1595">1595</a>
-<a href="#1596" id="1596">1596</a>
-<a href="#1597" id="1597">1597</a>
-<a href="#1598" id="1598">1598</a>
-<a href="#1599" id="1599">1599</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2863,7 +2854,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Lister&gt; {
-        <span class="self">self</span>.list_with(path, OpList::new()).<span class="kw">await
+        <span class="self">self</span>.list_with(path).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// List given path with OpList.
@@ -2886,8 +2877,7 @@
     /// use opendal::Operator;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let option = OpList::new().with_limit(10).with_start_after(&quot;start&quot;);
-    /// let mut ds = op.list_with(&quot;path/to/dir/&quot;, option).await?;
+    /// let mut ds = op.list_with(&quot;path/to/dir/&quot;).limit(10).start_after(&quot;start&quot;).await?;
     /// while let Some(mut de) = ds.try_next().await? {
     ///     let meta = op.metadata(&amp;de, Metakey::Mode).await?;
     ///     match meta.mode() {
@@ -2918,8 +2908,7 @@
     /// use opendal::Operator;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let option = OpList::new().with_delimiter(&quot;&quot;);
-    /// let mut ds = op.list_with(&quot;path/to/dir/&quot;, option).await?;
+    /// let mut ds = op.list_with(&quot;path/to/dir/&quot;).delimiter(&quot;&quot;).await?;
     /// while let Some(mut de) = ds.try_next().await? {
     ///     let meta = op.metadata(&amp;de, Metakey::Mode).await?;
     ///     match meta.mode() {
@@ -2935,22 +2924,33 @@
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub async fn </span>list_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, op: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;Lister&gt; {
+    </span><span class="kw">pub fn </span>list_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FutureList {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::DIR) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::NotADirectory,
-                <span class="string">&quot;the path trying to list should end with `/`&quot;</span>,
-            )
-            .with_operation(<span class="string">&quot;Operator::list&quot;</span>)
-            .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
-        }
+        <span class="kw">let </span>fut = FutureList(OperatorFuture::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpList::default(),
+            |inner, path, args| {
+                <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                    <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::DIR) {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            ErrorKind::NotADirectory,
+                            <span class="string">&quot;the path trying to list should end with `/`&quot;</span>,
+                        )
+                        .with_operation(<span class="string">&quot;Operator::list&quot;</span>)
+                        .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                        .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
+                    }
 
-        <span class="kw">let </span>(<span class="kw">_</span>, pager) = <span class="self">self</span>.inner().list(<span class="kw-2">&amp;</span>path, op).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">let </span>(<span class="kw">_</span>, pager) = inner.list(<span class="kw-2">&amp;</span>path, args).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(Lister::new(pager))
+                    <span class="prelude-val">Ok</span>(Lister::new(pager))
+                };
+                Box::pin(fut)
+            },
+        ));
+        fut
     }
 
     <span class="doccomment">/// List dir in flat way.
@@ -2962,7 +2962,7 @@
     /// # Notes
     ///
     /// - `scan` will not return the prefix itself.
-    /// - `scan` is an alias of `list_with(OpList::new().with_delimiter(&quot;&quot;))`
+    /// - `scan` is an alias of `list_with(path).delimiter(&quot;&quot;)`
     ///
     /// # Examples
     ///
@@ -2993,27 +2993,9 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Lister&gt; {
-        <span class="kw">let </span>path = normalize_path(path);
-
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::DIR) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::NotADirectory,
-                <span class="string">&quot;the path trying to scan should end with `/`&quot;</span>,
-            )
-            .with_operation(<span class="string">&quot;list&quot;</span>)
-            .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
-        }
-
-        <span class="kw">let </span>(<span class="kw">_</span>, pager) = <span class="self">self
-            </span>.inner()
-            .list(<span class="kw-2">&amp;</span>path, OpList::new().with_delimiter(<span class="string">&quot;&quot;</span>))
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(Lister::new(pager))
-    }
+        <span class="self">self</span>.list_with(path).delimiter(<span class="string">&quot;&quot;</span>).<span class="kw">await
+    </span>}
 }
-
 <span class="doccomment">/// Operator presign API.
 </span><span class="kw">impl </span>Operator {
     <span class="doccomment">/// Presign an operation for stat(head).
