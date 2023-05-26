@@ -818,14 +818,6 @@
 <a href="#818" id="818">818</a>
 <a href="#819" id="819">819</a>
 <a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
-<a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
-<a href="#828" id="828">828</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1013,15 +1005,7 @@
         <span class="prelude-val">Ok</span>(req)
     }
 
-    <span class="doccomment">/// Oss append object request
-    ///
-    /// # Note
-    ///
-    /// This request is used to append data to an existing object or create an appendable object.
-    /// So we must set the `append` and `position` header.
-    ///
-    /// https://www.alibabacloud.com/help/object-storage-service/latest/appendobject
-    </span><span class="kw">pub fn </span>oss_append_object_request(
+    <span class="kw">pub fn </span>oss_append_object_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         position: u64,
