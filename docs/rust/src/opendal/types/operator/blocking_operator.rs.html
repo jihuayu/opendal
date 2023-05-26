@@ -786,6 +786,7 @@
 <a href="#786" id="786">786</a>
 <a href="#787" id="787">787</a>
 <a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -809,11 +810,9 @@
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>flagset::FlagSet;
 
-<span class="kw">use </span><span class="kw">crate</span>::ops::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::operator_functions::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span><span class="kw">super</span>::operator_functions::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// BlockingOperator is the entry for all public blocking APIs.
 ///
@@ -1371,7 +1370,10 @@
     ///
     /// # async fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let bs = b&quot;hello, world!&quot;.to_vec();
-    /// let _ = op.write_with(&quot;hello.txt&quot;, bs).content_type(&quot;text/plain&quot;).call()?;
+    /// let _ = op
+    ///     .write_with(&quot;hello.txt&quot;, bs)
+    ///     .content_type(&quot;text/plain&quot;)
+    ///     .call()?;
     /// # Ok(())
     /// # }
     /// ```

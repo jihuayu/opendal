@@ -1588,6 +1588,7 @@
 <a href="#1588" id="1588">1588</a>
 <a href="#1589" id="1589">1589</a>
 <a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1619,11 +1620,11 @@
 
 <span class="kw">use </span><span class="kw">super</span>::BlockingOperator;
 <span class="kw">use </span><span class="kw">crate</span>::operator_futures::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::ops::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Operator is the entry for all public async APIs.
+///
 /// Developer should manipulate the data from storage service through Operator only by right.
 ///
 /// We will usually do some general checks and data transformations in this layer,
@@ -1803,7 +1804,6 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// # use opendal::Operator;
-    /// # use opendal::ops::OpStat;
     /// use opendal::ErrorKind;
     /// #
     /// # #[tokio::main]
@@ -2038,7 +2038,6 @@
     /// ```
     /// # use std::io::Result;
     /// # use opendal::Operator;
-    /// # use opendal::ops::OpRead;
     /// # use futures::TryStreamExt;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
@@ -2114,7 +2113,6 @@
     /// ```
     /// # use std::io::Result;
     /// # use opendal::Operator;
-    /// # use opendal::ops::OpRead;
     /// # use futures::TryStreamExt;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
@@ -2176,13 +2174,9 @@
     /// # use opendal::Operator;
     /// # use futures::TryStreamExt;
     /// # use opendal::Scheme;
-    /// # use opendal::ops::OpRead;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let r = op
-    ///     .reader_with(&quot;path/to/file&quot;)
-    ///     .range((0..10))
-    ///     .await?;
+    /// let r = op.reader_with(&quot;path/to/file&quot;).range((0..10)).await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -2421,11 +2415,13 @@
     /// # use futures::StreamExt;
     /// # use futures::SinkExt;
     /// use bytes::Bytes;
-    /// use opendal::ops::OpWrite;
     ///
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let mut w = op.writer_with(&quot;path/to/file&quot;).content_type(&quot;application/octet-stream&quot;).await?;
+    /// let mut w = op
+    ///     .writer_with(&quot;path/to/file&quot;)
+    ///     .content_type(&quot;application/octet-stream&quot;)
+    ///     .await?;
     /// w.write(vec![0; 4096]).await?;
     /// w.write(vec![1; 4096]).await?;
     /// w.close().await?;
@@ -2472,12 +2468,14 @@
     /// # use std::io::Result;
     /// # use opendal::Operator;
     /// use bytes::Bytes;
-    /// use opendal::ops::OpWrite;
     ///
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let bs = b&quot;hello, world!&quot;.to_vec();
-    /// let _ = op.write_with(&quot;path/to/file&quot;, bs).content_type(&quot;text/plain&quot;).await?;
+    /// let _ = op
+    ///     .write_with(&quot;path/to/file&quot;, bs)
+    ///     .content_type(&quot;text/plain&quot;)
+    ///     .await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -2547,11 +2545,13 @@
     /// # use std::io::Result;
     /// # use opendal::Operator;
     /// use bytes::Bytes;
-    /// use opendal::ops::OpAppend;
     ///
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let mut a = op.appender_with(&quot;path/to/file&quot;).content_type(&quot;application/octet-stream&quot;).await?;
+    /// let mut a = op
+    ///     .appender_with(&quot;path/to/file&quot;)
+    ///     .content_type(&quot;application/octet-stream&quot;)
+    ///     .await?;
     /// a.append(vec![0; 4096]).await?;
     /// a.append(vec![1; 4096]).await?;
     /// a.close().await?;
@@ -2601,12 +2601,14 @@
     /// # use std::io::Result;
     /// # use opendal::Operator;
     /// use bytes::Bytes;
-    /// use opendal::ops::OpAppend;
     ///
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let bs = b&quot;hello, world!&quot;.to_vec();
-    /// let _ = op.append_with(&quot;path/to/file&quot;, bs).content_type(&quot;text/plain&quot;).await?;
+    /// let _ = op
+    ///     .append_with(&quot;path/to/file&quot;, bs)
+    ///     .content_type(&quot;text/plain&quot;)
+    ///     .await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -2871,13 +2873,16 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// use futures::TryStreamExt;
-    /// use opendal::ops::OpList;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
     /// use opendal::Operator;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let mut ds = op.list_with(&quot;path/to/dir/&quot;).limit(10).start_after(&quot;start&quot;).await?;
+    /// let mut ds = op
+    ///     .list_with(&quot;path/to/dir/&quot;)
+    ///     .limit(10)
+    ///     .start_after(&quot;start&quot;)
+    ///     .await?;
     /// while let Some(mut de) = ds.try_next().await? {
     ///     let meta = op.metadata(&amp;de, Metakey::Mode).await?;
     ///     match meta.mode() {
@@ -2902,7 +2907,6 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// use futures::TryStreamExt;
-    /// use opendal::ops::OpList;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
     /// use opendal::Operator;
@@ -3074,7 +3078,6 @@
     /// use futures::io;
     /// use opendal::Operator;
     /// use std::time::Duration;
-    /// use opendal::ops::OpRead;
     ///
     /// #[tokio::main]
     /// async fn test(op: Operator) -&gt; Result&lt;()&gt; {
@@ -3143,7 +3146,6 @@
     /// ```no_run
     /// use anyhow::Result;
     /// use futures::io;
-    /// use opendal::ops::OpWrite;
     /// use opendal::Operator;
     /// use std::time::Duration;
     ///

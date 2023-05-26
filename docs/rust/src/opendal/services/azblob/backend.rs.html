@@ -802,8 +802,6 @@
 <a href="#802" id="802">802</a>
 <a href="#803" id="803">803</a>
 <a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -839,7 +837,6 @@
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::pager::AzblobPager;
 <span class="kw">use </span><span class="kw">super</span>::writer::AzblobWriter;
-<span class="kw">use </span><span class="kw">crate</span>::ops::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::services::azblob::core::AzblobCore;
 <span class="kw">use </span><span class="kw">crate</span>::types::Metadata;
@@ -858,7 +855,6 @@
 <span class="kw">const </span>AZBLOB_BATCH_LIMIT: usize = <span class="number">256</span>;
 
 <span class="doccomment">/// Azure Storage Blob services support.
-///
 </span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
 #[derive(Default, Clone)]
 </span><span class="kw">pub struct </span>AzblobBuilder {
