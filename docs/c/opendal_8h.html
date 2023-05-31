@@ -826,7 +826,7 @@ Example</h1>
 <div class="line"><a class="code" href="opendal_8h.html#af408af922875eb26c25cef4ddfdede02">opendal_operator_options_set</a>(&amp;options, <span class="stringliteral">&quot;root&quot;</span>, <span class="stringliteral">&quot;/myroot&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Construct the operator based on the options and scheme</span></div>
-<div class="line"><a class="code" href="structopendal__operator__ptr.html">opendal_operator_ptr</a> ptr = <a class="code" href="opendal_8h.html#a2af3e11594601424556c8465e2654a45">opendal_operator_new</a>(<span class="stringliteral">&quot;memory&quot;</span>, options);</div>
+<div class="line"><a class="code" href="structopendal__operator__ptr.html">opendal_operator_ptr</a> ptr = <a class="code" href="opendal_8h.html#a2af3e11594601424556c8465e2654a45">opendal_operator_new</a>(<span class="stringliteral">&quot;memory&quot;</span>, &amp;options);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// you could free the options right away since the options is not used afterwards</span></div>
 <div class="line"><a class="code" href="opendal_8h.html#ae87a9921870d96d1fd23ccf1f7b51c97">opendal_operator_options_free</a>(&amp;options);</div>
