@@ -551,6 +551,15 @@
 <a href="#551" id="551">551</a>
 <a href="#552" id="552">552</a>
 <a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -590,6 +599,8 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">mod </span>constants {
+    <span class="kw">pub const </span>X_MS_VERSION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-version&quot;</span>;
+
     <span class="kw">pub const </span>X_MS_BLOB_TYPE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-blob-type&quot;</span>;
     <span class="kw">pub const </span>X_MS_COPY_SOURCE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-copy-source&quot;</span>;
     <span class="kw">pub const </span>X_MS_BLOB_CACHE_CONTROL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-blob-cache-control&quot;</span>;
@@ -611,7 +622,6 @@
     <span class="kw">pub </span>client: HttpClient,
     <span class="kw">pub </span>loader: AzureStorageLoader,
     <span class="kw">pub </span>signer: AzureStorageSigner,
-    <span class="kw">pub </span>batch_signer: AzureStorageSigner,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>AzblobCore {
@@ -652,14 +662,22 @@
 
     <span class="kw">pub async fn </span>sign&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;mut </span>Request&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>cred = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="comment">// Insert x-ms-version header for normal requests.
+        </span>req.headers_mut().insert(
+            HeaderName::from_static(constants::X_MS_VERSION),
+            <span class="comment">// 2022-11-02 is the version supported by Azurite V3 and
+            // used by Azure Portal, We use this version to make
+            // sure most our developer happy.
+            //
+            // In the future, we could allow users to configure this value.
+            </span>HeaderValue::from_static(<span class="string">&quot;2022-11-02&quot;</span>),
+        );
         <span class="self">self</span>.signer.sign(req, <span class="kw-2">&amp;</span>cred).map_err(new_request_sign_error)
     }
 
     <span class="kw">async fn </span>batch_sign&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;mut </span>Request&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>cred = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.batch_signer
-            .sign(req, <span class="kw-2">&amp;</span>cred)
-            .map_err(new_request_sign_error)
+        <span class="self">self</span>.signer.sign(req, <span class="kw-2">&amp;</span>cred).map_err(new_request_sign_error)
     }
 
     <span class="attr">#[inline]
@@ -1090,8 +1108,8 @@
 
         <span class="kw">for </span>(idx, path) <span class="kw">in </span>paths.iter().enumerate() {
             <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.azblob_delete_blob_request(path)<span class="question-mark">?</span>;
-
             <span class="self">self</span>.batch_sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
+
             multipart = multipart.part(
                 MixedPart::from_request(req).part_header(<span class="string">&quot;content-id&quot;</span>.parse().unwrap(), idx.into()),
             );

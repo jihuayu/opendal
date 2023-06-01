@@ -322,6 +322,19 @@
 <a href="#322" id="322">322</a>
 <a href="#323" id="323">323</a>
 <a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -347,6 +360,8 @@
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
+<span class="kw">use </span>http::HeaderName;
+<span class="kw">use </span>http::HeaderValue;
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>reqsign::AzureStorageCredential;
@@ -357,6 +372,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">const </span>X_MS_RENAME_SOURCE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-rename-source&quot;</span>;
+<span class="kw">const </span>X_MS_VERSION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;x-ms-version&quot;</span>;
 
 <span class="kw">pub struct </span>AzdfsCore {
     <span class="kw">pub </span>filesystem: String,
@@ -398,6 +414,16 @@
 
     <span class="kw">pub async fn </span>sign&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;mut </span>Request&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>cred = <span class="self">self</span>.load_credential().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="comment">// Insert x-ms-version header for normal requests.
+        </span>req.headers_mut().insert(
+            HeaderName::from_static(X_MS_VERSION),
+            <span class="comment">// 2022-11-02 is the version supported by Azurite V3 and
+            // used by Azure Portal, We use this version to make
+            // sure most our developer happy.
+            //
+            // In the future, we could allow users to configure this value.
+            </span>HeaderValue::from_static(<span class="string">&quot;2022-11-02&quot;</span>),
+        );
         <span class="self">self</span>.signer.sign(req, <span class="kw-2">&amp;</span>cred).map_err(new_request_sign_error)
     }
 
