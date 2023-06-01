@@ -581,49 +581,6 @@
 <a href="#581" id="581">581</a>
 <a href="#582" id="582">582</a>
 <a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
-<a href="#592" id="592">592</a>
-<a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
-<a href="#604" id="604">604</a>
-<a href="#605" id="605">605</a>
-<a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
-<a href="#616" id="616">616</a>
-<a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -894,32 +851,21 @@
             url += <span class="macro">format!</span>(<span class="string">&quot;&amp;{auth}&quot;</span>).as_str();
         }
 
-        <span class="kw">let </span>req = Request::put(<span class="kw-2">&amp;</span>url)
-            .body(AsyncBody::Empty)
-            .map_err(new_request_build_error)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>url);
 
         <span class="comment">// mkdir does not redirect
         </span><span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(req);
+            <span class="kw">return </span>req.body(AsyncBody::Empty).map_err(new_request_build_error);
         }
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="comment">// should be a 307 TEMPORARY_REDIRECT
-        </span><span class="kw">if </span>resp.status() != StatusCode::TEMPORARY_REDIRECT {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
-        }
-        <span class="kw">let </span>re_url = <span class="self">self</span>.follow_redirect(resp)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>re_builder = Request::put(re_url);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-            re_builder = re_builder.header(CONTENT_LENGTH, size.to_string());
+            req = req.header(CONTENT_LENGTH, size.to_string());
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
-            re_builder = re_builder.header(CONTENT_TYPE, content_type);
+            req = req.header(CONTENT_TYPE, content_type);
         }
 
-        re_builder.body(body).map_err(new_request_build_error)
+        req.body(body).map_err(new_request_build_error)
     }
 
     <span class="kw">async fn </span>webhdfs_open_request(
@@ -984,17 +930,6 @@
         range: BytesRange,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_open_request(path, <span class="kw-2">&amp;</span>range).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="comment">// webhdfs namenode will redirect us to datanode for data transfer.
-        </span><span class="kw">if </span>resp.status() != StatusCode::TEMPORARY_REDIRECT {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
-        }
-
-        <span class="kw">let </span>location = <span class="self">self</span>.follow_redirect(resp)<span class="question-mark">?</span>;
-        <span class="kw">let </span>req = Request::get(<span class="kw-2">&amp;</span>location)
-            .body(AsyncBody::Empty)
-            .map_err(new_request_build_error)<span class="question-mark">?</span>;
         <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
 
@@ -1034,27 +969,6 @@
 
         <span class="self">self</span>.client.send(req).<span class="kw">await
     </span>}
-
-    <span class="doccomment">/// get redirect destination from 307 TEMPORARY_REDIRECT http response
-    </span><span class="kw">fn </span>follow_redirect(<span class="kw-2">&amp;</span><span class="self">self</span>, resp: Response&lt;IncomingAsyncBody&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-        <span class="kw">let </span>location = parse_location(resp.headers())<span class="question-mark">?</span>.ok_or_else(|| {
-            Error::new(
-                ErrorKind::Unexpected,
-                <span class="string">&quot;webhdfs expect to have redirect location but got none&quot;</span>,
-            )
-        })<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>location = <span class="kw">if </span>location.starts_with(<span class="string">&#39;/&#39;</span>) {
-            <span class="comment">// location starts with `/` means it&#39;s a relative path to current
-            // endpoint. We should prepend the endpoint to it so that we can
-            // send request to the correct location.
-            </span><span class="macro">format!</span>(<span class="string">&quot;{}/{location}&quot;</span>, <span class="self">self</span>.endpoint)
-        } <span class="kw">else </span>{
-            location.to_string()
-        };
-
-        <span class="prelude-val">Ok</span>(location)
-    }
 
     <span class="kw">async fn </span>check_root(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.webhdfs_get_file_status(<span class="string">&quot;/&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
