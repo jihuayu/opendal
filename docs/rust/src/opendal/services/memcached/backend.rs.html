@@ -311,8 +311,6 @@
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
 <a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
 </pre><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -376,7 +374,6 @@
 /// ```no_run
 /// use anyhow::Result;
 /// use opendal::services::Memcached;
-/// use opendal::Object;
 /// use opendal::Operator;
 ///
 /// #[tokio::main]
@@ -386,7 +383,6 @@
 ///     builder.endpoint(&quot;tcp://127.0.0.1:11211&quot;);
 ///
 ///     let op: Operator = Operator::new(builder)?.finish();
-///     let _: Object = op.object(&quot;test_file&quot;);
 ///     Ok(())
 /// }
 /// ```
