@@ -818,6 +818,7 @@
 <a href="#818" id="818">818</a>
 <a href="#819" id="819">819</a>
 <a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -885,6 +886,7 @@
     <span class="kw">pub </span>loader: AliyunLoader,
     <span class="kw">pub </span>signer: AliyunOssSigner,
     <span class="kw">pub </span>write_min_size: usize,
+    <span class="kw">pub </span>batch_max_operations: usize,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>OssCore {

@@ -625,6 +625,22 @@
 <a href="#625" id="625">625</a>
 <a href="#626" id="626">626</a>
 <a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -666,6 +682,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">const </span>DEFAULT_WRITE_MIN_SIZE: usize = <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
+<span class="kw">const </span>DEFAULT_BATCH_MAX_OPERATIONS: usize = <span class="number">1000</span>;
 <span class="doccomment">/// Aliyun Object Storage Service (OSS) support
 </span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
 #[derive(Default)]
@@ -687,6 +704,8 @@
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
     <span class="doccomment">/// the size of each part, and the range is 5MB ~ 5 GB.
     </span>write_min_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    <span class="doccomment">/// batch_max_operations
+    </span>batch_max_operations: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>OssBuilder {
@@ -864,6 +883,13 @@
 
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Set maximum batch operations of this backend.
+    </span><span class="kw">pub fn </span>batch_max_operations(<span class="kw-2">&amp;mut </span><span class="self">self</span>, batch_max_operations: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.batch_max_operations = <span class="prelude-val">Some</span>(batch_max_operations);
+
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>OssBuilder {
@@ -887,6 +913,8 @@
             .map(|v| builder.server_side_encryption_key_id(v));
         map.get(<span class="string">&quot;write_min_size&quot;</span>)
             .map(|v| builder.write_min_size(v.parse::&lt;usize&gt;().unwrap()));
+        map.get(<span class="string">&quot;batch_max_operations&quot;</span>)
+            .map(|v| builder.batch_max_operations(v.parse::&lt;usize&gt;().unwrap()));
         builder
     }
 
@@ -966,6 +994,9 @@
             )
             .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Oss));
         }
+        <span class="kw">let </span>batch_max_operations = <span class="self">self
+            </span>.batch_max_operations
+            .unwrap_or(DEFAULT_BATCH_MAX_OPERATIONS);
         <span class="macro">debug!</span>(<span class="string">&quot;Backend build finished&quot;</span>);
 
         <span class="prelude-val">Ok</span>(OssBackend {
@@ -981,6 +1012,7 @@
                 server_side_encryption,
                 server_side_encryption_key_id,
                 write_min_size,
+                batch_max_operations,
             }),
         })
     }
@@ -1041,7 +1073,7 @@
                 presign_write: <span class="bool-val">true</span>,
 
                 batch: <span class="bool-val">true</span>,
-                batch_max_operations: <span class="prelude-val">Some</span>(<span class="number">1000</span>),
+                batch_max_operations: <span class="prelude-val">Some</span>(<span class="self">self</span>.core.batch_max_operations),
 
                 ..Default::default()
             });
