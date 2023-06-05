@@ -538,6 +538,8 @@
 <a href="#538" id="538">538</a>
 <a href="#539" id="539">539</a>
 <a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -637,6 +639,9 @@
     </span><span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
         <span class="kw-2">*</span><span class="self">self </span>= <span class="kw">match </span>mem::replace(<span class="self">self</span>.as_mut().get_mut(), OperatorFuture::Empty) {
             OperatorFuture::Idle(inner, path, args, f) =&gt; {
+                <span class="comment">// Wake up to make sure the future is ready after the
+                // future has been built.
+                </span>cx.waker().wake_by_ref();
                 OperatorFuture::Poll(f(inner, path, args))
             }
             OperatorFuture::Poll(<span class="kw-2">mut </span>fut) =&gt; <span class="kw">match </span>fut.as_mut().poll(cx) {
@@ -647,7 +652,6 @@
                 <span class="macro">panic!</span>(<span class="string">&quot;future polled after completion&quot;</span>);
             }
         };
-        cx.waker().wake_by_ref();
         Poll::Pending
     }
 }
