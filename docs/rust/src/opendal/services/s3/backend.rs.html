@@ -1036,6 +1036,17 @@
 <a href="#1036" id="1036">1036</a>
 <a href="#1037" id="1037">1037</a>
 <a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1093,7 +1104,7 @@
 });
 
 <span class="kw">const </span>DEFAULT_WRITE_MIN_SIZE: usize = <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
-
+<span class="kw">const </span>DEFAULT_BATCH_MAX_OPERATIONS: usize = <span class="number">1000</span>;
 <span class="doccomment">/// Aws S3 and compatible services (including minio, digitalocean space, Tencent Cloud Object Storage(COS) and so on) support.
 /// For more information about s3-compatible services, refer to [Compatible Services](#compatible-services).
 ///
@@ -1131,6 +1142,8 @@
     <span class="doccomment">/// the part size of s3 multipart upload, which should be 5 MiB to 5 GiB.
     /// There is no minimum size limit on the last part of your multipart upload
     </span>write_min_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    <span class="doccomment">/// batch_max_operations
+    </span>batch_max_operations: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>S3Builder {
@@ -1548,6 +1561,12 @@
 
         <span class="self">self
     </span>}
+    <span class="doccomment">/// Set maximum batch operations of this backend.
+    </span><span class="kw">pub fn </span>batch_max_operations(<span class="kw-2">&amp;mut </span><span class="self">self</span>, batch_max_operations: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.batch_max_operations = <span class="prelude-val">Some</span>(batch_max_operations);
+
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>S3Builder {
@@ -1734,7 +1753,9 @@
             )
             .with_context(<span class="string">&quot;service&quot;</span>, Scheme::S3));
         }
-
+        <span class="kw">let </span>batch_max_operations = <span class="self">self
+            </span>.batch_max_operations
+            .unwrap_or(DEFAULT_BATCH_MAX_OPERATIONS);
         <span class="macro">debug!</span>(<span class="string">&quot;backend build finished&quot;</span>);
         <span class="prelude-val">Ok</span>(S3Backend {
             core: Arc::new(S3Core {
@@ -1752,6 +1773,7 @@
                 loader,
                 client,
                 write_min_size,
+                batch_max_operations,
             }),
         })
     }
@@ -1811,7 +1833,7 @@
                 presign_write: <span class="bool-val">true</span>,
 
                 batch: <span class="bool-val">true</span>,
-                batch_max_operations: <span class="prelude-val">Some</span>(<span class="number">1000</span>),
+                batch_max_operations: <span class="prelude-val">Some</span>(<span class="self">self</span>.core.batch_max_operations),
 
                 ..Default::default()
             });
