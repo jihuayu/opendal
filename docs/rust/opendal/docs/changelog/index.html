@@ -3,11 +3,13 @@
 <p>All notable changes to this project will be documented in this file.</p>
 <p>The format is based on <a href="https://keepachangelog.com/">Keep a Changelog</a>
 and this project adheres to <a href="https://semver.org/">Semantic Versioning</a>.</p>
-<h3 id="v0361---2023-06-02"><a href="#v0361---2023-06-02">v0.36.1 - 2023-06-02</a></h3><h4 id="added"><a href="#added">Added</a></h4>
+<h3 id="v0370---2023-06-06"><a href="#v0370---2023-06-06">v0.37.0 - 2023-06-06</a></h3><h4 id="added"><a href="#added">Added</a></h4>
 <ul>
 <li>feat(services/webdav): support redirection when get 302/307 response during read operation by @Yansongsongsong in https://github.com/apache/incubator-opendal/pull/2256</li>
 <li>feat: Add Zig Bindings Module by @kassane in https://github.com/apache/incubator-opendal/pull/2374</li>
 <li>feat: Implement Timeout Layer by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2395</li>
+<li>feat(bindings/c): add  opendal_operator_blocking_delete method by @jiaoew1991 in https://github.com/apache/incubator-opendal/pull/2416</li>
+<li>feat(services/obs): add append support by @infdahai in https://github.com/apache/incubator-opendal/pull/2422</li>
 </ul>
 <h4 id="changed"><a href="#changed">Changed</a></h4>
 <ul>
@@ -19,6 +21,9 @@ and this project adheres to <a href="https://semver.org/">Semantic Versioning</a
 <ul>
 <li>fix(bindings/zig): reflect C interface changes by @tisonkun in https://github.com/apache/incubator-opendal/pull/2378</li>
 <li>fix(services/azblob): Fix batch delete doesn’t work on azure by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2382</li>
+<li>fix(services/oss): Fix oss batch max operations by @A-Stupid-Sun in https://github.com/apache/incubator-opendal/pull/2414</li>
+<li>fix(core): Don’t wake up operator futures while not ready by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2415</li>
+<li>fix(services/s3): Fix s3 batch max operations by @A-Stupid-Sun in https://github.com/apache/incubator-opendal/pull/2418</li>
 </ul>
 <h4 id="docs"><a href="#docs">Docs</a></h4>
 <ul>
@@ -28,6 +33,11 @@ and this project adheres to <a href="https://semver.org/">Semantic Versioning</a
 <li>docs: docs for kv services by @suyanhanx in https://github.com/apache/incubator-opendal/pull/2396</li>
 <li>docs: docs for fs related services by @suyanhanx in https://github.com/apache/incubator-opendal/pull/2397</li>
 <li>docs(bindings/java): do not release snapshot versions anymore by @tisonkun in https://github.com/apache/incubator-opendal/pull/2398</li>
+<li>docs: doc for ipmfs by @suyanhanx in https://github.com/apache/incubator-opendal/pull/2408</li>
+<li>docs: add service doc for oss by @A-Stupid-Sun in https://github.com/apache/incubator-opendal/pull/2409</li>
+<li>docs: improvement of Python binding by @ideal in https://github.com/apache/incubator-opendal/pull/2411</li>
+<li>docs: doc for download by @suyanhanx in https://github.com/apache/incubator-opendal/pull/2424</li>
+<li>docs: Add release guide by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2425</li>
 </ul>
 <h4 id="ci"><a href="#ci">CI</a></h4>
 <ul>
@@ -36,11 +46,15 @@ and this project adheres to <a href="https://semver.org/">Semantic Versioning</a
 <li>build(deps): bump reqwest from 0.11.15 to 0.11.18 by @dependabot in https://github.com/apache/incubator-opendal/pull/2389</li>
 <li>build(deps): bump pyo3 from 0.18.2 to 0.18.3 by @dependabot in https://github.com/apache/incubator-opendal/pull/2388</li>
 <li>ci: Enable nextest for all behavior tests by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2400</li>
+<li>ci: reflect ascii file rewrite by @tisonkun in https://github.com/apache/incubator-opendal/pull/2419</li>
+<li>ci: Remove website from git archive by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2420</li>
+<li>ci: Add integration tests for Cloudflare R2 by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2423</li>
 </ul>
 <h4 id="chore"><a href="#chore">Chore</a></h4>
 <ul>
 <li>chore(bindings/python): upgrade maturin to 1.0 by @messense in https://github.com/apache/incubator-opendal/pull/2369</li>
 <li>chore: Fix license headers for release/labler by @Xuanwo in https://github.com/apache/incubator-opendal/pull/2371</li>
+<li>chore(bindings/C): add one simple read/write example into readme and code by @Ji-Xinyou in https://github.com/apache/incubator-opendal/pull/2421</li>
 </ul>
 <h3 id="v0360---2023-05-30"><a href="#v0360---2023-05-30">v0.36.0 - 2023-05-30</a></h3><h4 id="added-1"><a href="#added-1">Added</a></h4>
 <ul>
