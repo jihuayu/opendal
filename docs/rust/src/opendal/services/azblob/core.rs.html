@@ -560,6 +560,7 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -622,6 +623,7 @@
     <span class="kw">pub </span>client: HttpClient,
     <span class="kw">pub </span>loader: AzureStorageLoader,
     <span class="kw">pub </span>signer: AzureStorageSigner,
+    <span class="kw">pub </span>batch_max_operations: usize,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>AzblobCore {

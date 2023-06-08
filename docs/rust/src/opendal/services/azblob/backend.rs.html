@@ -927,6 +927,18 @@
 <a href="#927" id="927">927</a>
 <a href="#928" id="928">928</a>
 <a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -982,7 +994,6 @@
 ];
 
 <span class="kw">const </span>AZBLOB_BATCH_LIMIT: usize = <span class="number">256</span>;
-
 <span class="doccomment">/// Azure Storage Blob services support.
 </span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
 #[derive(Default, Clone)]
@@ -997,6 +1008,7 @@
     encryption_algorithm: <span class="prelude-ty">Option</span>&lt;String&gt;,
     sas_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
+    batch_max_operations: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>AzblobBuilder {
@@ -1186,6 +1198,13 @@
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Set maximum batch operations of this backend.
+    </span><span class="kw">pub fn </span>batch_max_operations(<span class="kw-2">&amp;mut </span><span class="self">self</span>, batch_max_operations: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.batch_max_operations = <span class="prelude-val">Some</span>(batch_max_operations);
+
+        <span class="self">self
+    </span>}
+
     <span class="doccomment">/// from_connection_string will make a builder from connection string
     ///
     /// connection string looks like:
@@ -1289,6 +1308,8 @@
         map.get(<span class="string">&quot;encryption_algorithm&quot;</span>)
             .map(|v| builder.encryption_algorithm(v));
         map.get(<span class="string">&quot;sas_token&quot;</span>).map(|v| builder.sas_token(v));
+        map.get(<span class="string">&quot;batch_max_operations&quot;</span>)
+            .map(|v| builder.batch_max_operations(v.parse::&lt;usize&gt;().unwrap()));
 
         builder
     }
@@ -1370,6 +1391,8 @@
 
         <span class="kw">let </span>signer = AzureStorageSigner::new();
 
+        <span class="kw">let </span>batch_max_operations = <span class="self">self</span>.batch_max_operations.unwrap_or(AZBLOB_BATCH_LIMIT);
+
         <span class="macro">debug!</span>(<span class="string">&quot;backend build finished: {:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>);
         <span class="prelude-val">Ok</span>(AzblobBackend {
             core: Arc::new(AzblobCore {
@@ -1383,6 +1406,7 @@
                 client,
                 loader: cred_loader,
                 signer,
+                batch_max_operations,
             }),
             has_sas_token: <span class="self">self</span>.sas_token.is_some(),
         })
@@ -1470,7 +1494,7 @@
 
                 batch: <span class="bool-val">true</span>,
                 batch_delete: <span class="bool-val">true</span>,
-                batch_max_operations: <span class="prelude-val">Some</span>(AZBLOB_BATCH_LIMIT),
+                batch_max_operations: <span class="prelude-val">Some</span>(<span class="self">self</span>.core.batch_max_operations),
 
                 ..Default::default()
             });
