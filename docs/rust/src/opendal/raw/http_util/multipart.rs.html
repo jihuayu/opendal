@@ -1006,6 +1006,13 @@
 <a href="#1006" id="1006">1006</a>
 <a href="#1007" id="1007">1007</a>
 <a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1028,6 +1035,7 @@
 
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>bytes::BytesMut;
+<span class="kw">use </span>futures::stream;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
@@ -1044,6 +1052,7 @@
 
 <span class="kw">use </span><span class="kw">super</span>::new_request_build_error;
 <span class="kw">use </span><span class="kw">super</span>::AsyncBody;
+<span class="kw">use </span><span class="kw">super</span>::IncomingAsyncBody;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Multipart is a builder for multipart/form-data.
@@ -1080,6 +1089,11 @@
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Into parts.
+    </span><span class="kw">pub fn </span>into_parts(<span class="self">self</span>) -&gt; Vec&lt;T&gt; {
+        <span class="self">self</span>.parts
+    }
+
     <span class="doccomment">/// Parse a response with multipart body into Multipart.
     </span><span class="kw">pub fn </span>parse(<span class="kw-2">mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>s = String::from_utf8(bs.to_vec()).map_err(|err| {
@@ -1095,7 +1109,7 @@
             .collect::&lt;Vec&lt;<span class="kw-2">&amp;</span>str&gt;&gt;();
 
         <span class="kw">for </span>part <span class="kw">in </span>parts {
-            <span class="kw">if </span>part.is_empty() || part == <span class="string">&quot;--&quot; </span>{
+            <span class="kw">if </span>part.is_empty() || part.starts_with(<span class="string">&quot;--&quot;</span>) {
                 <span class="kw">continue</span>;
             }
 
@@ -1308,7 +1322,7 @@
     }
 
     <span class="doccomment">/// Consume a mixed part to build a response.
-    </span><span class="kw">pub fn </span>into_response(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Response&lt;AsyncBody&gt; {
+    </span><span class="kw">pub fn </span>into_response(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Response&lt;IncomingAsyncBody&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>builder = Response::builder();
 
         builder = builder.status(<span class="self">self</span>.status_code.unwrap_or(StatusCode::OK));
@@ -1316,10 +1330,10 @@
         <span class="comment">// Swap headers directly instead of copy the entire map.
         </span>mem::swap(builder.headers_mut().unwrap(), <span class="kw-2">&amp;mut </span><span class="self">self</span>.headers);
 
-        <span class="kw">let </span>body = <span class="kw">match </span><span class="self">self</span>.content.is_empty() {
-            <span class="bool-val">true </span>=&gt; AsyncBody::Empty,
-            <span class="bool-val">false </span>=&gt; AsyncBody::Bytes(<span class="self">self</span>.content),
-        };
+        <span class="kw">let </span>bs: Bytes = <span class="self">self</span>.content;
+        <span class="kw">let </span>length = bs.len();
+        <span class="kw">let </span>body =
+            IncomingAsyncBody::new(Box::new(stream::iter(<span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(bs)])), <span class="prelude-val">Some</span>(length <span class="kw">as </span>u64));
 
         builder
             .body(body)
