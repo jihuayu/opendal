@@ -211,7 +211,7 @@
 </span><span class="kw">pub fn </span>new_request_credential_error(err: anyhow::Error) -&gt; Error {
     Error::new(
         ErrorKind::Unexpected,
-        <span class="string">&quot;loading credentail to sign http request&quot;</span>,
+        <span class="string">&quot;loading credential to sign http request&quot;</span>,
     )
     .set_temporary()
     .with_operation(<span class="string">&quot;reqsign::LoadCredential&quot;</span>)

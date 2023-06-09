@@ -71,6 +71,11 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -103,9 +108,8 @@
 <span class="kw">pub use </span>read::ReadOperation;
 <span class="kw">pub use </span>read::Reader;
 
-<span class="kw">pub mod </span>into_reader;
-
 <span class="kw">pub mod </span>into_blocking_reader;
+<span class="kw">pub mod </span>into_reader;
 
 <span class="kw">mod </span>write;
 <span class="kw">pub use </span>write::BlockingWrite;
@@ -118,6 +122,12 @@
 <span class="kw">pub use </span>append::Append;
 <span class="kw">pub use </span>append::AppendOperation;
 <span class="kw">pub use </span>append::Appender;
+
+<span class="kw">mod </span>stream;
+<span class="kw">pub use </span>stream::Stream;
+<span class="kw">pub use </span>stream::Streamer;
+
+<span class="kw">pub mod </span>into_stream;
 
 <span class="kw">mod </span>cursor;
 <span class="kw">pub use </span>cursor::Cursor;

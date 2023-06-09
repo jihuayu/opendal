@@ -123,6 +123,13 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -205,6 +212,8 @@
     <span class="kw">use </span>futures::stream;
     <span class="kw">use </span>serde_json::from_reader;
 
+    <span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_stream;
+
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// Error response example from https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Error%20Responses
@@ -222,7 +231,12 @@
 }
     &quot;#</span>,
         );
-        <span class="kw">let </span>body = IncomingAsyncBody::new(Box::new(stream::iter(<span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(ill_args.clone())])), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>body = IncomingAsyncBody::new(
+            Box::new(into_stream::from_futures_stream(stream::iter(<span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(
+                ill_args.clone(),
+            )]))),
+            <span class="prelude-val">None</span>,
+        );
         <span class="kw">let </span>resp = Response::builder()
             .status(StatusCode::BAD_REQUEST)
             .body(body)

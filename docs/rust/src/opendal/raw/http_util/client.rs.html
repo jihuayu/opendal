@@ -150,6 +150,11 @@
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
 <a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -179,6 +184,7 @@
 <span class="kw">use </span><span class="kw">super</span>::body::IncomingAsyncBody;
 <span class="kw">use </span><span class="kw">super</span>::parse_content_length;
 <span class="kw">use </span><span class="kw">super</span>::AsyncBody;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_stream;
 <span class="kw">use </span><span class="kw">crate</span>::Error;
 <span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
@@ -245,6 +251,7 @@
         req_builder = <span class="kw">match </span>body {
             AsyncBody::Empty =&gt; req_builder.body(reqwest::Body::from(<span class="string">&quot;&quot;</span>)),
             AsyncBody::Bytes(bs) =&gt; req_builder.body(reqwest::Body::from(bs)),
+            AsyncBody::Stream(s) =&gt; req_builder.body(reqwest::Body::wrap_stream(s)),
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>resp = req_builder.send().<span class="kw">await</span>.map_err(|err| {
@@ -295,7 +302,10 @@
                 .set_source(err)
         });
 
-        <span class="kw">let </span>body = IncomingAsyncBody::new(Box::new(stream), content_length);
+        <span class="kw">let </span>body = IncomingAsyncBody::new(
+            Box::new(into_stream::from_futures_stream(stream)),
+            content_length,
+        );
 
         <span class="kw">let </span>resp = hr.body(body).expect(<span class="string">&quot;response must build succeed&quot;</span>);
 

@@ -104,7 +104,7 @@ use its formal name.</p>
 instead of <code>aws</code> or <code>awss3</code>. This is because there are many storage
 vendors that provide s3-like RESTful APIs, and our s3 service is
 implemented to support all of them, not just AWS S3.</p>
-<p>Obviously, we can use <code>duck</code> as scheme, let’s add a new variant in <a href="../../../enum.Scheme.html" title="enum opendal::Scheme"><code>Scheme</code></a>, and implement all reqired functions like <code>Scheme::from_str</code> and <code>Scheme::into_static</code>:</p>
+<p>Obviously, we can use <code>duck</code> as scheme, let’s add a new variant in <a href="../../../enum.Scheme.html" title="enum opendal::Scheme"><code>Scheme</code></a>, and implement all required functions like <code>Scheme::from_str</code> and <code>Scheme::into_static</code>:</p>
 
 <div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">pub enum </span>Scheme {
     Duck,
