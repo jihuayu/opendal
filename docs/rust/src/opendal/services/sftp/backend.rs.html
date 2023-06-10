@@ -579,7 +579,6 @@
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::StreamExt;
@@ -637,6 +636,7 @@
     </span>}
 
     <span class="doccomment">/// set root path for sftp backend.
+    /// It uses the default directory set by the remote `sftp-server` as default.
     </span><span class="kw">pub fn </span>root(<span class="kw-2">&amp;mut </span><span class="self">self</span>, root: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.root = <span class="kw">if </span>root.is_empty() {
             <span class="prelude-val">None
@@ -713,7 +713,7 @@
             </span>.root
             .clone()
             .map(|r| normalize_root(r.as_str()))
-            .unwrap_or(<span class="macro">format!</span>(<span class="string">&quot;/home/{}/&quot;</span>, user));
+            .unwrap_or_default();
 
         <span class="kw">let </span>known_hosts_strategy = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.known_hosts_strategy {
             <span class="prelude-val">Some</span>(v) =&gt; {
@@ -1085,29 +1085,29 @@
         session.control_directory(<span class="string">&quot;/private/tmp/.opendal/&quot;</span>);
     }
 
-    session.server_alive_interval(Duration::from_secs(<span class="number">5</span>));
     session.known_hosts_check(known_hosts_strategy);
 
     <span class="kw">let </span>session = session.connect(<span class="kw-2">&amp;</span>endpoint).<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="kw">let </span>sftp = Sftp::from_session(session, SftpOptions::default()).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>fs = sftp.fs();
-    fs.set_cwd(<span class="string">&quot;/&quot;</span>);
+    <span class="kw">if </span>!root.is_empty() {
+        <span class="kw">let </span><span class="kw-2">mut </span>fs = sftp.fs();
 
-    <span class="kw">let </span>paths = Path::new(<span class="kw-2">&amp;</span>root).components();
-    <span class="kw">let </span><span class="kw-2">mut </span>current = PathBuf::from(<span class="string">&quot;/&quot;</span>);
-    <span class="kw">for </span>p <span class="kw">in </span>paths {
-        current = current.join(p);
-        <span class="kw">let </span>res = fs.create_dir(p).<span class="kw">await</span>;
+        <span class="kw">let </span>paths = Path::new(<span class="kw-2">&amp;</span>root).components();
+        <span class="kw">let </span><span class="kw-2">mut </span>current = PathBuf::new();
+        <span class="kw">for </span>p <span class="kw">in </span>paths {
+            current.push(p);
+            <span class="kw">let </span>res = fs.create_dir(p).<span class="kw">await</span>;
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = res {
-            <span class="comment">// ignore error if dir already exists
-            </span><span class="kw">if </span>!is_sftp_protocol_error(<span class="kw-2">&amp;</span>e) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = res {
+                <span class="comment">// ignore error if dir already exists
+                </span><span class="kw">if </span>!is_sftp_protocol_error(<span class="kw-2">&amp;</span>e) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
+                }
             }
+            fs.set_cwd(<span class="kw-2">&amp;</span>current);
         }
-        fs.set_cwd(<span class="kw-2">&amp;</span>current);
     }
 
     <span class="macro">debug!</span>(<span class="string">&quot;sftp connection created at {}&quot;</span>, root);
