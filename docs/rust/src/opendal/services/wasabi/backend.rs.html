@@ -1187,6 +1187,12 @@
 <a href="#1187" id="1187">1187</a>
 <a href="#1188" id="1188">1188</a>
 <a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1226,6 +1232,7 @@
 
 <span class="kw">use </span><span class="kw">super</span>::core::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">super</span>::error::parse_wasabi_error_code;
 <span class="kw">use </span><span class="kw">super</span>::pager::WasabiPager;
 <span class="kw">use </span><span class="kw">super</span>::writer::WasabiWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -2290,10 +2297,15 @@
             </span><span class="kw">for </span>i <span class="kw">in </span>result.error {
                 <span class="kw">let </span>path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>i.key);
 
-                batched_result.push((
-                    path,
-                    <span class="prelude-val">Err</span>(Error::new(ErrorKind::Unexpected, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{i:?}&quot;</span>))),
-                ));
+                <span class="comment">// set the error kind and mark temporary if retryable
+                </span><span class="kw">let </span>(kind, retryable) =
+                    parse_wasabi_error_code(<span class="kw-2">&amp;</span>i.code).unwrap_or((ErrorKind::Unexpected, <span class="bool-val">false</span>));
+                <span class="kw">let </span><span class="kw-2">mut </span>err: Error = Error::new(kind, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{i:?}&quot;</span>));
+                <span class="kw">if </span>retryable {
+                    err = err.set_temporary();
+                }
+
+                batched_result.push((path, <span class="prelude-val">Err</span>(err)));
             }
 
             <span class="prelude-val">Ok</span>(RpBatch::new(batched_result))

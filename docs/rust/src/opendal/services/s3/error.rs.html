@@ -127,6 +127,8 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -146,7 +148,7 @@
 
 </span><span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>http::Response;
-<span class="kw">use </span>http::StatusCode;
+<span class="kw">use </span>http::Uri;
 <span class="kw">use </span>quick_xml::de;
 <span class="kw">use </span>serde::Deserialize;
 
@@ -170,16 +172,14 @@
     <span class="kw">let </span>(parts, body) = resp.into_parts();
     <span class="kw">let </span>bs = body.bytes().<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = <span class="kw">match </span>parts.status {
-        StatusCode::NOT_FOUND =&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
-        StatusCode::FORBIDDEN =&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
-        StatusCode::PRECONDITION_FAILED | StatusCode::NOT_MODIFIED =&gt; {
-            (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>)
-        }
-        StatusCode::INTERNAL_SERVER_ERROR
-        | StatusCode::BAD_GATEWAY
-        | StatusCode::SERVICE_UNAVAILABLE
-        | StatusCode::GATEWAY_TIMEOUT =&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
+    <span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = <span class="kw">match </span>parts.status.as_u16() {
+        <span class="number">403 </span>=&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
+        <span class="number">404 </span>=&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
+        <span class="number">304 </span>| <span class="number">412 </span>=&gt; (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>),
+        <span class="comment">// Service like R2 could return 499 error with a message like:
+        // Client Disconnect, we should retry it.
+        </span><span class="number">499 </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
+        <span class="number">500 </span>| <span class="number">502 </span>| <span class="number">503 </span>| <span class="number">504 </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
         <span class="kw">_ </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
     };
 
@@ -195,6 +195,10 @@
 
     <span class="kw">if </span>retryable {
         err = err.set_temporary();
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(uri) = parts.extensions.get::&lt;Uri&gt;() {
+        err = err.with_context(<span class="string">&quot;uri&quot;</span>, uri.to_string());
     }
 
     <span class="prelude-val">Ok</span>(err)

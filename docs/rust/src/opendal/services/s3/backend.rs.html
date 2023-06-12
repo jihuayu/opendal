@@ -1050,7 +1050,6 @@
 <a href="#1050" id="1050">1050</a>
 <a href="#1051" id="1051">1051</a>
 <a href="#1052" id="1052">1052</a>
-<a href="#1053" id="1053">1053</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2022,14 +2021,13 @@
                 <span class="kw">let </span>path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>i.key);
                 batched_result.push((path, <span class="prelude-val">Ok</span>(RpDelete::default().into())));
             }
-            <span class="comment">// TODO: we should handle those errors with code.
-            </span><span class="kw">for </span>i <span class="kw">in </span>result.error {
+            <span class="kw">for </span>i <span class="kw">in </span>result.error {
                 <span class="kw">let </span>path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>i.key);
 
                 <span class="comment">// set the error kind and mark temporary if retryable
                 </span><span class="kw">let </span>(kind, retryable) =
                     parse_s3_error_code(i.code.as_str()).unwrap_or((ErrorKind::Unexpected, <span class="bool-val">false</span>));
-                <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{i:?}&quot;</span>));
+                <span class="kw">let </span><span class="kw-2">mut </span>err: Error = Error::new(kind, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{i:?}&quot;</span>));
                 <span class="kw">if </span>retryable {
                     err = err.set_temporary();
                 }

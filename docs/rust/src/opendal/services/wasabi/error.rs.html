@@ -107,6 +107,26 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -167,16 +187,8 @@
         .map(|err| (<span class="macro">format!</span>(<span class="string">&quot;{err:?}&quot;</span>), <span class="prelude-val">Some</span>(err)))
         .unwrap_or_else(|<span class="kw">_</span>| (String::from_utf8_lossy(<span class="kw-2">&amp;</span>bs).into_owned(), <span class="prelude-val">None</span>));
 
-    <span class="comment">// All possible error code: &lt;https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList&gt;
-    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(wasabi_err) = wasabi_err {
-        (kind, retryable) = <span class="kw">match </span>wasabi_err.code.as_str() {
-            <span class="comment">// &gt; Your socket connection to the server was not read from
-            // &gt; or written to within the timeout period.&quot;
-            //
-            // It&#39;s Ok for us to retry it again.
-            </span><span class="string">&quot;RequestTimeout&quot; </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
-            <span class="kw">_ </span>=&gt; (kind, retryable),
-        }
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(wasabi_err) = wasabi_err {
+        (kind, retryable) = parse_wasabi_error_code(<span class="kw-2">&amp;</span>wasabi_err.code).unwrap_or((kind, retryable));
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message).with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
@@ -186,6 +198,34 @@
     }
 
     <span class="prelude-val">Ok</span>(err)
+}
+
+<span class="doccomment">/// Returns the Errorkind of this code and whether the error is retryable.
+/// All possible error code: &lt;https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList&gt;
+</span><span class="kw">pub fn </span>parse_wasabi_error_code(code: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;(ErrorKind, bool)&gt; {
+    <span class="kw">match </span>code {
+        <span class="comment">// &gt; Your socket connection to the server was not read from
+        // &gt; or written to within the timeout period.&quot;
+        //
+        // It&#39;s Ok for us to retry it again.
+        </span><span class="string">&quot;RequestTimeout&quot; </span>=&gt; <span class="prelude-val">Some</span>((ErrorKind::Unexpected, <span class="bool-val">true</span>)),
+        <span class="comment">// &gt; An internal error occurred. Try again.
+        </span><span class="string">&quot;InternalError&quot; </span>=&gt; <span class="prelude-val">Some</span>((ErrorKind::Unexpected, <span class="bool-val">true</span>)),
+        <span class="comment">// &gt; A conflicting conditional operation is currently in progress
+        // &gt; against this resource. Try again.
+        </span><span class="string">&quot;OperationAborted&quot; </span>=&gt; <span class="prelude-val">Some</span>((ErrorKind::Unexpected, <span class="bool-val">true</span>)),
+        <span class="comment">// &gt; Please reduce your request rate.
+        //
+        // It&#39;s Ok to retry since later on the request rate may get reduced.
+        </span><span class="string">&quot;SlowDown&quot; </span>=&gt; <span class="prelude-val">Some</span>((ErrorKind::RateLimited, <span class="bool-val">true</span>)),
+        <span class="comment">// &gt; Service is unable to handle request.
+        //
+        // ServiceUnavailable is considered a retryable error because it typically
+        // indicates a temporary issue with the service or server, such as high load,
+        // maintenance, or an internal problem.
+        </span><span class="string">&quot;ServiceUnavailable&quot; </span>=&gt; <span class="prelude-val">Some</span>((ErrorKind::Unexpected, <span class="bool-val">true</span>)),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+    }
 }
 
 <span class="attr">#[cfg(test)]

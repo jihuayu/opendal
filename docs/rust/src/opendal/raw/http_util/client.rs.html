@@ -155,6 +155,11 @@
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -234,7 +239,9 @@
 
     <span class="doccomment">/// Send a request in async way.
     </span><span class="kw">pub async fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, req: Request&lt;AsyncBody&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span>url = req.uri().to_string();
+        <span class="comment">// Uri stores all string alike data in `Bytes` which means
+        // the clone here is cheap.
+        </span><span class="kw">let </span>uri = req.uri().clone();
         <span class="kw">let </span>is_head = req.method() == http::Method::HEAD;
 
         <span class="kw">let </span>(parts, body) = req.into_parts();
@@ -243,7 +250,7 @@
             </span>.client
             .request(
                 parts.method,
-                reqwest::Url::from_str(<span class="kw-2">&amp;</span>url).expect(<span class="string">&quot;input request url must be valid&quot;</span>),
+                reqwest::Url::from_str(<span class="kw-2">&amp;</span>uri.to_string()).expect(<span class="string">&quot;input request url must be valid&quot;</span>),
             )
             .version(parts.version)
             .headers(parts.headers);
@@ -270,7 +277,7 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>oerr = Error::new(ErrorKind::Unexpected, <span class="string">&quot;send async request&quot;</span>)
                 .with_operation(<span class="string">&quot;http_util::Client::send_async&quot;</span>)
-                .with_context(<span class="string">&quot;url&quot;</span>, <span class="kw-2">&amp;</span>url)
+                .with_context(<span class="string">&quot;url&quot;</span>, uri.to_string())
                 .set_source(err);
             <span class="kw">if </span>is_temporary {
                 oerr = oerr.set_temporary();
@@ -289,7 +296,10 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>hr = Response::builder()
             .version(resp.version())
-            .status(resp.status());
+            .status(resp.status())
+            <span class="comment">// Insert uri into response extension so that we can fetch
+            // it later.
+            </span>.extension(uri.clone());
         <span class="comment">// Swap headers directly instead of copy the entire map.
         </span>mem::swap(hr.headers_mut().unwrap(), resp.headers_mut());
 
@@ -298,7 +308,7 @@
             // it to interrupt so we can retry it.
             </span>Error::new(ErrorKind::Unexpected, <span class="string">&quot;read data from http stream&quot;</span>)
                 .map(|v| <span class="kw">if </span>err.is_body() { v.set_temporary() } <span class="kw">else </span>{ v })
-                .with_context(<span class="string">&quot;url&quot;</span>, <span class="kw-2">&amp;</span>url)
+                .with_context(<span class="string">&quot;url&quot;</span>, uri.to_string())
                 .set_source(err)
         });
 
