@@ -78,6 +78,12 @@
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
 <a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -156,6 +162,12 @@
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;layers-otel-trace&quot;</span>)]
 </span><span class="kw">mod </span>oteltrace;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;layers-throttle&quot;</span>)]
+</span><span class="kw">mod </span>throttle;
+<span class="attr">#[cfg(feature = <span class="string">&quot;layers-throttle&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::throttle::ThrottleLayer;
+
 <span class="attr">#[cfg(feature = <span class="string">&quot;layers-otel-trace&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::oteltrace::OtelTraceLayer;
 </code></pre></div></section></main></body></html>
