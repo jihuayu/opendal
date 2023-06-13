@@ -204,7 +204,7 @@
     <span class="prelude-val">Ok</span>(err)
 }
 
-<span class="doccomment">/// Returns the Errorkind of this code and whether the error is retryable.
+<span class="doccomment">/// Returns the `Error kind` of this code and whether the error is retryable.
 /// All possible error code: &lt;https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList&gt;
 </span><span class="kw">pub fn </span>parse_s3_error_code(code: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;(ErrorKind, bool)&gt; {
     <span class="kw">match </span>code {

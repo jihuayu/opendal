@@ -183,7 +183,7 @@
         StatusCode::NOT_FOUND =&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN =&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
         <span class="comment">// passing invalid arguments will return BAD_REQUEST
-        // should be unretryable
+        // should be un-retryable
         </span>StatusCode::BAD_REQUEST =&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
         StatusCode::INTERNAL_SERVER_ERROR
         | StatusCode::BAD_GATEWAY
