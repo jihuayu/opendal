@@ -719,6 +719,8 @@
 <a href="#719" id="719">719</a>
 <a href="#720" id="720">720</a>
 <a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1126,6 +1128,8 @@
             .set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root)
             .set_name(<span class="kw-2">&amp;</span><span class="self">self</span>.core.bucket)
             .set_capability(Capability {
+                create_dir: <span class="bool-val">true</span>,
+
                 stat: <span class="bool-val">true</span>,
                 stat_with_if_match: <span class="bool-val">true</span>,
                 stat_with_if_none_match: <span class="bool-val">true</span>,
