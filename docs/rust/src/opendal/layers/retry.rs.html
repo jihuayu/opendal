@@ -1114,6 +1114,7 @@
 <a href="#1114" id="1114">1114</a>
 <a href="#1115" id="1115">1115</a>
 <a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1981,6 +1982,7 @@
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
             am.set_capability(Capability {
+                read: <span class="bool-val">true</span>,
                 list: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
                 list_without_delimiter: <span class="bool-val">true</span>,
