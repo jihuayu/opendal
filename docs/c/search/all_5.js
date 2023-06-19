@@ -12,7 +12,7 @@ var searchData=
   ['opendal_5fis_5fsame_5ffile_15',['OPENDAL_IS_SAME_FILE',['../opendal_8h.html#a6715be152766e5b8f840ce10cf9442c2aa2ade9f6ea9d1ad5a6f328a73217e536',1,'opendal.h']]],
   ['opendal_5fmetadata_16',['opendal_metadata',['../structopendal__metadata.html',1,'opendal_metadata'],['../opendal_8h.html#af0acf7956915881ccd1f0874f309c682',1,'opendal_metadata():&#160;opendal.h']]],
   ['opendal_5fmetadata_5fcontent_5flength_17',['opendal_metadata_content_length',['../opendal_8h.html#ac8e9a9da0f04cb80848e7e42c3b90235',1,'opendal.h']]],
-  ['opendal_5fmetadata_5ffree_18',['opendal_metadata_free',['../opendal_8h.html#a8edd7cec07ae7051e8363da44aa168e6',1,'opendal.h']]],
+  ['opendal_5fmetadata_5ffree_18',['opendal_metadata_free',['../opendal_8h.html#afa0569fdf94b0e0ec409bbde587d5af8',1,'opendal.h']]],
   ['opendal_5fmetadata_5fis_5fdir_19',['opendal_metadata_is_dir',['../opendal_8h.html#ac8cb949fb37f83dfcbe78976eaa29409',1,'opendal.h']]],
   ['opendal_5fmetadata_5fis_5ffile_20',['opendal_metadata_is_file',['../opendal_8h.html#a8900dddbbce980c3323cedd4f30c33ad',1,'opendal.h']]],
   ['opendal_5fnot_5fa_5fdirectory_21',['OPENDAL_NOT_A_DIRECTORY',['../opendal_8h.html#a6715be152766e5b8f840ce10cf9442c2ad8f1a6410599cec2a213685324560555',1,'opendal.h']]],
