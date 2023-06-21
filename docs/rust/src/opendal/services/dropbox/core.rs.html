@@ -169,17 +169,21 @@
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::{build_rooted_abs_path, new_json_serialize_error, HttpClient};
-
 <span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>http::header;
 <span class="kw">use </span>http::request::Builder;
-<span class="kw">use </span>http::{header, Request, Response};
-<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>http::Request;
+<span class="kw">use </span>http::Response;
+<span class="kw">use </span>serde::Deserialize;
+<span class="kw">use </span>serde::Serialize;
 
-<span class="kw">use crate</span>::{
-    raw::{new_request_build_error, AsyncBody, IncomingAsyncBody},
-    types::Result,
-};
+<span class="kw">use </span><span class="kw">crate</span>::raw::build_rooted_abs_path;
+<span class="kw">use </span><span class="kw">crate</span>::raw::new_json_serialize_error;
+<span class="kw">use </span><span class="kw">crate</span>::raw::new_request_build_error;
+<span class="kw">use </span><span class="kw">crate</span>::raw::AsyncBody;
+<span class="kw">use </span><span class="kw">crate</span>::raw::HttpClient;
+<span class="kw">use </span><span class="kw">crate</span>::raw::IncomingAsyncBody;
+<span class="kw">use </span><span class="kw">crate</span>::types::Result;
 
 <span class="kw">pub struct </span>DropboxCore {
     <span class="kw">pub </span>token: String,
@@ -200,9 +204,8 @@
         <span class="kw">let </span>download_args = DropboxDownloadArgs {
             path: build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path),
         };
-        <span class="kw">let </span>request_payload = serde_json::to_string(<span class="kw-2">&amp;</span>download_args)
-            .map_err(new_json_serialize_error)
-            .unwrap();
+        <span class="kw">let </span>request_payload =
+            serde_json::to_string(<span class="kw-2">&amp;</span>download_args).map_err(new_json_serialize_error)<span class="question-mark">?</span>;
         <span class="kw">let </span>request = <span class="self">self
             </span>.build_auth_header(Request::post(<span class="kw-2">&amp;</span>url))
             .header(<span class="string">&quot;Dropbox-API-Arg&quot;</span>, request_payload)
@@ -234,9 +237,7 @@
             </span>.build_auth_header(request_builder)
             .header(
                 <span class="string">&quot;Dropbox-API-Arg&quot;</span>,
-                serde_json::to_string(<span class="kw-2">&amp;</span>args)
-                    .map_err(new_json_serialize_error)
-                    .unwrap(),
+                serde_json::to_string(<span class="kw-2">&amp;</span>args).map_err(new_json_serialize_error)<span class="question-mark">?</span>,
             )
             .body(body)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
@@ -249,14 +250,13 @@
         <span class="kw">let </span>args = DropboxDeleteArgs {
             path: build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path),
         };
+
+        <span class="kw">let </span>bs = Bytes::from(serde_json::to_string(<span class="kw-2">&amp;</span>args).map_err(new_json_serialize_error)<span class="question-mark">?</span>);
+
         <span class="kw">let </span>request = <span class="self">self
             </span>.build_auth_header(Request::post(<span class="kw-2">&amp;</span>url))
             .header(header::CONTENT_TYPE, <span class="string">&quot;application/json&quot;</span>)
-            .body(AsyncBody::Bytes(Bytes::from(
-                serde_json::to_string(<span class="kw-2">&amp;</span>args)
-                    .map_err(new_json_serialize_error)
-                    .unwrap(),
-            )))
+            .body(AsyncBody::Bytes(bs))
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
         <span class="self">self</span>.client.send(request).<span class="kw">await
     </span>}

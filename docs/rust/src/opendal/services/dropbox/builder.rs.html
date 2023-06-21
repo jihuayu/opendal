@@ -164,13 +164,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::fmt::{Debug, Formatter};
-
-<span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::DropboxBackend;
-<span class="kw">use </span><span class="kw">crate</span>::raw::{normalize_root, HttpClient};
-<span class="kw">use </span><span class="kw">crate</span>::Scheme;
+<span class="kw">use </span><span class="kw">super</span>::core::DropboxCore;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// [Dropbox](https://www.dropbox.com/) backend support.
@@ -203,28 +204,17 @@
 ///
 /// ```
 /// use anyhow::Result;
+/// use opendal::raw::OpWrite;
 /// use opendal::services::Dropbox;
 /// use opendal::Operator;
-/// use opendal::raw::OpWrite;
 ///
 /// #[tokio::main]
 /// async fn main() -&gt; Result&lt;()&gt; {
 ///     // create backend builder
 ///     let mut builder = Dropbox::default();
-///
-///     builder.access_token(&quot;x&quot;).root(&quot;/&quot;);
+///     builder.access_token(&quot;&lt;token&gt;&quot;);
 ///
 ///     let op: Operator = Operator::new(builder)?.finish();
-///     let content = &quot;who are you&quot;;
-///
-///
-///     let write = op.write_with(&quot;abc2.txt&quot;, content)
-///         .content_type(&quot;application/octet-stream&quot;)
-///         .content_length(content.len() as u64).await?;
-///     let read = op.read(&quot;abc2.txt&quot;).await?;
-///     let s = String::from_utf8(read).unwrap();
-///     println!(&quot;{}&quot;, s);
-///     let delete = op.delete(&quot;abc.txt&quot;).await?;
 ///     Ok(())
 /// }
 /// ```
@@ -287,13 +277,23 @@
                     .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Dropbox)
             })<span class="question-mark">?
         </span>};
-        <span class="kw">match </span><span class="self">self</span>.access_token.clone() {
-            <span class="prelude-val">Some</span>(access_token) =&gt; <span class="prelude-val">Ok</span>(DropboxBackend::new(root, access_token, client)),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::ConfigInvalid,
-                <span class="string">&quot;access_token is required&quot;</span>,
-            )),
-        }
+        <span class="kw">let </span>token = <span class="kw">match </span><span class="self">self</span>.access_token.clone() {
+            <span class="prelude-val">Some</span>(access_token) =&gt; access_token,
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                    ErrorKind::ConfigInvalid,
+                    <span class="string">&quot;access_token is required&quot;</span>,
+                ))
+            }
+        };
+
+        <span class="prelude-val">Ok</span>(DropboxBackend {
+            core: Arc::new(DropboxCore {
+                root,
+                token,
+                client,
+            }),
+        })
     }
 }
 </code></pre></div></section></main></body></html>

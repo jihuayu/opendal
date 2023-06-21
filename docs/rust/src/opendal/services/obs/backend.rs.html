@@ -495,6 +495,7 @@
 <a href="#495" id="495">495</a>
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -524,10 +525,11 @@
 <span class="kw">use </span>reqsign::HuaweicloudObsCredentialLoader;
 <span class="kw">use </span>reqsign::HuaweicloudObsSigner;
 
+<span class="kw">use </span><span class="kw">super</span>::appender::ObsAppender;
+<span class="kw">use </span><span class="kw">super</span>::core::ObsCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::pager::ObsPager;
 <span class="kw">use </span><span class="kw">super</span>::writer::ObsWriter;
-<span class="kw">use super</span>::{appender::ObsAppender, core::ObsCore};
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 

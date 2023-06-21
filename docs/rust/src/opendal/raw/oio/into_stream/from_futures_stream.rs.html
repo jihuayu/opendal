@@ -43,6 +43,7 @@
 <a href="#43" id="43">43</a>
 <a href="#44" id="44">44</a>
 <a href="#45" id="45">45</a>
+<a href="#46" id="46">46</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -60,7 +61,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::task::{Context, Poll};
+</span><span class="kw">use </span>std::task::Context;
+<span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>futures::TryStreamExt;
