@@ -715,8 +715,8 @@
         map.get(<span class="string">&quot;endpoint&quot;</span>).map(|v| builder.endpoint(v));
         map.get(<span class="string">&quot;delegation&quot;</span>).map(|v| builder.delegation(v));
         map.get(<span class="string">&quot;disable_list_batch&quot;</span>)
-            .map(|v| v == <span class="string">&quot;true&quot;</span>)
-            .map(|_v| builder.disable_list_batch());
+            .filter(|v| v == <span class="kw-2">&amp;</span><span class="string">&quot;true&quot;</span>)
+            .map(|<span class="kw">_</span>| builder.disable_list_batch());
 
         builder
     }
