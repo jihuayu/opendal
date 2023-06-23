@@ -74,6 +74,12 @@
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
 <a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -115,8 +121,14 @@
     <span class="kw">let </span>(parts, body) = resp.into_parts();
     <span class="kw">let </span>bs = body.bytes().<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = (ErrorKind::Unexpected, <span class="bool-val">false</span>);
-    <span class="kw">let </span>(message, <span class="kw">_</span>) = from_slice::&lt;SupabaseError&gt;(<span class="kw-2">&amp;</span>bs)
+    <span class="comment">// Check HTTP status code first/
+    </span><span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = <span class="kw">match </span>parts.status.as_u16() {
+        <span class="number">500 </span>| <span class="number">502 </span>| <span class="number">503 </span>| <span class="number">504 </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
+        <span class="kw">_ </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
+    };
+
+    <span class="comment">// Than extrace the error message.
+    </span><span class="kw">let </span>(message, <span class="kw">_</span>) = from_slice::&lt;SupabaseError&gt;(<span class="kw-2">&amp;</span>bs)
         .map(|sb_err| {
             (kind, retryable) = parse_supabase_error(<span class="kw-2">&amp;</span>sb_err);
             (<span class="macro">format!</span>(<span class="string">&quot;{sb_err:?}&quot;</span>), <span class="prelude-val">Some</span>(sb_err))

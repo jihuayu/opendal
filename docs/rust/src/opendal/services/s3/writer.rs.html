@@ -259,6 +259,12 @@
 <a href="#259" id="259">259</a>
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -315,14 +321,14 @@
         }
     }
 
-    <span class="kw">async fn </span>write_oneshot(<span class="kw-2">&amp;</span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>write_oneshot(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.core.s3_put_object_request(
             <span class="kw-2">&amp;</span><span class="self">self</span>.path,
-            <span class="prelude-val">Some</span>(bs.len()),
+            <span class="prelude-val">Some</span>(size),
             <span class="self">self</span>.op.content_type(),
             <span class="self">self</span>.op.content_disposition(),
             <span class="self">self</span>.op.cache_control(),
-            AsyncBody::Bytes(bs),
+            body,
         )<span class="question-mark">?</span>;
 
         <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -415,7 +421,9 @@
             <span class="prelude-val">Some</span>(upload_id) =&gt; upload_id,
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">if </span><span class="self">self</span>.op.content_length().unwrap_or_default() == bs.len() <span class="kw">as </span>u64 {
-                    <span class="kw">return </span><span class="self">self</span>.write_oneshot(bs).<span class="kw">await</span>;
+                    <span class="kw">return </span><span class="self">self
+                        </span>.write_oneshot(bs.len() <span class="kw">as </span>u64, AsyncBody::Bytes(bs))
+                        .<span class="kw">await</span>;
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>upload_id = <span class="self">self</span>.initiate_upload().<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="self">self</span>.upload_id = <span class="prelude-val">Some</span>(upload_id);
@@ -453,11 +461,15 @@
         }
     }
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: u64, _s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">&quot;Write::sink is not supported&quot;</span>,
-        ))
+    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span><span class="self">self</span>.op.content_length().unwrap_or_default() == size {
+            <span class="kw">return </span><span class="self">self</span>.write_oneshot(size, AsyncBody::Stream(s)).<span class="kw">await</span>;
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::Unsupported,
+                <span class="string">&quot;S3 does not support streaming multipart upload&quot;</span>,
+            ));
+        }
     }
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
