@@ -149,6 +149,13 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -168,6 +175,7 @@
 
 </span><span class="kw">use </span>std::collections::BTreeMap;
 <span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>async_trait::async_trait;
@@ -215,9 +223,15 @@
 <span class="doccomment">/// Backend is used to serve `Accessor` support in memory.
 </span><span class="kw">pub type </span>MemoryBackend = typed_kv::Backend&lt;Adapter&gt;;
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Adapter {
     inner: Arc&lt;Mutex&lt;BTreeMap&lt;String, typed_kv::Value&gt;&gt;&gt;,
+}
+
+<span class="kw">impl </span>Debug <span class="kw">for </span>Adapter {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        f.debug_struct(<span class="string">&quot;MemoryBackend&quot;</span>).finish_non_exhaustive()
+    }
 }
 
 <span class="attr">#[async_trait]
