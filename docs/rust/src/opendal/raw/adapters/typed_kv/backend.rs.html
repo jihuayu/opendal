@@ -424,6 +424,22 @@
 <a href="#424" id="424">424</a>
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -516,6 +532,14 @@
         <span class="kw">if </span>kv_cap.scan {
             cap.list = <span class="bool-val">true</span>;
             cap.list_without_delimiter = <span class="bool-val">true</span>;
+        }
+
+        <span class="kw">if </span>cap.read &amp;&amp; cap.write {
+            cap.copy = <span class="bool-val">true</span>;
+        }
+
+        <span class="kw">if </span>cap.read &amp;&amp; cap.write &amp;&amp; cap.delete {
+            cap.rename = <span class="bool-val">true</span>;
         }
 
         cap.blocking = <span class="bool-val">true</span>;
@@ -649,25 +673,33 @@
     }
 
     <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="kw">match </span><span class="self">self</span>.copy(from, to, OpCopy {}).<span class="kw">await </span>{
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
-                <span class="kw">let </span>from = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, from);
-                <span class="self">self</span>.kv.delete(<span class="kw-2">&amp;</span>from).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(RpRename::default())
-            }
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
-        }
+        <span class="kw">let </span>from = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, from);
+        <span class="kw">let </span>to = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, to);
+
+        <span class="kw">let </span>bs = <span class="kw">match </span><span class="self">self</span>.kv.get(<span class="kw-2">&amp;</span>from).<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="comment">// TODO: we can reuse the metadata in value to build content range.
+            </span><span class="prelude-val">Some</span>(bs) =&gt; bs,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(ErrorKind::NotFound, <span class="string">&quot;kv doesn&#39;t have this path&quot;</span>)),
+        };
+
+        <span class="self">self</span>.kv.set(<span class="kw-2">&amp;</span>to, bs).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.kv.delete(<span class="kw-2">&amp;</span>from).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(RpRename::default())
     }
 
     <span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="kw">match </span><span class="self">self</span>.blocking_copy(from, to, OpCopy {}) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
-                <span class="kw">let </span>from = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, from);
-                <span class="self">self</span>.kv.blocking_delete(<span class="kw-2">&amp;</span>from)<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(RpRename::default())
-            }
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
-        }
+        <span class="kw">let </span>from = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, from);
+        <span class="kw">let </span>to = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, to);
+
+        <span class="kw">let </span>bs = <span class="kw">match </span><span class="self">self</span>.kv.blocking_get(<span class="kw-2">&amp;</span>from)<span class="question-mark">? </span>{
+            <span class="comment">// TODO: we can reuse the metadata in value to build content range.
+            </span><span class="prelude-val">Some</span>(bs) =&gt; bs,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(ErrorKind::NotFound, <span class="string">&quot;kv doesn&#39;t have this path&quot;</span>)),
+        };
+
+        <span class="self">self</span>.kv.blocking_set(<span class="kw-2">&amp;</span>to, bs)<span class="question-mark">?</span>;
+        <span class="self">self</span>.kv.blocking_delete(<span class="kw-2">&amp;</span>from)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(RpRename::default())
     }
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
