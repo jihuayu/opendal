@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Azblob","Azdfs","Cos","Dashmap","Dropbox","Fs","Ftp","Gcs","Gdrive","Ghac","Hdfs","Http","Ipfs","Ipmfs","Memcached","Memory","Moka","Obs","Onedrive","Oss","Redis","Rocksdb","S3","Sftp","Sled","Supabase","VercelArtifacts","Wasabi","Webdav","Webhdfs"]};
+window.SIDEBAR_ITEMS = {"struct":["Azblob","Azdfs","Cos","Dashmap","Dropbox","Fs","Ftp","Gcs","Gdrive","Ghac","Hdfs","Http","Ipfs","Ipmfs","Memcached","Memory","Moka","Obs","Onedrive","Oss","Redb","Redis","Rocksdb","S3","Sftp","Sled","Supabase","VercelArtifacts","Wasabi","Webdav","Webhdfs"]};

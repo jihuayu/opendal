@@ -168,6 +168,11 @@
 <a href="#168" id="168">168</a>
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -338,4 +343,9 @@
 </span><span class="kw">mod </span>vercel_artifacts;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-vercel-artifacts&quot;</span>)]
 </span><span class="kw">pub use </span>vercel_artifacts::VercelArtifacts;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-redb&quot;</span>)]
+</span><span class="kw">mod </span>redb;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-redb&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::redb::Redb;
 </code></pre></div></section></main></body></html>
