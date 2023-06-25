@@ -170,6 +170,36 @@
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -190,6 +220,7 @@
 </span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::str;
 
 <span class="kw">use </span>async_trait::async_trait;
 
@@ -200,6 +231,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::Scheme;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
+<span class="comment">// https://github.com/spacejam/sled/blob/69294e59c718289ab3cb6bd03ac3b9e1e072a1e7/src/db.rs#L5
+</span><span class="kw">const </span>DEFAULT_TREE_ID: <span class="kw-2">&amp;</span>str = <span class="string">r#&quot;__sled__default&quot;#</span>;
+
 <span class="doccomment">/// Sled service support.
 </span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
 #[derive(Default)]
@@ -207,6 +241,7 @@
     <span class="doccomment">/// That path to the sled data directory.
     </span>datadir: <span class="prelude-ty">Option</span>&lt;String&gt;,
     root: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    tree: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>SledBuilder {
@@ -221,6 +256,12 @@
         <span class="self">self</span>.root = <span class="prelude-val">Some</span>(path.into());
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Set the tree for sled.
+    </span><span class="kw">pub fn </span>tree(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tree: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.tree = <span class="prelude-val">Some</span>(tree.into());
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>SledBuilder {
@@ -232,6 +273,7 @@
 
         map.get(<span class="string">&quot;datadir&quot;</span>).map(|v| builder.datadir(v));
         map.get(<span class="string">&quot;root&quot;</span>).map(|v| builder.root(v));
+        map.get(<span class="string">&quot;tree&quot;</span>).map(|v| builder.tree(v));
 
         builder
     }
@@ -249,9 +291,23 @@
                 .set_source(e)
         })<span class="question-mark">?</span>;
 
+        <span class="comment">// use &quot;default&quot; tree if not set
+        </span><span class="kw">let </span>tree_name = <span class="kw">match </span><span class="self">self</span>.tree.take() {
+            <span class="prelude-val">Some</span>(tree) =&gt; tree,
+            <span class="prelude-val">None </span>=&gt; DEFAULT_TREE_ID.to_string(),
+        };
+
+        <span class="kw">let </span>tree = db.open_tree(<span class="kw-2">&amp;</span>tree_name).map_err(|e| {
+            Error::new(ErrorKind::ConfigInvalid, <span class="string">&quot;open tree&quot;</span>)
+                .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Sled)
+                .with_context(<span class="string">&quot;datadir&quot;</span>, datadir_path.clone())
+                .with_context(<span class="string">&quot;tree&quot;</span>, tree_name.clone())
+                .set_source(e)
+        })<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(SledBackend::new(Adapter {
             datadir: datadir_path,
-            db,
+            tree,
         })
         .with_root(<span class="self">self</span>.root.as_deref().unwrap_or_default()))
     }
@@ -263,7 +319,7 @@
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Adapter {
     datadir: String,
-    db: sled::Db,
+    tree: sled::Tree,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>Adapter {
@@ -295,7 +351,11 @@
     }
 
     <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.db.get(path).map_err(parse_error)<span class="question-mark">?</span>.map(|v| v.to_vec()))
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.tree
+            .get(path)
+            .map_err(parse_error)<span class="question-mark">?
+            </span>.map(|v| v.to_vec()))
     }
 
     <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -303,7 +363,7 @@
     }
 
     <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.db.insert(path, value).map_err(parse_error)<span class="question-mark">?</span>;
+        <span class="self">self</span>.tree.insert(path, value).map_err(parse_error)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -313,7 +373,7 @@
     }
 
     <span class="kw">fn </span>blocking_delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.db.remove(path).map_err(parse_error)<span class="question-mark">?</span>;
+        <span class="self">self</span>.tree.remove(path).map_err(parse_error)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -323,7 +383,7 @@
     }
 
     <span class="kw">fn </span>blocking_scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
-        <span class="kw">let </span>it = <span class="self">self</span>.db.scan_prefix(path).keys();
+        <span class="kw">let </span>it = <span class="self">self</span>.tree.scan_prefix(path).keys();
         <span class="kw">let </span><span class="kw-2">mut </span>res = Vec::default();
 
         <span class="kw">for </span>i <span class="kw">in </span>it {
