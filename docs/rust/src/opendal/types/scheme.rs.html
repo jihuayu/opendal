@@ -203,6 +203,10 @@
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
 <a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -265,6 +269,8 @@
     </span>Memcached,
     <span class="doccomment">/// [memory][crate::services::Memory]: In memory backend support.
     </span>Memory,
+    <span class="doccomment">/// [mini-moka][crate::services::MiniMoka]: Mini Moka backend support.
+    </span>MiniMoka,
     <span class="doccomment">/// [moka][crate::services::Moka]: moka backend support.
     </span>Moka,
     <span class="doccomment">/// [obs][crate::services::Obs]: Huawei Cloud OBS services.
@@ -347,6 +353,7 @@
             <span class="string">&quot;ipmfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipmfs),
             <span class="string">&quot;memcached&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memcached),
             <span class="string">&quot;memory&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memory),
+            <span class="string">&quot;mini_moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::MiniMoka),
             <span class="string">&quot;moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Moka),
             <span class="string">&quot;obs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Obs),
             <span class="string">&quot;redis&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Redis),
@@ -381,6 +388,7 @@
             Scheme::Ipmfs =&gt; <span class="string">&quot;ipmfs&quot;</span>,
             Scheme::Memcached =&gt; <span class="string">&quot;memcached&quot;</span>,
             Scheme::Memory =&gt; <span class="string">&quot;memory&quot;</span>,
+            Scheme::MiniMoka =&gt; <span class="string">&quot;mini_moka&quot;</span>,
             Scheme::Moka =&gt; <span class="string">&quot;moka&quot;</span>,
             Scheme::Obs =&gt; <span class="string">&quot;obs&quot;</span>,
             Scheme::Onedrive =&gt; <span class="string">&quot;onedrive&quot;</span>,
