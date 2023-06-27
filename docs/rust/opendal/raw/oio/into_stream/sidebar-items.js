@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["from_futures_stream"]};
+window.SIDEBAR_ITEMS = {"fn":["from_futures_reader","from_futures_stream"]};
