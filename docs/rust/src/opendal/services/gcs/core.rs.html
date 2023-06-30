@@ -788,7 +788,7 @@
     <span class="kw">pub fn </span>gcs_insert_object_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
-        size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+        size: <span class="prelude-ty">Option</span>&lt;u64&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
