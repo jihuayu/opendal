@@ -80,6 +80,8 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -119,17 +121,14 @@
     <span class="kw">pub fn </span>new(core: Arc&lt;CosCore&gt;, op: OpWrite, path: String) -&gt; <span class="self">Self </span>{
         CosWriter { core, op, path }
     }
-}
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::Write <span class="kw">for </span>CosWriter {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>write_oneshot(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.core.cos_put_object_request(
             <span class="kw-2">&amp;</span><span class="self">self</span>.path,
-            <span class="prelude-val">Some</span>(bs.len()),
+            <span class="prelude-val">Some</span>(size),
             <span class="self">self</span>.op.content_type(),
             <span class="self">self</span>.op.cache_control(),
-            AsyncBody::Bytes(bs),
+            body,
         )<span class="question-mark">?</span>;
 
         <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -146,13 +145,18 @@
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
+}
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: u64, _s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">&quot;Write::sink is not supported&quot;</span>,
-        ))
-    }
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>oio::Write <span class="kw">for </span>CosWriter {
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.write_oneshot(bs.len() <span class="kw">as </span>u64, AsyncBody::Bytes(bs))
+            .<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="self">self</span>.write_oneshot(size, AsyncBody::Stream(s)).<span class="kw">await
+    </span>}
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
