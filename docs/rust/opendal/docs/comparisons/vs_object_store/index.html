@@ -41,25 +41,26 @@ object_store’s maintainers. So it could not be very objective.</p>
 <h4 id="design"><a href="#design">Design</a></h4>
 <p><code>object_store</code> exposed a trait called <a href="https://docs.rs/object_store/latest/object_store/trait.ObjectStore.html"><code>ObjectStore</code></a> to users.</p>
 <p>Users need to build a <code>dyn ObjectStore</code> and operate on it directly:</p>
-<div class="example-wrap"><pre class="language-Rust"><code>let object_store: Arc&lt;dyn ObjectStore&gt; = Arc::new(get_object_store());
-let path: Path = &quot;data/file01.parquet&quot;.try_into()?;
-let stream = object_store
-    .get(&amp;path)
-    .await?
-    .into_stream();
-</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>object_store: Arc&lt;<span class="kw">dyn </span>ObjectStore&gt; = Arc::new(get_object_store());
+<span class="kw">let </span>path: Path = <span class="string">&quot;data/file01.parquet&quot;</span>.try_into()<span class="question-mark">?</span>;
+<span class="kw">let </span>stream = object_store
+    .get(<span class="kw-2">&amp;</span>path)
+    .<span class="kw">await</span><span class="question-mark">?
+    </span>.into_stream();</code></pre></div>
 <p><code>opendal</code> has a similar trait called <a href="../../../raw/trait.Accessor.html" title="trait opendal::raw::Accessor"><code>Accessor</code></a></p>
 <p>But <code>opendal</code> don’t expose this trait to end users directly. Instead, <code>opendal</code> expose a new struct called <a href="../../../struct.Operator.html" title="struct opendal::Operator"><code>Operator</code></a> and builds public API on it.</p>
-<div class="example-wrap"><pre class="language-Rust"><code>let op: Operator = Operator::from_env(Scheme::S3)?;
-let r = op.reader(&quot;data/file01.parquet&quot;).await?;
-</code></pre></div><h4 id="interception"><a href="#interception">Interception</a></h4>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>op: Operator = Operator::from_env(Scheme::S3)<span class="question-mark">?</span>;
+<span class="kw">let </span>r = op.reader(<span class="string">&quot;data/file01.parquet&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;</code></pre></div>
+<h4 id="interception"><a href="#interception">Interception</a></h4>
 <p>Both <code>object_store</code> and <code>opendal</code> provide a mechanism to intercept operations.</p>
 <p><code>object_store</code> called <code>Adapters</code>:</p>
-<div class="example-wrap"><pre class="language-Rust"><code>let object_store = ThrottledStore::new(get_object_store(), ThrottleConfig::default())
-</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>object_store = ThrottledStore::new(get_object_store(), ThrottleConfig::default())</code></pre></div>
 <p><code>opendal</code> called <a href="../../../raw/trait.Layer.html" title="trait opendal::raw::Layer"><code>Layer</code></a>:</p>
-<div class="example-wrap"><pre class="language-Rust"><code>let op = op.layer(TracingLayer).layer(MetricsLayer);
-</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>op = op.layer(TracingLayer).layer(MetricsLayer);</code></pre></div>
 <p>At the time of writing:</p>
 <p>object_store (<code>v0.5.0</code>) supports:</p>
 <ul>
@@ -118,21 +119,22 @@ let r = op.reader(&quot;data/file01.parquet&quot;).await?;
 </div><h3 id="demo-show"><a href="#demo-show">Demo show</a></h3>
 <p>The most straightforward complete demo how to read a file from s3:</p>
 <p><code>opendal</code></p>
-<div class="example-wrap"><pre class="language-Rust"><code>let mut builder = S3::default();
-builder.bucket(&quot;example&quot;);
-builder.access_key_id(&quot;access_key_id&quot;);
-builder.secret_access_key(&quot;secret_access_key&quot;);
 
-let store = Operator::new(builder)?.finish();
-let r = store.reader(&quot;data.parquet&quot;).await?;
-</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span><span class="kw-2">mut </span>builder = S3::default();
+builder.bucket(<span class="string">&quot;example&quot;</span>);
+builder.access_key_id(<span class="string">&quot;access_key_id&quot;</span>);
+builder.secret_access_key(<span class="string">&quot;secret_access_key&quot;</span>);
+
+<span class="kw">let </span>store = Operator::new(builder)<span class="question-mark">?</span>.finish();
+<span class="kw">let </span>r = store.reader(<span class="string">&quot;data.parquet&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;</code></pre></div>
 <p><code>object_store</code></p>
-<div class="example-wrap"><pre class="language-Rust"><code>let mut builder = AmazonS3Builder::new()
-.with_bucket_name(&quot;example&quot;)
-.with_access_key_id(&quot;access_key_id&quot;)
-.with_secret_access_key(&quot;secret_access_key&quot;);
 
-let store = Arc::new(builder.build()?);
-let path: Path = &quot;data.parquet&quot;.try_into().unwrap();
-let stream = store.get(&amp;path).await()?.into_stream();
-</code></pre></div></div></details></section></div></main></body></html>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span><span class="kw-2">mut </span>builder = AmazonS3Builder::new()
+.with_bucket_name(<span class="string">&quot;example&quot;</span>)
+.with_access_key_id(<span class="string">&quot;access_key_id&quot;</span>)
+.with_secret_access_key(<span class="string">&quot;secret_access_key&quot;</span>);
+
+<span class="kw">let </span>store = Arc::new(builder.build()<span class="question-mark">?</span>);
+<span class="kw">let </span>path: Path = <span class="string">&quot;data.parquet&quot;</span>.try_into().unwrap();
+<span class="kw">let </span>stream = store.get(<span class="kw-2">&amp;</span>path).<span class="kw">await</span>()<span class="question-mark">?</span>.into_stream();</code></pre></div>
+</div></details></section></div></main></body></html>
