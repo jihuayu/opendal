@@ -91,6 +91,40 @@
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -116,6 +150,7 @@
 
 <span class="kw">use </span><span class="kw">super</span>::core::DropboxCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">super</span>::response::DropboxMetadataResponse;
 <span class="kw">use </span><span class="kw">super</span>::writer::DropboxWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -180,6 +215,39 @@
 
         <span class="kw">match </span>status {
             StatusCode::OK =&gt; <span class="prelude-val">Ok</span>(RpDelete::default()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">if </span>path == <span class="string">&quot;/&quot; </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
+        }
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.dropbox_get_metadata(path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                <span class="kw">let </span>bytes = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>decoded_response = serde_json::from_slice::&lt;DropboxMetadataResponse&gt;(<span class="kw-2">&amp;</span>bytes)
+                    .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
+                <span class="kw">let </span>entry_mode: EntryMode = <span class="kw">match </span>decoded_response.tag.as_str() {
+                    <span class="string">&quot;file&quot; </span>=&gt; EntryMode::FILE,
+                    <span class="string">&quot;folder&quot; </span>=&gt; EntryMode::DIR,
+                    <span class="kw">_ </span>=&gt; EntryMode::Unknown,
+                };
+                <span class="kw">let </span><span class="kw-2">mut </span>metadata = Metadata::new(entry_mode);
+                <span class="kw">let </span>last_modified = decoded_response.client_modified;
+                <span class="kw">let </span>date_utc_last_modified = parse_datetime_from_rfc3339(<span class="kw-2">&amp;</span>last_modified)<span class="question-mark">?</span>;
+                metadata.set_last_modified(date_utc_last_modified);
+                <span class="kw">if </span>decoded_response.size.is_some() {
+                    <span class="kw">let </span>size = decoded_response.size.unwrap();
+                    metadata.set_content_length(size);
+                }
+                <span class="prelude-val">Ok</span>(RpStat::new(metadata))
+            }
+            StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) =&gt; {
+                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
+            }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
