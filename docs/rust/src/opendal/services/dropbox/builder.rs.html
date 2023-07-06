@@ -147,6 +147,7 @@
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -263,6 +264,7 @@
 
     <span class="kw">fn </span>from_map(map: HashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">Self</span>::default();
+        map.get(<span class="string">&quot;root&quot;</span>).map(|v| builder.root(v));
         map.get(<span class="string">&quot;access_token&quot;</span>).map(|v| builder.access_token(v));
         builder
     }
