@@ -82,13 +82,6 @@
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -108,19 +101,26 @@
 
 </span><span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
+<span class="kw">use </span>http::Uri;
+<span class="kw">use </span>serde::Deserialize;
 
-<span class="kw">use </span><span class="kw">super</span>::response::DropboxErrorResponse;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::Error;
 <span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
+
+<span class="attr">#[derive(Default, Debug, Deserialize)]
+#[serde(default)]
+</span><span class="kw">pub struct </span>DropboxErrorResponse {
+    error_summary: String,
+}
 
 <span class="doccomment">/// Parse error response into Error.
 </span><span class="kw">pub async fn </span>parse_error(resp: Response&lt;IncomingAsyncBody&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Error&gt; {
     <span class="kw">let </span>(parts, body) = resp.into_parts();
     <span class="kw">let </span>bs = body.bytes().<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span>(kind, retryable) = <span class="kw">match </span>parts.status {
+    <span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = <span class="kw">match </span>parts.status {
         StatusCode::NOT_FOUND =&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
         StatusCode::FORBIDDEN =&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
         StatusCode::INTERNAL_SERVER_ERROR
@@ -130,54 +130,40 @@
         <span class="kw">_ </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
     };
 
-    <span class="kw">let </span>dropbox_error =
-        serde_json::from_slice::&lt;DropboxErrorResponse&gt;(<span class="kw-2">&amp;</span>bs).map_err(new_json_deserialize_error);
-    <span class="kw">match </span>dropbox_error {
-        <span class="prelude-val">Ok</span>(dropbox_error) =&gt; {
-            <span class="comment">// We cannot get the error type from the response header when the status code is 409.
-            // Because Dropbox API v2 will put error summary in the response body,
-            // we need to parse it to get the correct error type and then error kind.
-            // See https://www.dropbox.com/developers/documentation/http/documentation#error-handling
-            </span><span class="kw">let </span>error_summary = dropbox_error.error_summary.as_str();
+    <span class="kw">let </span>(message, dropbox_err) = serde_json::from_slice::&lt;DropboxErrorResponse&gt;(<span class="kw-2">&amp;</span>bs)
+        .map(|dropbox_err| (<span class="macro">format!</span>(<span class="string">&quot;{dropbox_err:?}&quot;</span>), <span class="prelude-val">Some</span>(dropbox_err)))
+        .unwrap_or_else(|<span class="kw">_</span>| (String::from_utf8_lossy(<span class="kw-2">&amp;</span>bs).into_owned(), <span class="prelude-val">None</span>));
 
-            <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(
-                <span class="kw">match </span>parts.status {
-                    <span class="comment">// 409 Conflict means that Endpoint-specific error.
-                    // Look to the JSON response body for the specifics of the error.
-                    </span>StatusCode::CONFLICT =&gt; {
-                        <span class="kw">if </span>error_summary.contains(<span class="string">&quot;path/not_found&quot;</span>)
-                            || error_summary.contains(<span class="string">&quot;path_lookup/not_found&quot;</span>)
-                        {
-                            ErrorKind::NotFound
-                        } <span class="kw">else if </span>error_summary.contains(<span class="string">&quot;path/conflict&quot;</span>) {
-                            ErrorKind::AlreadyExists
-                        } <span class="kw">else </span>{
-                            ErrorKind::Unexpected
-                        }
-                    }
-                    <span class="comment">// Otherwise, we can get the error type from the response status code.
-                    </span><span class="kw">_ </span>=&gt; kind,
-                },
-                error_summary,
-            )
-            .with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
-
-            <span class="kw">if </span>retryable {
-                err = err.set_temporary();
-            }
-
-            <span class="prelude-val">Ok</span>(err)
-        }
-        <span class="prelude-val">Err</span>(_err) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>String::from_utf8_lossy(<span class="kw-2">&amp;</span>bs))
-                .with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
-
-            <span class="kw">if </span>retryable {
-                err = err.set_temporary();
-            }
-
-            <span class="prelude-val">Ok</span>(err)
-        }
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(dropbox_err) = dropbox_err {
+        (kind, retryable) =
+            parse_dropbox_error_summary(<span class="kw-2">&amp;</span>dropbox_err.error_summary).unwrap_or((kind, retryable));
     }
+
+    <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message).with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
+
+    <span class="kw">if </span>retryable {
+        err = err.set_temporary();
+    }
+
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(uri) = parts.extensions.get::&lt;Uri&gt;() {
+        err = err.with_context(<span class="string">&quot;uri&quot;</span>, uri.to_string());
+    }
+
+    <span class="prelude-val">Ok</span>(err)
+}
+
+<span class="doccomment">/// We cannot get the error type from the response header when the status code is 409.
+/// Because Dropbox API v2 will put error summary in the response body,
+/// we need to parse it to get the correct error type and then error kind.
+///
+/// See &lt;https://www.dropbox.com/developers/documentation/http/documentation#error-handling&gt;
+</span><span class="kw">pub fn </span>parse_dropbox_error_summary(summary: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;(ErrorKind, bool)&gt; {
+    <span class="kw">if </span>summary.starts_with(<span class="string">&quot;path/not_found&quot;</span>) || summary.starts_with(<span class="string">&quot;path_lookup/not_found&quot;</span>) {
+        <span class="prelude-val">Some</span>((ErrorKind::NotFound, <span class="bool-val">false</span>))
+    } <span class="kw">else if </span>summary.starts_with(<span class="string">&quot;path/conflict&quot;</span>) {
+        <span class="prelude-val">Some</span>((ErrorKind::AlreadyExists, <span class="bool-val">false</span>))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 </code></pre></div></section></main></body></html>
