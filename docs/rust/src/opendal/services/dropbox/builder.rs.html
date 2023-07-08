@@ -229,6 +229,31 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -280,16 +305,38 @@
 ///
 /// # Configuration
 ///
-/// - `access_token`: set the access_token for google drive api
-/// - `root`: Set the work directory for backend
+/// - `root`: Set the work directory for this backend.
 ///
-/// You can refer to [`DropboxBuilder`]&#39;s docs for more information
+/// ## Credentials related
+///
+/// ### Just provide Access Token (Temporary)
+///
+/// - `access_token`: set the access_token for this backend.
+/// Please notice its expiration.
+///
+/// ### Or provide Client ID and Client Secret and refresh token (Long Term)
+///
+/// If you want to let OpenDAL to refresh the access token automatically,
+/// please provide the following fields:
+///
+/// - `refresh_token`: set the refresh_token for dropbox api
+/// - `client_id`: set the client_id for dropbox api
+/// - `client_secret`: set the client_secret for dropbox api
+///
+/// OpenDAL is a library, it cannot do the first step of OAuth2 for you.
+/// You need to get authorization code from user by calling Dropbox&#39;s authorize url
+/// and exchange it for refresh token.
+///
+/// Please refer to [Dropbox OAuth2 Guide](https://www.dropbox.com/developers/reference/oauth-guide)
+/// for more information.
+///
+/// You can refer to [`DropboxBuilder`]&#39;s docs for more information.
 ///
 /// # Example
 ///
 /// ## Via Builder
 ///
-/// ```
+/// ```rust
 /// use anyhow::Result;
 /// use opendal::raw::OpWrite;
 /// use opendal::services::Dropbox;
@@ -297,8 +344,8 @@
 ///
 /// #[tokio::main]
 /// async fn main() -&gt; Result&lt;()&gt; {
-///     // create backend builder
 ///     let mut builder = Dropbox::default();
+///     builder.root(&quot;/test&quot;);
 ///     builder.access_token(&quot;&lt;token&gt;&quot;);
 ///
 ///     let op: Operator = Operator::new(builder)?.finish();
@@ -309,7 +356,9 @@
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>DropboxBuilder {
     root: <span class="prelude-ty">Option</span>&lt;String&gt;,
+
     access_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
+
     refresh_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
     client_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
     client_secret: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -336,15 +385,16 @@
     ///
     /// You can get the access token from [Dropbox App Console](https://www.dropbox.com/developers/apps)
     ///
-    /// NOTE: this token will be expired in 4 hours. If you are trying to use dropbox services in a long time, please set a refresh_token instead.
+    /// NOTE: this token will be expired in 4 hours.
+    /// If you are trying to use the Dropbox service in a long time, please set a refresh_token instead.
     </span><span class="kw">pub fn </span>access_token(<span class="kw-2">&amp;mut </span><span class="self">self</span>, access_token: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.access_token = <span class="prelude-val">Some</span>(access_token.to_string());
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Refersh token is used for long term access to the Dropbox API.
+    <span class="doccomment">/// Refresh token is used for long term access to the Dropbox API.
     ///
-    /// You can get the refresh token via OAuth2.0 Flow of dropbox.
+    /// You can get the refresh token via OAuth 2.0 Flow of Dropbox.
     ///
     /// OpenDAL will use this refresh token to get a new access token when the old one is expired.
     </span><span class="kw">pub fn </span>refresh_token(<span class="kw-2">&amp;mut </span><span class="self">self</span>, refresh_token: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
@@ -352,17 +402,17 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set the client id for dropbox.
+    <span class="doccomment">/// Set the client id for Dropbox.
     ///
-    /// This is required for OAuth2.0 Flow with refresh token.
+    /// This is required for OAuth 2.0 Flow to refresh the access token.
     </span><span class="kw">pub fn </span>client_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client_id: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.client_id = <span class="prelude-val">Some</span>(client_id.to_string());
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Set the client secret for dropbox.
+    <span class="doccomment">/// Set the client secret for Dropbox.
     ///
-    /// This is required for OAuth2.0 Flow with refresh token.
+    /// This is required for OAuth 2.0 Flow with refresh the access token.
     </span><span class="kw">pub fn </span>client_secret(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client_secret: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.client_secret = <span class="prelude-val">Some</span>(client_secret.to_string());
         <span class="self">self

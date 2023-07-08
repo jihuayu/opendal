@@ -82,6 +82,8 @@
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -112,7 +114,7 @@
 <span class="attr">#[derive(Default, Debug, Deserialize)]
 #[serde(default)]
 </span><span class="kw">pub struct </span>DropboxErrorResponse {
-    error_summary: String,
+    <span class="kw">pub </span>error_summary: String,
 }
 
 <span class="doccomment">/// Parse error response into Error.
@@ -162,6 +164,8 @@
         <span class="prelude-val">Some</span>((ErrorKind::NotFound, <span class="bool-val">false</span>))
     } <span class="kw">else if </span>summary.starts_with(<span class="string">&quot;path/conflict&quot;</span>) {
         <span class="prelude-val">Some</span>((ErrorKind::AlreadyExists, <span class="bool-val">false</span>))
+    } <span class="kw">else if </span>summary.starts_with(<span class="string">&quot;too_many_write_operations&quot;</span>) {
+        <span class="prelude-val">Some</span>((ErrorKind::RateLimited, <span class="bool-val">true</span>))
     } <span class="kw">else </span>{
         <span class="prelude-val">None
     </span>}
