@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FutureAppend","FutureAppender","FutureList","FuturePresignRead","FuturePresignWrite","FutureRead","FutureReader","FutureStat","FutureWrite","FutureWriter"]};
+window.SIDEBAR_ITEMS = {"struct":["FutureAppend","FutureAppender","FutureDelete","FutureList","FuturePresignRead","FuturePresignWrite","FutureRead","FutureReader","FutureStat","FutureWrite","FutureWriter"]};
