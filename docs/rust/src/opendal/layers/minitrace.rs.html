@@ -447,9 +447,6 @@
 <a href="#447" id="447">447</a>
 <a href="#448" id="448">448</a>
 <a href="#449" id="449">449</a>
-<a href="#450" id="450">450</a>
-<a href="#451" id="451">451</a>
-<a href="#452" id="452">452</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -516,32 +513,29 @@
 /// fn main() -&gt; Result&lt;(), Box&lt;dyn Error + Send + Sync + &#39;static&gt;&gt; {
 ///     let collector = {
 ///         let (span, collector) = minitrace::Span::root(&quot;op&quot;);
-///         let _g = span.set_local_parent();
 ///         let runtime = tokio::runtime::Runtime::new()?;
-///
-///         runtime.block_on(async {
-///             let _ = dotenvy::dotenv();
-///             let op = Operator::from_env::&lt;services::Memory&gt;()
-///                 .expect(&quot;init operator must succeed&quot;)
-///                 .layer(MinitraceLayer)
-///                 .finish();
-///
-///             op.write(&quot;test&quot;, &quot;0&quot;.repeat(16 * 1024 * 1024).into_bytes())
-///                 .await
-///                 .expect(&quot;must succeed&quot;);
-///             op.stat(&quot;test&quot;).await.expect(&quot;must succeed&quot;);
-///             op.read(&quot;test&quot;).await.expect(&quot;must succeed&quot;);
-///         });
+///         runtime.block_on(
+///             async {
+///                 let _ = dotenvy::dotenv();
+///                 let op = Operator::from_env::&lt;services::Memory&gt;()
+///                     .expect(&quot;init operator must succeed&quot;)
+///                     .layer(MinitraceLayer)
+///                     .finish();
+///                 op.write(&quot;test&quot;, &quot;0&quot;.repeat(16 * 1024 * 1024).into_bytes())
+///                     .await
+///                     .expect(&quot;must succeed&quot;);
+///                 op.stat(&quot;test&quot;).await.expect(&quot;must succeed&quot;);
+///                 op.read(&quot;test&quot;).await.expect(&quot;must succeed&quot;);
+///             }
+///             .in_span(Span::enter_with_parent(&quot;test&quot;, &amp;span)),
+///         );
 ///         collector
 ///     };
-///
 ///     let spans = block_on(collector.collect());
-///
 ///     let bytes =
 ///         minitrace_jaeger::encode(&quot;opendal&quot;.to_owned(), rand::random(), 0, 0, &amp;spans).unwrap();
 ///     minitrace_jaeger::report_blocking(&quot;127.0.0.1:6831&quot;.parse().unwrap(), &amp;bytes)
 ///         .expect(&quot;report error&quot;);
-///
 ///     Ok(())
 /// }
 /// ```
