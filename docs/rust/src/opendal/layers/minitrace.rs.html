@@ -561,22 +561,22 @@
         <span class="self">self</span>.inner.append(path, args).<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;copy&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
         <span class="self">self</span>.inner().copy(from, to, args).<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;rename&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
         <span class="self">self</span>.inner().rename(from, to, args).<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;stat&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
         <span class="self">self</span>.inner.stat(path, args).<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;delete&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="self">self</span>.inner.delete(path, args).<span class="kw">await
     </span>}
@@ -589,17 +589,17 @@
             .<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;presign&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
         <span class="self">self</span>.inner.presign(path, args).<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;batch&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {
         <span class="self">self</span>.inner.batch(args).<span class="kw">await
     </span>}
 
-    <span class="attr">#[trace(<span class="string">&quot;blocking_create&quot;</span>)]
+    <span class="attr">#[trace]
     </span><span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="self">self</span>.inner.blocking_create_dir(path, args)
     }
@@ -624,22 +624,22 @@
         })
     }
 
-    <span class="attr">#[trace(<span class="string">&quot;blocking_copy&quot;</span>)]
+    <span class="attr">#[trace]
     </span><span class="kw">fn </span>blocking_copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
         <span class="self">self</span>.inner().blocking_copy(from, to, args)
     }
 
-    <span class="attr">#[trace(<span class="string">&quot;blocking_rename&quot;</span>)]
+    <span class="attr">#[trace]
     </span><span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
         <span class="self">self</span>.inner().blocking_rename(from, to, args)
     }
 
-    <span class="attr">#[trace(<span class="string">&quot;blocking_stat&quot;</span>)]
+    <span class="attr">#[trace]
     </span><span class="kw">fn </span>blocking_stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
         <span class="self">self</span>.inner.blocking_stat(path, args)
     }
 
-    <span class="attr">#[trace(<span class="string">&quot;blocking_delete&quot;</span>)]
+    <span class="attr">#[trace]
     </span><span class="kw">fn </span>blocking_delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="self">self</span>.inner.blocking_delete(path, args)
     }
