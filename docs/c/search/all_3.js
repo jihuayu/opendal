@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['len_4',['len',['../structopendal__bytes.html#a16abed2ad211c076650d1ea81772b851',1,'opendal_bytes']]]
+  ['entry_3',['Entry',['../opendal_8h.html#a65b0d0252adaf76f9ce2004299344de8',1,'opendal.h']]]
 ];

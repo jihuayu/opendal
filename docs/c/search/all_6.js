@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ptr_43',['ptr',['../structopendal__operator__ptr.html#a17b619ae01bb6471f51f8501ab18dd9b',1,'opendal_operator_ptr']]]
+  ['meta_8',['meta',['../structopendal__result__stat.html#a1d4d484d7bf50bc8e5d65dea5f6f2425',1,'opendal_result_stat']]]
 ];

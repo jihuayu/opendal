@@ -35,6 +35,8 @@ var menudata={children:[
 {text:"File List",url:"files.html"},
 {text:"File Members",url:"globals.html",children:[
 {text:"All",url:"globals.html",children:[
+{text:"b",url:"globals.html#index_b"},
+{text:"e",url:"globals.html#index_e"},
 {text:"o",url:"globals.html#index_o"}]},
 {text:"Functions",url:"globals_func.html"},
 {text:"Typedefs",url:"globals_type.html"},
