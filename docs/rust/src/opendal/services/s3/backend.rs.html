@@ -1050,6 +1050,75 @@
 <a href="#1050" id="1050">1050</a>
 <a href="#1051" id="1051">1051</a>
 <a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1569,6 +1638,69 @@
 
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// a helper function to make it easier to find region
+    /// Reference: [Amazon S3 HeadBucket API](https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/API/API_HeadBucket.html)
+    /// # Args
+    ///
+    /// endpoint: the endpoint of S3 service
+    ///
+    /// bucket: the bucket of S3 service
+    /// # Return
+    /// if get the region of given inputs, return Some(region)
+    /// else return None
+    ///
+    /// # Usage
+    /// let b = S3Builder::default();
+    /// let region = b.detect_region(&quot;https://s3.amazonaws.com&quot;, &quot;buckets&quot;).await;
+    </span><span class="kw">pub async fn </span>detect_region(<span class="kw-2">&amp;</span><span class="self">self</span>, endpoint: <span class="kw-2">&amp;</span>str, bucket: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>endpoint = <span class="kw">if </span>endpoint.starts_with(<span class="string">&quot;http&quot;</span>) {
+            endpoint.to_string()
+        } <span class="kw">else </span>{
+            <span class="comment">// Prefix https if endpoint doesn&#39;t start with scheme.
+            </span><span class="macro">format!</span>(<span class="string">&quot;https://{}&quot;</span>, endpoint)
+        };
+
+        endpoint = endpoint.replace(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;//{0}.&quot;</span>, bucket), <span class="string">&quot;//&quot;</span>);
+        <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{0}/{1}&quot;</span>, endpoint, bucket);
+
+        <span class="macro">debug!</span>(<span class="string">&quot;backend detect region with url: {url}&quot;</span>);
+
+        <span class="kw">let </span>req = <span class="kw">match </span>http::Request::head(<span class="kw-2">&amp;</span>url).body(AsyncBody::Empty) {
+            <span class="prelude-val">Ok</span>(reg) =&gt; reg,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        };
+
+        <span class="kw">let </span>client = <span class="kw">match </span>HttpClient::new() {
+            <span class="prelude-val">Ok</span>(client) =&gt; client,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        };
+        <span class="kw">let </span>res = <span class="kw">match </span>client.send(req).<span class="kw">await </span>{
+            <span class="prelude-val">Ok</span>(res) =&gt; res,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        };
+
+        <span class="macro">debug!</span>(
+            <span class="string">&quot;auto detect region got response: status {:?}, header: {:?}&quot;</span>,
+            res.status(),
+            res.headers()
+        );
+
+        <span class="kw">match </span>res.status() {
+            <span class="comment">// The endpoint works, return with not changed endpoint and
+            // default region.
+            </span>StatusCode::OK | StatusCode::FORBIDDEN | StatusCode::MOVED_PERMANENTLY =&gt; {
+                <span class="kw">let </span>region = res.headers().get(<span class="string">&quot;x-amz-bucket-region&quot;</span>).unwrap().to_str();
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(regin) = region {
+                    <span class="prelude-val">Some</span>(regin.to_string())
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
+            }
+            <span class="comment">// Unexpected status code
+            </span><span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        }
+    }
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>S3Builder {
@@ -2100,6 +2232,12 @@
             <span class="kw">let </span>endpoint = b.build_endpoint(<span class="string">&quot;us-east-2&quot;</span>);
             <span class="macro">assert_eq!</span>(endpoint, <span class="string">&quot;https://test.s3.us-east-2.amazonaws.com&quot;</span>);
         }
+    }
+    <span class="attr">#[tokio::test]
+    </span><span class="kw">async fn </span>test_detect_region() {
+        <span class="kw">let </span>b = S3Builder::default();
+        <span class="kw">let </span>region = b.detect_region(<span class="string">&quot;https://s3.amazonaws.com&quot;</span>, <span class="string">&quot;buckets&quot;</span>).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(region, <span class="prelude-val">Some</span>(<span class="string">&quot;us-east-1&quot;</span>.to_string()))
     }
 }
 </code></pre></div></section></main></body></html>
