@@ -209,7 +209,7 @@
 
         <span class="kw">match </span>base.checked_add(offset) {
             <span class="prelude-val">Some</span>(n) <span class="kw">if </span>n &lt; <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::Unexpected,
+                ErrorKind::InvalidInput,
                 <span class="string">&quot;invalid seek to a negative or overflowing position&quot;</span>,
             )),
             <span class="prelude-val">Some</span>(n) =&gt; {
@@ -223,7 +223,7 @@
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.offset - <span class="self">self</span>.start)
             }
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::Unexpected,
+                ErrorKind::InvalidInput,
                 <span class="string">&quot;invalid seek to a negative or overflowing position&quot;</span>,
             )),
         }

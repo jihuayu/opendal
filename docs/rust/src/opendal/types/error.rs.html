@@ -393,6 +393,11 @@
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -494,6 +499,10 @@
     /// - Users expected to read 1024 bytes, but service returned less bytes.
     /// - Service expected to write 1024 bytes, but users write less bytes.
     </span>ContentIncomplete,
+    <span class="doccomment">/// The input is invalid.
+    ///
+    /// For example, user try to seek to a negative position
+    </span>InvalidInput,
 }
 
 <span class="kw">impl </span>ErrorKind {
@@ -525,6 +534,7 @@
             ErrorKind::ConditionNotMatch =&gt; <span class="string">&quot;ConditionNotMatch&quot;</span>,
             ErrorKind::ContentTruncated =&gt; <span class="string">&quot;ContentTruncated&quot;</span>,
             ErrorKind::ContentIncomplete =&gt; <span class="string">&quot;ContentIncomplete&quot;</span>,
+            ErrorKind::InvalidInput =&gt; <span class="string">&quot;InvalidInput&quot;</span>,
         }
     }
 }
