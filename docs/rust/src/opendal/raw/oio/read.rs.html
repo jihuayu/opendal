@@ -373,6 +373,13 @@
 <a href="#373" id="373">373</a>
 <a href="#374" id="374">374</a>
 <a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -524,6 +531,17 @@
     }
 }
 
+<span class="kw">fn </span>convert_to_io_error(err: Error) -&gt; io::Error {
+    <span class="kw">let </span>kind = <span class="kw">match </span>err.kind() {
+        ErrorKind::NotFound =&gt; io::ErrorKind::NotFound,
+        ErrorKind::PermissionDenied =&gt; io::ErrorKind::PermissionDenied,
+        ErrorKind::InvalidInput =&gt; io::ErrorKind::InvalidInput,
+        <span class="kw">_ </span>=&gt; io::ErrorKind::Interrupted,
+    };
+
+    io::Error::new(kind, err)
+}
+
 <span class="kw">impl </span>futures::AsyncRead <span class="kw">for dyn </span>Read {
     <span class="kw">fn </span>poll_read(
         <span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
@@ -531,8 +549,7 @@
         buf: <span class="kw-2">&amp;mut </span>[u8],
     ) -&gt; Poll&lt;io::Result&lt;usize&gt;&gt; {
         <span class="kw">let </span>this: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Read = <span class="kw-2">&amp;mut *</span><span class="self">self</span>;
-        this.poll_read(cx, buf)
-            .map_err(|err| io::Error::new(io::ErrorKind::Interrupted, err))
+        this.poll_read(cx, buf).map_err(convert_to_io_error)
     }
 }
 
@@ -543,8 +560,7 @@
         pos: io::SeekFrom,
     ) -&gt; Poll&lt;io::Result&lt;u64&gt;&gt; {
         <span class="kw">let </span>this: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Read = <span class="kw-2">&amp;mut *</span><span class="self">self</span>;
-        this.poll_seek(cx, pos)
-            .map_err(|err| io::Error::new(io::ErrorKind::Interrupted, err))
+        this.poll_seek(cx, pos).map_err(convert_to_io_error)
     }
 }
 
@@ -725,8 +741,7 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; io::Result&lt;usize&gt; {
         <span class="kw">let </span>this: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>BlockingRead = <span class="kw-2">&amp;mut *</span><span class="self">self</span>;
-        this.read(buf)
-            .map_err(|err| io::Error::new(io::ErrorKind::Interrupted, err))
+        this.read(buf).map_err(convert_to_io_error)
     }
 }
 
@@ -734,8 +749,7 @@
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: io::SeekFrom) -&gt; io::Result&lt;u64&gt; {
         <span class="kw">let </span>this: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>BlockingRead = <span class="kw-2">&amp;mut *</span><span class="self">self</span>;
-        this.seek(pos)
-            .map_err(|err| io::Error::new(io::ErrorKind::Interrupted, err))
+        this.seek(pos).map_err(convert_to_io_error)
     }
 }
 
