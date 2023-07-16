@@ -211,6 +211,10 @@
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
 <a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -289,6 +293,8 @@
     </span>Dropbox,
     <span class="doccomment">/// [oss][crate::services::Oss]: Aliyun Object Storage Services
     </span>Oss,
+    <span class="doccomment">/// [persy][crate::services::Persy]: persy backend support.
+    </span>Persy,
     <span class="doccomment">/// [redis][crate::services::Redis]: Redis services
     </span>Redis,
     <span class="doccomment">/// [rocksdb][crate::services::Rocksdb]: RocksDB services
@@ -363,6 +369,7 @@
             <span class="string">&quot;mini_moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::MiniMoka),
             <span class="string">&quot;moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Moka),
             <span class="string">&quot;obs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Obs),
+            <span class="string">&quot;persy&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Persy),
             <span class="string">&quot;redis&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Redis),
             <span class="string">&quot;rocksdb&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Rocksdb),
             <span class="string">&quot;s3&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::S3),
@@ -400,6 +407,7 @@
             Scheme::Moka =&gt; <span class="string">&quot;moka&quot;</span>,
             Scheme::Obs =&gt; <span class="string">&quot;obs&quot;</span>,
             Scheme::Onedrive =&gt; <span class="string">&quot;onedrive&quot;</span>,
+            Scheme::Persy =&gt; <span class="string">&quot;persy&quot;</span>,
             Scheme::Gdrive =&gt; <span class="string">&quot;gdrive&quot;</span>,
             Scheme::Dropbox =&gt; <span class="string">&quot;dropbox&quot;</span>,
             Scheme::Redis =&gt; <span class="string">&quot;redis&quot;</span>,

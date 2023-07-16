@@ -368,6 +368,8 @@
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -565,6 +567,8 @@
             </span>Scheme::Gdrive =&gt; <span class="self">Self</span>::from_map::&lt;services::Gdrive&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-oss&quot;</span>)]
             </span>Scheme::Oss =&gt; <span class="self">Self</span>::from_map::&lt;services::Oss&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-persy&quot;</span>)]
+            </span>Scheme::Persy =&gt; <span class="self">Self</span>::from_map::&lt;services::Persy&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
             </span>Scheme::Redis =&gt; <span class="self">Self</span>::from_map::&lt;services::Redis&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-rocksdb&quot;</span>)]
