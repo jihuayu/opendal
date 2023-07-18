@@ -126,9 +126,6 @@
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -148,7 +145,6 @@
 
 </span><span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>http::Response;
-<span class="kw">use </span>http::Uri;
 <span class="kw">use </span>quick_xml::de;
 <span class="kw">use </span>serde::Deserialize;
 
@@ -191,14 +187,12 @@
         (kind, retryable) = parse_s3_error_code(s3_err.code.as_str()).unwrap_or((kind, retryable));
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message).with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
+    <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message);
+
+    err = with_error_response_context(err, parts);
 
     <span class="kw">if </span>retryable {
         err = err.set_temporary();
-    }
-
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(uri) = parts.extensions.get::&lt;Uri&gt;() {
-        err = err.with_context(<span class="string">&quot;uri&quot;</span>, uri.to_string());
     }
 
     <span class="prelude-val">Ok</span>(err)

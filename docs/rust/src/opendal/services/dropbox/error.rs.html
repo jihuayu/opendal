@@ -81,9 +81,6 @@
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -103,7 +100,6 @@
 
 </span><span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
-<span class="kw">use </span>http::Uri;
 <span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -141,14 +137,12 @@
             parse_dropbox_error_summary(<span class="kw-2">&amp;</span>dropbox_err.error_summary).unwrap_or((kind, retryable));
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message).with_context(<span class="string">&quot;response&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{parts:?}&quot;</span>));
+    <span class="kw">let </span><span class="kw-2">mut </span>err = Error::new(kind, <span class="kw-2">&amp;</span>message);
+
+    err = with_error_response_context(err, parts);
 
     <span class="kw">if </span>retryable {
         err = err.set_temporary();
-    }
-
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(uri) = parts.extensions.get::&lt;Uri&gt;() {
-        err = err.with_context(<span class="string">&quot;uri&quot;</span>, uri.to_string());
     }
 
     <span class="prelude-val">Ok</span>(err)

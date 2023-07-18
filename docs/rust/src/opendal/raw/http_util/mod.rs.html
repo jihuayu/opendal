@@ -64,7 +64,6 @@
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
 <a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -118,8 +117,7 @@
 <span class="kw">pub use </span>error::new_request_build_error;
 <span class="kw">pub use </span>error::new_request_credential_error;
 <span class="kw">pub use </span>error::new_request_sign_error;
-<span class="kw">pub use </span>error::parse_error_response;
-<span class="kw">pub use </span>error::ErrorResponse;
+<span class="kw">pub use </span>error::with_error_response_context;
 
 <span class="kw">mod </span>bytes_range;
 <span class="kw">pub use </span>bytes_range::BytesRange;
