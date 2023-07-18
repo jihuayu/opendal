@@ -414,9 +414,6 @@
 <a href="#414" id="414">414</a>
 <a href="#415" id="415">415</a>
 <a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -576,18 +573,15 @@
     /// use std::io::Result;
     ///
     /// use bytes::Bytes;
+    /// use futures::io::Cursor;
     /// use futures::stream;
     /// use futures::StreamExt;
     /// use opendal::Operator;
-    /// use futures::io::Cursor;
     ///
     /// #[tokio::main]
     /// async fn copy_example(op: Operator) -&gt; Result&lt;()&gt; {
-    ///     let mut w = op
-    ///         .writer_with(&quot;path/to/file&quot;)
-    ///         .content_length(4096)
-    ///         .await?;
-    ///     let reader = Cursor::new(vec![0;4096]);
+    ///     let mut w = op.writer_with(&quot;path/to/file&quot;).content_length(4096).await?;
+    ///     let reader = Cursor::new(vec![0; 4096]);
     ///     w.copy(4096, reader).await?;
     ///     w.close().await?;
     ///     Ok(())

@@ -83,6 +83,7 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -130,6 +131,7 @@
 </span><span class="kw">pub use </span><span class="self">self</span>::prometheus::PrometheusLayer;
 
 <span class="kw">mod </span>retry;
+<span class="kw">pub use </span><span class="self">self</span>::retry::RetryInterceptor;
 <span class="kw">pub use </span><span class="self">self</span>::retry::RetryLayer;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;layers-tracing&quot;</span>)]

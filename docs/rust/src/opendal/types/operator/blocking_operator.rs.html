@@ -915,6 +915,7 @@
 <a href="#915" id="915">915</a>
 <a href="#916" id="916">916</a>
 <a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1610,7 +1611,8 @@
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let _ = op
     ///     .delete_with(&quot;path/to/file&quot;)
-    ///     .version(&quot;example_version&quot;).call()?;
+    ///     .version(&quot;example_version&quot;)
+    ///     .call()?;
     /// # Ok(())
     /// # }
     /// ```
