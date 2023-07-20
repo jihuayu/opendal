@@ -1,13 +1,13 @@
 var searchData=
 [
-  ['opendal_5fbytes_5ffree_70',['opendal_bytes_free',['../opendal_8h.html#a3b1ce7664f2da3e0c1d67f8251d9cd7f',1,'opendal.h']]],
-  ['opendal_5flist_5fentry_5ffree_71',['opendal_list_entry_free',['../opendal_8h.html#ac99523a72383af87fa691b75e27beb64',1,'opendal.h']]],
-  ['opendal_5flist_5fentry_5fname_72',['opendal_list_entry_name',['../opendal_8h.html#ab5b300209df85890e5ace33920db7880',1,'opendal.h']]],
-  ['opendal_5flist_5fentry_5fpath_73',['opendal_list_entry_path',['../opendal_8h.html#a880d4fd54bc40a099633dc46b38b1027',1,'opendal.h']]],
+  ['opendal_5fbytes_5ffree_70',['opendal_bytes_free',['../opendal_8h.html#aea5253c2bbe9438349eebb68a18a82ea',1,'opendal.h']]],
+  ['opendal_5flist_5fentry_5ffree_71',['opendal_list_entry_free',['../opendal_8h.html#afa415362bf713d7c7869225a7f50f4a5',1,'opendal.h']]],
+  ['opendal_5flist_5fentry_5fname_72',['opendal_list_entry_name',['../opendal_8h.html#ac9b6091ec4c8aa0333727b34de3fa845',1,'opendal.h']]],
+  ['opendal_5flist_5fentry_5fpath_73',['opendal_list_entry_path',['../opendal_8h.html#a3a9984872f04ae478af91a15e1af0af0',1,'opendal.h']]],
   ['opendal_5flister_5ffree_74',['opendal_lister_free',['../opendal_8h.html#a25e2bd426163636455d6ba2e82547db7',1,'opendal.h']]],
   ['opendal_5flister_5fnext_75',['opendal_lister_next',['../opendal_8h.html#a191fdabb43a5173bcb00fbb3f615070c',1,'opendal.h']]],
   ['opendal_5fmetadata_5fcontent_5flength_76',['opendal_metadata_content_length',['../opendal_8h.html#ac8e9a9da0f04cb80848e7e42c3b90235',1,'opendal.h']]],
-  ['opendal_5fmetadata_5ffree_77',['opendal_metadata_free',['../opendal_8h.html#afa0569fdf94b0e0ec409bbde587d5af8',1,'opendal.h']]],
+  ['opendal_5fmetadata_5ffree_77',['opendal_metadata_free',['../opendal_8h.html#a8ff66345b1c45c66920ef0ddfef739c5',1,'opendal.h']]],
   ['opendal_5fmetadata_5fis_5fdir_78',['opendal_metadata_is_dir',['../opendal_8h.html#ac8cb949fb37f83dfcbe78976eaa29409',1,'opendal.h']]],
   ['opendal_5fmetadata_5fis_5ffile_79',['opendal_metadata_is_file',['../opendal_8h.html#a8900dddbbce980c3323cedd4f30c33ad',1,'opendal.h']]],
   ['opendal_5foperator_5fblocking_5fdelete_80',['opendal_operator_blocking_delete',['../opendal_8h.html#ab339b3a262d3b508030a966000833145',1,'opendal.h']]],
