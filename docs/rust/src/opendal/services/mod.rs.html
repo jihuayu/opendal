@@ -188,6 +188,14 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -309,9 +317,17 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-persy&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::persy::Persy;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
+<span class="attr">#[cfg(any(
+    feature = <span class="string">&quot;services-redis&quot;</span>,
+    feature = <span class="string">&quot;services-redis-rustls&quot;</span>,
+    feature = <span class="string">&quot;services-redis-native-tls&quot;
+</span>))]
 </span><span class="kw">mod </span>redis;
-<span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
+<span class="attr">#[cfg(any(
+    feature = <span class="string">&quot;services-redis&quot;</span>,
+    feature = <span class="string">&quot;services-redis-rustls&quot;</span>,
+    feature = <span class="string">&quot;services-redis-native-tls&quot;
+</span>))]
 </span><span class="kw">pub use </span><span class="self">self</span>::redis::Redis;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-rocksdb&quot;</span>)]

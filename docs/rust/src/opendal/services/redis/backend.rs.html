@@ -320,6 +320,17 @@
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -507,8 +518,19 @@
                 <span class="kw">let </span>port = ep_url.port_u16().unwrap_or(DEFAULT_REDIS_PORT);
                 ConnectionAddr::Tcp(host, port)
             }
-            <span class="comment">// TODO: wait for upstream to support `rustls` based TLS connection.
-            </span><span class="prelude-val">Some</span>(<span class="string">&quot;unix&quot;</span>) | <span class="prelude-val">Some</span>(<span class="string">&quot;redis+unix&quot;</span>) =&gt; {
+            <span class="prelude-val">Some</span>(<span class="string">&quot;rediss&quot;</span>) =&gt; {
+                <span class="kw">let </span>host = ep_url
+                    .host()
+                    .map(|h| h.to_string())
+                    .unwrap_or_else(|| <span class="string">&quot;127.0.0.1&quot;</span>.to_string());
+                <span class="kw">let </span>port = ep_url.port_u16().unwrap_or(DEFAULT_REDIS_PORT);
+                ConnectionAddr::TcpTls {
+                    host,
+                    port,
+                    insecure: <span class="bool-val">false</span>,
+                }
+            }
+            <span class="prelude-val">Some</span>(<span class="string">&quot;unix&quot;</span>) | <span class="prelude-val">Some</span>(<span class="string">&quot;redis+unix&quot;</span>) =&gt; {
                 <span class="kw">let </span>path = PathBuf::from(ep_url.path());
                 ConnectionAddr::Unix(path)
             }

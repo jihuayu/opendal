@@ -370,6 +370,10 @@
 <a href="#370" id="370">370</a>
 <a href="#371" id="371">371</a>
 <a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -569,7 +573,11 @@
             </span>Scheme::Oss =&gt; <span class="self">Self</span>::from_map::&lt;services::Oss&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-persy&quot;</span>)]
             </span>Scheme::Persy =&gt; <span class="self">Self</span>::from_map::&lt;services::Persy&gt;(map)<span class="question-mark">?</span>.finish(),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
+            <span class="attr">#[cfg(any(
+                feature = <span class="string">&quot;services-redis&quot;</span>,
+                feature = <span class="string">&quot;services-redis-rustls&quot;</span>,
+                feature = <span class="string">&quot;services-redis-native-tls&quot;
+            </span>))]
             </span>Scheme::Redis =&gt; <span class="self">Self</span>::from_map::&lt;services::Redis&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-rocksdb&quot;</span>)]
             </span>Scheme::Rocksdb =&gt; <span class="self">Self</span>::from_map::&lt;services::Rocksdb&gt;(map)<span class="question-mark">?</span>.finish(),
