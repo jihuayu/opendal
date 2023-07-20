@@ -1213,6 +1213,7 @@
 <a href="#1213" id="1213">1213</a>
 <a href="#1214" id="1214">1214</a>
 <a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1834,7 +1835,7 @@
         );
 
         <span class="kw">match </span>res.status() {
-            StatusCode::OK | StatusCode::FORBIDDEN | StatusCode::MOVED_PERMANENTLY =&gt; {
+            StatusCode::OK | StatusCode::MOVED_PERMANENTLY =&gt; {
                 <span class="kw">let </span>region = res.headers().get(<span class="string">&quot;x-amz-bucket-region&quot;</span>)<span class="question-mark">?</span>;
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(regin) = region.to_str() {
                     <span class="prelude-val">Some</span>(regin.to_string())
@@ -1842,6 +1843,7 @@
                     <span class="prelude-val">None
                 </span>}
             }
+            StatusCode::FORBIDDEN =&gt; <span class="prelude-val">Some</span>(<span class="string">&quot;us-east-1&quot;</span>.to_string()),
             <span class="comment">// Unexpected status code
             </span><span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
