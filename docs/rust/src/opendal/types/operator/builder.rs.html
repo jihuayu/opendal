@@ -370,6 +370,8 @@
 <a href="#370" id="370">370</a>
 <a href="#371" id="371">371</a>
 <a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -535,6 +537,8 @@
             </span>Scheme::Cos =&gt; <span class="self">Self</span>::from_map::&lt;services::Cos&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-dashmap&quot;</span>)]
             </span>Scheme::Dashmap =&gt; <span class="self">Self</span>::from_map::&lt;services::Dashmap&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-etcd&quot;</span>)]
+            </span>Scheme::Etcd =&gt; <span class="self">Self</span>::from_map::&lt;services::Etcd&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-fs&quot;</span>)]
             </span>Scheme::Fs =&gt; <span class="self">Self</span>::from_map::&lt;services::Fs&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-ftp&quot;</span>)]
