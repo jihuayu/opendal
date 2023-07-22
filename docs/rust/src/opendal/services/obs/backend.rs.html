@@ -517,13 +517,6 @@
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
-<a href="#520" id="520">520</a>
-<a href="#521" id="521">521</a>
-<a href="#522" id="522">522</a>
-<a href="#523" id="523">523</a>
-<a href="#524" id="524">524</a>
-<a href="#525" id="525">525</a>
-<a href="#526" id="526">526</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -617,7 +610,7 @@
 ///
 ///     Ok(())
 /// }
-///
+///```
 
 </span><span class="kw">const </span>DEFAULT_WRITE_MIN_SIZE: usize = <span class="number">100 </span>* <span class="number">1024</span>;
 
@@ -973,13 +966,6 @@
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="kw">if </span>args.content_length().is_none() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::Unsupported,
-                <span class="string">&quot;write without content length is not supported&quot;</span>,
-            ));
-        }
-
         <span class="prelude-val">Ok</span>((
             RpWrite::default(),
             ObsWriter::new(<span class="self">self</span>.core.clone(), path, args),
