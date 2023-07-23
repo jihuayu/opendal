@@ -193,6 +193,11 @@
 <a href="#193" id="193">193</a>
 <a href="#194" id="194">194</a>
 <a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -388,4 +393,9 @@
 </span><span class="kw">mod </span>redb;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-redb&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::redb::Redb;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-tikv&quot;</span>)]
+</span><span class="kw">mod </span>tikv;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-tikv&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::tikv::Tikv;
 </code></pre></div></section></main></body></html>

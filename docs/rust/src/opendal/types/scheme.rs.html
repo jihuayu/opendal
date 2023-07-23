@@ -219,6 +219,9 @@
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -323,6 +326,8 @@
     </span>Webhdfs,
     <span class="doccomment">/// [redb][crate::services::Redb]: Redb Services
     </span>Redb,
+    <span class="doccomment">/// [tikv][crate::services::tikv]: Tikv Services
+    </span>Tikv,
     <span class="doccomment">/// Custom that allow users to implement services outside of OpenDAL.
     ///
     /// # NOTE
@@ -430,6 +435,7 @@
             Scheme::Webdav =&gt; <span class="string">&quot;webdav&quot;</span>,
             Scheme::Webhdfs =&gt; <span class="string">&quot;webhdfs&quot;</span>,
             Scheme::Redb =&gt; <span class="string">&quot;redb&quot;</span>,
+            Scheme::Tikv =&gt; <span class="string">&quot;tikv&quot;</span>,
             Scheme::Custom(v) =&gt; v,
         }
     }
