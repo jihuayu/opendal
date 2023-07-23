@@ -819,6 +819,7 @@
 <a href="#819" id="819">819</a>
 <a href="#820" id="820">820</a>
 <a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1593,9 +1594,10 @@
         };
 
         <span class="comment">// quick_xml::se::to_string()
-        </span><span class="kw">let </span><span class="kw-2">mut </span>serializer = quick_xml::se::Serializer::new(String::new());
+        </span><span class="kw">let </span><span class="kw-2">mut </span>serialized = String::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>serializer = quick_xml::se::Serializer::new(<span class="kw-2">&amp;mut </span>serialized);
         serializer.indent(<span class="string">&#39; &#39;</span>, <span class="number">4</span>);
-        <span class="kw">let </span>serialized = req.serialize(serializer).unwrap();
+        req.serialize(serializer).unwrap();
         <span class="macro">pretty_assertions::assert_eq!</span>(
             serialized,
             <span class="string">r#&quot;&lt;CompleteMultipartUpload&gt;
