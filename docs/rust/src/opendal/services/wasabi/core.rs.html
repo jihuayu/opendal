@@ -962,7 +962,7 @@
 <span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>reqsign::AwsCredential;
-<span class="kw">use </span>reqsign::AwsLoader;
+<span class="kw">use </span>reqsign::AwsDefaultLoader;
 <span class="kw">use </span>reqsign::AwsV4Signer;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde::Serialize;
@@ -1013,7 +1013,7 @@
     <span class="kw">pub </span>default_storage_class: <span class="prelude-ty">Option</span>&lt;HeaderValue&gt;,
 
     <span class="kw">pub </span>signer: AwsV4Signer,
-    <span class="kw">pub </span>loader: AwsLoader,
+    <span class="kw">pub </span>loader: AwsDefaultLoader,
     <span class="kw">pub </span>client: HttpClient,
 }
 

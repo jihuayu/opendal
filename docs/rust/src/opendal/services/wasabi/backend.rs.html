@@ -1190,9 +1190,6 @@
 <a href="#1190" id="1190">1190</a>
 <a href="#1191" id="1191">1191</a>
 <a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1227,7 +1224,7 @@
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>reqsign::AwsConfig;
 <span class="kw">use </span>reqsign::AwsCredentialLoad;
-<span class="kw">use </span>reqsign::AwsLoader;
+<span class="kw">use </span>reqsign::AwsDefaultLoader;
 <span class="kw">use </span>reqsign::AwsV4Signer;
 
 <span class="kw">use </span><span class="kw">super</span>::core::<span class="kw-2">*</span>;
@@ -2049,12 +2046,9 @@
         </span><span class="kw">let </span>endpoint = <span class="self">self</span>.build_endpoint(<span class="kw-2">&amp;</span>region);
         <span class="macro">debug!</span>(<span class="string">&quot;backend use endpoint: {endpoint}&quot;</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>loader = AwsLoader::new(client.client(), cfg);
+        <span class="kw">let </span><span class="kw-2">mut </span>loader = AwsDefaultLoader::new(client.client(), cfg);
         <span class="kw">if </span><span class="self">self</span>.disable_ec2_metadata {
             loader = loader.with_disable_ec2_metadata();
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="self">self</span>.customed_credential_load.take() {
-            loader = loader.with_customed_credential_loader(v);
         }
 
         <span class="kw">let </span>signer = AwsV4Signer::new(<span class="string">&quot;s3&quot;</span>, <span class="kw-2">&amp;</span>region);
