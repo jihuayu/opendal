@@ -1252,11 +1252,6 @@
 <a href="#1252" id="1252">1252</a>
 <a href="#1253" id="1253">1253</a>
 <a href="#1254" id="1254">1254</a>
-<a href="#1255" id="1255">1255</a>
-<a href="#1256" id="1256">1256</a>
-<a href="#1257" id="1257">1257</a>
-<a href="#1258" id="1258">1258</a>
-<a href="#1259" id="1259">1259</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1815,17 +1810,14 @@
     /// use opendal::services::S3;
     ///
     /// # async fn example() {
-    /// let builder = S3::default();
-    /// let region: Option&lt;String&gt; = builder
-    ///     .detect_region(&quot;https://s3.amazonaws.com&quot;, &quot;example&quot;)
-    ///     .await;
+    /// let region: Option&lt;String&gt; = S3::detect_region(&quot;https://s3.amazonaws.com&quot;, &quot;example&quot;).await;
     /// # }
     /// ```
     ///
     /// # Reference
     ///
     /// - [Amazon S3 HeadBucket API](https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/API/API_HeadBucket.html)
-    </span><span class="kw">pub async fn </span>detect_region(<span class="kw-2">&amp;</span><span class="self">self</span>, endpoint: <span class="kw-2">&amp;</span>str, bucket: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+    </span><span class="kw">pub async fn </span>detect_region(endpoint: <span class="kw-2">&amp;</span>str, bucket: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>endpoint = <span class="kw">if </span>endpoint.starts_with(<span class="string">&quot;http&quot;</span>) {
             endpoint.to_string()
         } <span class="kw">else </span>{
@@ -1885,20 +1877,20 @@
             res.headers()
         );
 
-        <span class="kw">match </span>res.status() {
-            StatusCode::OK | StatusCode::MOVED_PERMANENTLY =&gt; {
-                <span class="kw">let </span>region = res.headers().get(<span class="string">&quot;x-amz-bucket-region&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>(regin) = region.to_str() {
-                    <span class="prelude-val">Some</span>(regin.to_string())
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>}
-            }
-            StatusCode::FORBIDDEN =&gt; <span class="prelude-val">Some</span>(<span class="string">&quot;us-east-1&quot;</span>.to_string()),
-            <span class="comment">// Unexpected status code
-            </span><span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        <span class="comment">// Get region from response header no matter status code.
+        </span><span class="kw">let </span>region = res.headers().get(<span class="string">&quot;x-amz-bucket-region&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(regin) = region.to_str() {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(regin.to_string());
         }
-    }
+
+        <span class="comment">// Status code is 403 or 200 means we already visit the correct
+        // region, we can use the default region directly.
+        </span><span class="kw">if </span>res.status() == StatusCode::FORBIDDEN || res.status() == StatusCode::OK {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="string">&quot;us-east-1&quot;</span>.to_string());
+        }
+
+        <span class="prelude-val">None
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>S3Builder {
@@ -2508,10 +2500,8 @@
             ),
         ];
 
-        <span class="kw">let </span>b = S3Builder::default();
-
         <span class="kw">for </span>(name, endpoint, bucket, expected) <span class="kw">in </span>cases {
-            <span class="kw">let </span>region = b.detect_region(endpoint, bucket).<span class="kw">await</span>;
+            <span class="kw">let </span>region = S3Builder::detect_region(endpoint, bucket).<span class="kw">await</span>;
             <span class="macro">assert_eq!</span>(region.as_deref(), expected, <span class="string">&quot;{}&quot;</span>, name);
         }
     }

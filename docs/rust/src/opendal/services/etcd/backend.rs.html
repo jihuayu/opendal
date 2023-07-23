@@ -326,6 +326,8 @@
 <a href="#326" id="326">326</a>
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -349,10 +351,12 @@
 
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>etcd_client::Certificate;
+<span class="kw">use </span>etcd_client::Client;
+<span class="kw">use </span>etcd_client::ConnectOptions;
 <span class="kw">use </span>etcd_client::Error <span class="kw">as </span>EtcdError;
+<span class="kw">use </span>etcd_client::GetOptions;
 <span class="kw">use </span>etcd_client::Identity;
 <span class="kw">use </span>etcd_client::TlsOptions;
-<span class="kw">use </span>etcd_client::{Client, ConnectOptions, GetOptions};
 <span class="kw">use </span>tokio::sync::OnceCell;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
