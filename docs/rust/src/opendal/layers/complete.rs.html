@@ -1046,13 +1046,13 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bytes::Bytes;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_reader::RangeReader;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::to_flat_pager;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::to_hierarchy_pager;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_flat_page;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_hierarchy_page;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::ByRangeSeekableReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Entry;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::IntoStreamableReader;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::ToFlatPager;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::ToHierarchyPager;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::FlatPager;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::HierarchyPager;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamableReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -1193,7 +1193,7 @@
         <span class="kw">match </span>(seekable, streamable) {
             (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>((rp, CompleteReader::AlreadyComplete(r))),
             (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
-                <span class="kw">let </span>r = oio::into_streamable_reader(r, <span class="number">256 </span>* <span class="number">1024</span>);
+                <span class="kw">let </span>r = oio::into_streamable_read(r, <span class="number">256 </span>* <span class="number">1024</span>);
                 <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedStreamable(r)))
             }
             <span class="kw">_ </span>=&gt; {
@@ -1214,12 +1214,12 @@
                         (offset, size)
                     }
                 };
-                <span class="kw">let </span>r = oio::into_reader::by_range(<span class="self">self</span>.inner.clone(), path, r, offset, size);
+                <span class="kw">let </span>r = oio::into_seekable_read_by_range(<span class="self">self</span>.inner.clone(), path, r, offset, size);
 
                 <span class="kw">if </span>streamable {
                     <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedSeekable(r)))
                 } <span class="kw">else </span>{
-                    <span class="kw">let </span>r = oio::into_streamable_reader(r, <span class="number">256 </span>* <span class="number">1024</span>);
+                    <span class="kw">let </span>r = oio::into_streamable_read(r, <span class="number">256 </span>* <span class="number">1024</span>);
                     <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedBoth(r)))
                 }
             }
@@ -1244,7 +1244,7 @@
         <span class="kw">match </span>(seekable, streamable) {
             (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>((rp, CompleteReader::AlreadyComplete(r))),
             (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
-                <span class="kw">let </span>r = oio::into_streamable_reader(r, <span class="number">256 </span>* <span class="number">1024</span>);
+                <span class="kw">let </span>r = oio::into_streamable_read(r, <span class="number">256 </span>* <span class="number">1024</span>);
                 <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedStreamable(r)))
             }
             (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::new(
@@ -1275,7 +1275,7 @@
                 <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
             } <span class="kw">else </span>{
-                <span class="kw">let </span>p = to_flat_pager(
+                <span class="kw">let </span>p = into_flat_page(
                     <span class="self">self</span>.inner.clone(),
                     path,
                     args.with_delimiter(<span class="string">&quot;/&quot;</span>).limit().unwrap_or(<span class="number">1000</span>),
@@ -1290,7 +1290,7 @@
                 <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
             } <span class="kw">else </span>{
                 <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.list(path, args.with_delimiter(<span class="string">&quot;&quot;</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let </span>p = to_hierarchy_pager(p, path);
+                <span class="kw">let </span>p = into_hierarchy_page(p, path);
                 <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
             };
         }
@@ -1324,7 +1324,7 @@
                 <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_list(path, args)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
             } <span class="kw">else </span>{
-                <span class="kw">let </span>p = to_flat_pager(
+                <span class="kw">let </span>p = into_flat_page(
                     <span class="self">self</span>.inner.clone(),
                     path,
                     args.with_delimiter(<span class="string">&quot;/&quot;</span>).limit().unwrap_or(<span class="number">1000</span>),
@@ -1339,8 +1339,8 @@
                 <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
             } <span class="kw">else </span>{
                 <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.blocking_list(path, args.with_delimiter(<span class="string">&quot;&quot;</span>))<span class="question-mark">?</span>;
-                <span class="kw">let </span>p: ToHierarchyPager&lt;&lt;A <span class="kw">as </span>Accessor&gt;::BlockingPager&gt; =
-                    to_hierarchy_pager(p, path);
+                <span class="kw">let </span>p: HierarchyPager&lt;&lt;A <span class="kw">as </span>Accessor&gt;::BlockingPager&gt; =
+                    into_hierarchy_page(p, path);
                 <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
             };
         }
@@ -1553,9 +1553,9 @@
 
 <span class="kw">pub enum </span>CompleteReader&lt;A: Accessor, R&gt; {
     AlreadyComplete(R),
-    NeedSeekable(RangeReader&lt;A&gt;),
-    NeedStreamable(IntoStreamableReader&lt;R&gt;),
-    NeedBoth(IntoStreamableReader&lt;RangeReader&lt;A&gt;&gt;),
+    NeedSeekable(ByRangeSeekableReader&lt;A&gt;),
+    NeedStreamable(StreamableReader&lt;R&gt;),
+    NeedBoth(StreamableReader&lt;ByRangeSeekableReader&lt;A&gt;&gt;),
 }
 
 <span class="kw">impl</span>&lt;A, R&gt; oio::Read <span class="kw">for </span>CompleteReader&lt;A, R&gt;
@@ -1635,8 +1635,8 @@
 
 <span class="kw">pub enum </span>CompletePager&lt;A: Accessor, P&gt; {
     AlreadyComplete(P),
-    NeedFlat(ToFlatPager&lt;Arc&lt;A&gt;, P&gt;),
-    NeedHierarchy(ToHierarchyPager&lt;P&gt;),
+    NeedFlat(FlatPager&lt;Arc&lt;A&gt;, P&gt;),
+    NeedHierarchy(HierarchyPager&lt;P&gt;),
 }
 
 <span class="attr">#[async_trait]

@@ -152,7 +152,7 @@
 <span class="kw">use </span>openssh_sftp_client::metadata::MetaData <span class="kw">as </span>SftpMeta;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_reader::FdReader;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::FromFileReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::ReadExt;
 <span class="kw">use </span><span class="kw">crate</span>::EntryMode;
 <span class="kw">use </span><span class="kw">crate</span>::Metadata;
@@ -161,7 +161,7 @@
 <span class="kw">pub struct </span>SftpReaderInner {
     file: Pin&lt;Box&lt;Compat&lt;TokioCompatFile&gt;&gt;&gt;,
 }
-<span class="kw">pub type </span>SftpReader = FdReader&lt;SftpReaderInner&gt;;
+<span class="kw">pub type </span>SftpReader = FromFileReader&lt;SftpReaderInner&gt;;
 
 <span class="kw">impl </span>SftpReaderInner {
     <span class="kw">pub async fn </span>new(file: File) -&gt; <span class="self">Self </span>{
@@ -176,7 +176,7 @@
     <span class="doccomment">/// Create a new reader from a file, starting at the given offset and ending at the given offset.
     </span><span class="kw">pub async fn </span>new(file: File, start: u64, end: u64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>file = SftpReaderInner::new(file).<span class="kw">await</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>r = oio::into_reader::from_fd(file, start, end);
+        <span class="kw">let </span><span class="kw-2">mut </span>r = oio::into_read_from_file(file, start, end);
         r.seek(SeekFrom::Start(<span class="number">0</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(r)
     }

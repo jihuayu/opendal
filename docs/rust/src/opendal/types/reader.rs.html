@@ -536,7 +536,7 @@
             r
         } <span class="kw">else </span>{
             <span class="comment">// Make this capacity configurable.
-            </span>Box::new(oio::into_streamable_reader(r, <span class="number">256 </span>* <span class="number">1024</span>))
+            </span>Box::new(oio::into_streamable_read(r, <span class="number">256 </span>* <span class="number">1024</span>))
         };
 
         <span class="prelude-val">Ok</span>(BlockingReader { inner: r })

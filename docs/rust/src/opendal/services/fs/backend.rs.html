@@ -949,8 +949,8 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>FsBackend {
-    <span class="kw">type </span>Reader = oio::into_reader::FdReader&lt;Compat&lt;tokio::fs::File&gt;&gt;;
-    <span class="kw">type </span>BlockingReader = oio::into_blocking_reader::FdReader&lt;std::fs::File&gt;;
+    <span class="kw">type </span>Reader = oio::FromFileReader&lt;Compat&lt;tokio::fs::File&gt;&gt;;
+    <span class="kw">type </span>BlockingReader = oio::FromFileReader&lt;std::fs::File&gt;;
     <span class="kw">type </span>Writer = FsWriter&lt;tokio::fs::File&gt;;
     <span class="kw">type </span>BlockingWriter = FsWriter&lt;std::fs::File&gt;;
     <span class="kw">type </span>Appender = FsAppender&lt;tokio::fs::File&gt;;
@@ -1063,7 +1063,7 @@
             </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; (<span class="number">0</span>, total_length),
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>r = oio::into_reader::from_fd(f, start, end);
+        <span class="kw">let </span><span class="kw-2">mut </span>r = oio::into_read_from_file(f, start, end);
 
         <span class="comment">// Rewind to make sure we are on the correct offset.
         </span>r.seek(SeekFrom::Start(<span class="number">0</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1263,7 +1263,7 @@
             </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; (<span class="number">0</span>, total_length),
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>r = oio::into_blocking_reader::from_fd(f, start, end);
+        <span class="kw">let </span><span class="kw-2">mut </span>r: oio::FromFileReader&lt;std::fs::File&gt; = oio::into_read_from_file(f, start, end);
 
         <span class="comment">// Rewind to make sure we are on the correct offset.
         </span>r.seek(SeekFrom::Start(<span class="number">0</span>))<span class="question-mark">?</span>;

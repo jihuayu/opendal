@@ -1057,7 +1057,7 @@
 <span class="kw">use </span><span class="kw">super</span>::new_request_build_error;
 <span class="kw">use </span><span class="kw">super</span>::AsyncBody;
 <span class="kw">use </span><span class="kw">super</span>::IncomingAsyncBody;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::into_stream;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Multipart is a builder for multipart/form-data.
@@ -1339,7 +1339,7 @@
         <span class="kw">let </span>bs: Bytes = <span class="self">self</span>.content;
         <span class="kw">let </span>length = bs.len();
         <span class="kw">let </span>body = IncomingAsyncBody::new(
-            Box::new(into_stream::from_futures_stream(stream::iter(<span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(bs)]))),
+            Box::new(oio::into_stream(stream::iter(<span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(bs)]))),
             <span class="prelude-val">Some</span>(length <span class="kw">as </span>u64),
         );
 
