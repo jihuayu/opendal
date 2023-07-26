@@ -77,7 +77,7 @@ append</li>
 <ol start="3">
 <li>Append the HADOOP_CONF_DIR to the <code>CLASSPATH</code></li>
 </ol>
-<div class="example-wrap"><pre class="language-shell"><code>export CLASSPATH=$CLASSPATH:$HADOOP_CONF_DIR
+<div class="example-wrap"><pre class="language-shell"><code>export CLASSPATH=$HADOOP_CONF_DIR:$HADOOP_CLASSPATH:$CLASSPATH
 </code></pre></div>
 <ol start="4">
 <li>Use the <code>cluster_name</code> specified in the <code>core-site.xml</code> file (located in the HADOOP_CONF_DIR folder) to replace namenode:port.</li>
