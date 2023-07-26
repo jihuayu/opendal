@@ -500,9 +500,6 @@
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
 <a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
-<a href="#505" id="505">505</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -658,6 +655,7 @@
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;u64&gt;,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
@@ -673,7 +671,9 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = cache_control {
             req = req.header(CACHE_CONTROL, cache_control)
         }
-
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = content_disposition {
+            req = req.header(CONTENT_DISPOSITION, pos)
+        }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(mime) = content_type {
             req = req.header(CONTENT_TYPE, mime)
         }
@@ -873,7 +873,7 @@
         path: <span class="kw-2">&amp;</span>str,
         upload_id: <span class="kw-2">&amp;</span>str,
         part_number: usize,
-        size: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+        size: u64,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -887,11 +887,7 @@
         );
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>url);
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-            req = req.header(CONTENT_LENGTH, size);
-        }
-
+        req = req.header(CONTENT_LENGTH, size);
         <span class="comment">// Set body
         </span><span class="kw">let </span><span class="kw-2">mut </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;
 
@@ -904,7 +900,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         upload_id: <span class="kw-2">&amp;</span>str,
-        parts: <span class="kw-2">&amp;</span>[CompleteMultipartUploadRequestPart],
+        parts: Vec&lt;CompleteMultipartUploadRequestPart&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
@@ -917,10 +913,8 @@
 
         <span class="kw">let </span>req = Request::post(<span class="kw-2">&amp;</span>url);
 
-        <span class="kw">let </span>content = quick_xml::se::to_string(<span class="kw-2">&amp;</span>CompleteMultipartUploadRequest {
-            part: parts.to_vec(),
-        })
-        .map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
+        <span class="kw">let </span>content = quick_xml::se::to_string(<span class="kw-2">&amp;</span>CompleteMultipartUploadRequest { part: parts })
+            .map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
         <span class="comment">// Make sure content length has been set to avoid post with chunked encoding.
         </span><span class="kw">let </span>req = req.header(CONTENT_LENGTH, content.len());
         <span class="comment">// Set content-type to `application/xml` to avoid mixed with form post.
