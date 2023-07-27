@@ -310,24 +310,6 @@
 <a href="#310" id="310">310</a>
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -354,7 +336,6 @@
 <span class="kw">use </span>etcd_client::Client;
 <span class="kw">use </span>etcd_client::ConnectOptions;
 <span class="kw">use </span>etcd_client::Error <span class="kw">as </span>EtcdError;
-<span class="kw">use </span>etcd_client::GetOptions;
 <span class="kw">use </span>etcd_client::Identity;
 <span class="kw">use </span>etcd_client::TlsOptions;
 <span class="kw">use </span>tokio::sync::OnceCell;
@@ -602,7 +583,6 @@
                 read: <span class="bool-val">true</span>,
                 write: <span class="bool-val">true</span>,
                 create_dir: <span class="bool-val">true</span>,
-                list: <span class="bool-val">true</span>,
 
                 ..Default::default()
             },
@@ -632,22 +612,6 @@
         <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>.conn().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let _ </span>= client.delete(p, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
-        <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
-        <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>.conn().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>get_options = <span class="prelude-val">Some</span>(GetOptions::new().with_prefix().with_keys_only());
-        <span class="kw">let </span>resp = client.get(p, get_options).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>res = Vec::default();
-        <span class="kw">for </span>kv <span class="kw">in </span>resp.kvs() {
-            res.push(kv.key_str().map(String::from).map_err(|err| {
-                Error::new(ErrorKind::Unexpected, <span class="string">&quot;store key is not valid utf-8 string&quot;</span>)
-                    .set_source(err)
-            })<span class="question-mark">?</span>);
-        }
-
-        <span class="prelude-val">Ok</span>(res)
     }
 }
 
