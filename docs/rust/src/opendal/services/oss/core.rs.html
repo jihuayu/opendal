@@ -820,6 +820,14 @@
 <a href="#820" id="820">820</a>
 <a href="#821" id="821">821</a>
 <a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1311,25 +1319,11 @@
     <span class="kw">pub async fn </span>oss_initiate_upload(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
-        args: <span class="kw-2">&amp;</span>OpWrite,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span>cache_control = args.cache_control();
-        <span class="kw">let </span>req = <span class="self">self
-            </span>.oss_initiate_upload_request(path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, cache_control, AsyncBody::Empty, <span class="bool-val">false</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.send(req).<span class="kw">await
-    </span>}
-
-    <span class="doccomment">/// Creates a request that initiates multipart upload
-    </span><span class="kw">async fn </span>oss_initiate_upload_request(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        path: <span class="kw-2">&amp;</span>str,
         content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         content_disposition: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         cache_control: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
-        body: AsyncBody,
         is_presign: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>path = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="kw">let </span>endpoint = <span class="self">self</span>.get_endpoint(is_presign);
         <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;{}/{}?uploads&quot;</span>, endpoint, percent_encode_path(<span class="kw-2">&amp;</span>path));
@@ -1344,10 +1338,12 @@
             req = req.header(CACHE_CONTROL, cache_control);
         }
         req = <span class="self">self</span>.insert_sse_headers(req);
-        <span class="kw">let </span><span class="kw-2">mut </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>req = req
+            .body(AsyncBody::Empty)
+            .map_err(new_request_build_error)<span class="question-mark">?</span>;
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(req)
-    }
+        <span class="self">self</span>.send(req).<span class="kw">await
+    </span>}
 
     <span class="doccomment">/// Creates a request to upload a part
     </span><span class="kw">pub async fn </span>oss_upload_part_request(
@@ -1356,9 +1352,9 @@
         upload_id: <span class="kw-2">&amp;</span>str,
         part_number: usize,
         is_presign: bool,
-        size: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+        size: u64,
         body: AsyncBody,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="kw">let </span>endpoint = <span class="self">self</span>.get_endpoint(is_presign);
 
@@ -1371,21 +1367,18 @@
         );
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::put(<span class="kw-2">&amp;</span>url);
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
-            req = req.header(CONTENT_LENGTH, size);
-        }
+        req = req.header(CONTENT_LENGTH, size);
         <span class="kw">let </span><span class="kw-2">mut </span>req = req.body(body).map_err(new_request_build_error)<span class="question-mark">?</span>;
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(req)
-    }
+        <span class="self">self</span>.send(req).<span class="kw">await
+    </span>}
 
     <span class="kw">pub async fn </span>oss_complete_multipart_upload_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         upload_id: <span class="kw-2">&amp;</span>str,
         is_presign: bool,
-        parts: <span class="kw-2">&amp;</span>[MultipartUploadPart],
+        parts: Vec&lt;MultipartUploadPart&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="kw">let </span>endpoint = <span class="self">self</span>.get_endpoint(is_presign);
@@ -1411,6 +1404,29 @@
             .body(AsyncBody::Bytes(Bytes::from(content)))
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
+        <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.send(req).<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Abort an on-going multipart upload.
+    /// reference docs https://www.alibabacloud.com/help/zh/oss/developer-reference/abortmultipartupload
+    </span><span class="kw">pub async fn </span>oss_abort_multipart_upload(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+        upload_id: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+        <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+
+        <span class="kw">let </span>url = <span class="macro">format!</span>(
+            <span class="string">&quot;{}/{}?uploadId={}&quot;</span>,
+            <span class="self">self</span>.endpoint,
+            percent_encode_path(<span class="kw-2">&amp;</span>p),
+            percent_encode_path(upload_id)
+        );
+
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::delete(<span class="kw-2">&amp;</span>url)
+            .body(AsyncBody::Empty)
+            .map_err(new_request_build_error)<span class="question-mark">?</span>;
         <span class="self">self</span>.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.send(req).<span class="kw">await
     </span>}
