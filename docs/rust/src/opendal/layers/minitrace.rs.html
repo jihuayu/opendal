@@ -447,6 +447,9 @@
 <a href="#447" id="447">447</a>
 <a href="#448" id="448">448</a>
 <a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -506,13 +509,20 @@
 ///
 /// use anyhow::Result;
 /// use futures::executor::block_on;
+/// use minitrace::collector::Config;
+/// use minitrace::prelude::*;
 /// use opendal::layers::MinitraceLayer;
 /// use opendal::services;
 /// use opendal::Operator;
 ///
 /// fn main() -&gt; Result&lt;(), Box&lt;dyn Error + Send + Sync + &#39;static&gt;&gt; {
-///     let collector = {
-///         let (span, collector) = minitrace::Span::root(&quot;op&quot;);
+///     let reporter =
+///         minitrace_jaeger::JaegerReporter::new(&quot;127.0.0.1:6831&quot;.parse().unwrap(), &quot;opendal&quot;)
+///             .unwrap();
+///     minitrace::set_reporter(reporter, Config::default());
+///
+///     {
+///         let root = Span::root(&quot;op&quot;, SpanContext::random());
 ///         let runtime = tokio::runtime::Runtime::new()?;
 ///         runtime.block_on(
 ///             async {
@@ -527,15 +537,12 @@
 ///                 op.stat(&quot;test&quot;).await.expect(&quot;must succeed&quot;);
 ///                 op.read(&quot;test&quot;).await.expect(&quot;must succeed&quot;);
 ///             }
-///             .in_span(Span::enter_with_parent(&quot;test&quot;, &amp;span)),
+///             .in_span(Span::enter_with_parent(&quot;test&quot;, &amp;root)),
 ///         );
-///         collector
-///     };
-///     let spans = block_on(collector.collect());
-///     let bytes =
-///         minitrace_jaeger::encode(&quot;opendal&quot;.to_owned(), rand::random(), 0, 0, &amp;spans).unwrap();
-///     minitrace_jaeger::report_blocking(&quot;127.0.0.1:6831&quot;.parse().unwrap(), &amp;bytes)
-///         .expect(&quot;report error&quot;);
+///     }
+///
+///     minitrace::flush();
+///
 ///     Ok(())
 /// }
 /// ```
@@ -548,14 +555,13 @@
 ///
 /// For example:
 ///
-/// ```ignore
+/// ```no_run
 /// extern crate minitrace_jaeger;
 ///
-/// let spans = block_on(collector.collect());
-///
-/// let bytes =
-///     minitrace_jaeger::encode(&quot;opendal&quot;.to_owned(), rand::random(), 0, 0, &amp;spans).unwrap();
-/// minitrace_jaeger::report_blocking(&quot;127.0.0.1:6831&quot;.parse().unwrap(), &amp;bytes).expect(&quot;report error&quot;);
+/// let reporter =
+///     minitrace_jaeger::JaegerReporter::new(&quot;127.0.0.1:6831&quot;.parse().unwrap(), &quot;opendal&quot;)
+///         .unwrap();
+/// minitrace::set_reporter(reporter, Config::default());
 /// ```
 ///
 /// For real-world usage, please take a look at [`minitrace-datadog`](https://crates.io/crates/minitrace-datadog) or [`minitrace-jaeger`](https://crates.io/crates/minitrace-jaeger) .
@@ -594,7 +600,7 @@
         <span class="self">self</span>.inner.info()
     }
 
-    <span class="attr">#[trace(<span class="string">&quot;create&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
+    <span class="attr">#[trace(name = <span class="string">&quot;create&quot;</span>, enter_on_poll = <span class="bool-val">true</span>)]
     </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="self">self</span>.inner.create_dir(path, args).<span class="kw">await
     </span>}
