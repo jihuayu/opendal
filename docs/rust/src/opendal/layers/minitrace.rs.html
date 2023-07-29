@@ -450,6 +450,8 @@
 <a href="#450" id="450">450</a>
 <a href="#451" id="451">451</a>
 <a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -527,7 +529,7 @@
 ///         runtime.block_on(
 ///             async {
 ///                 let _ = dotenvy::dotenv();
-///                 let op = Operator::from_env::&lt;services::Memory&gt;()
+///                 let op = Operator::new(services::Memory::default())
 ///                     .expect(&quot;init operator must succeed&quot;)
 ///                     .layer(MinitraceLayer)
 ///                     .finish();
@@ -557,6 +559,8 @@
 ///
 /// ```no_run
 /// extern crate minitrace_jaeger;
+///
+/// use minitrace::collector::Config;
 ///
 /// let reporter =
 ///     minitrace_jaeger::JaegerReporter::new(&quot;127.0.0.1:6831&quot;.parse().unwrap(), &quot;opendal&quot;)
