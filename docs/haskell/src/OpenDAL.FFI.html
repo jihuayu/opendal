@@ -26,15 +26,15 @@
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="RawLister"><span class="annot"><a href="OpenDAL.FFI.html#RawLister"><span class="hs-identifier hs-var">RawLister</span></a></span></span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="FFIResult"><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-var">FFIResult</span></a></span></span><span> </span><span id="local-6989586621679060896"><span class="annot"><a href="#local-6989586621679060896"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FFIResult"><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-var">FFIResult</span></a></span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="FFIResult"><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-var">FFIResult</span></a></span></span><span> </span><span id="local-6989586621679060901"><span class="annot"><a href="#local-6989586621679060901"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FFIResult"><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-var">FFIResult</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ffiCode"><span class="annot"><span class="annottext">forall a. FFIResult a -&gt; CUInt
 </span><a href="OpenDAL.FFI.html#ffiCode"><span class="hs-identifier hs-var hs-var">ffiCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CUInt</span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="dataPtr"><span class="annot"><span class="annottext">forall a. FFIResult a -&gt; Ptr a
-</span><a href="OpenDAL.FFI.html#dataPtr"><span class="hs-identifier hs-var hs-var">dataPtr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ptr</span></span><span> </span><span class="annot"><a href="#local-6989586621679060896"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><a href="OpenDAL.FFI.html#dataPtr"><span class="hs-identifier hs-var hs-var">dataPtr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ptr</span></span><span> </span><span class="annot"><a href="#local-6989586621679060901"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="errorMessage"><span class="annot"><span class="annottext">forall a. FFIResult a -&gt; CString
 </span><a href="OpenDAL.FFI.html#errorMessage"><span class="hs-identifier hs-var hs-var">errorMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679060935"><span id="local-6989586621679060944"><span id="local-6989586621679060948"><span class="annot"><span class="annottext">Int -&gt; FFIResult a -&gt; ShowS
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679060940"><span id="local-6989586621679060949"><span id="local-6989586621679060953"><span class="annot"><span class="annottext">Int -&gt; FFIResult a -&gt; ShowS
 [FFIResult a] -&gt; ShowS
 FFIResult a -&gt; String
 (Int -&gt; FFIResult a -&gt; ShowS)
@@ -54,9 +54,9 @@ $cshowList :: forall a. [FFIResult a] -&gt; ShowS
 showList :: [FFIResult a] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679060913"><span id="local-6989586621679060954"><span id="local-6989586621679060958"><span id="local-6989586621679060961"><span id="local-6989586621679060964"><span class="annot"><span class="hs-identifier hs-type">Storable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-type">FFIResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679060913"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-37"></span><span>  </span><span id="local-6989586621679060983"><span class="annot"><span class="annottext">sizeOf :: FFIResult a -&gt; Int
-</span><a href="#local-6989586621679060983"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeOf</span></a></span></span><span> </span><span class="annot"><span class="annottext">FFIResult a
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679060918"><span id="local-6989586621679060959"><span id="local-6989586621679060963"><span id="local-6989586621679060966"><span id="local-6989586621679060969"><span class="annot"><span class="hs-identifier hs-type">Storable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-type">FFIResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679060918"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621679060988"><span class="annot"><span class="annottext">sizeOf :: FFIResult a -&gt; Int
+</span><a href="#local-6989586621679060988"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeOf</span></a></span></span><span> </span><span class="annot"><span class="annottext">FFIResult a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
@@ -74,37 +74,37 @@ forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621679060990"><span class="annot"><span class="annottext">alignment :: FFIResult a -&gt; Int
-</span><a href="#local-6989586621679060990"><span class="hs-identifier hs-var hs-var hs-var hs-var">alignment</span></a></span></span><span> </span><span class="annot"><span class="annottext">FFIResult a
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621679060995"><span class="annot"><span class="annottext">alignment :: FFIResult a -&gt; Int
+</span><a href="#local-6989586621679060995"><span class="hs-identifier hs-var hs-var hs-var hs-var">alignment</span></a></span></span><span> </span><span class="annot"><span class="annottext">FFIResult a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">alignment</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-39"></span><span>  </span><span id="local-6989586621679061001"><span class="annot"><span class="annottext">peek :: Ptr (FFIResult a) -&gt; IO (FFIResult a)
-</span><a href="#local-6989586621679061001"><span class="hs-identifier hs-var hs-var hs-var hs-var">peek</span></a></span></span><span> </span><span id="local-6989586621679061003"><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061003"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-40"></span><span>    </span><span id="local-6989586621679061004"><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061004"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; IO CUInt
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621679061006"><span class="annot"><span class="annottext">peek :: Ptr (FFIResult a) -&gt; IO (FFIResult a)
+</span><a href="#local-6989586621679061006"><span class="hs-identifier hs-var hs-var hs-var hs-var">peek</span></a></span></span><span> </span><span id="local-6989586621679061008"><span class="annot"><span class="annottext">Ptr (FFIResult a)
+</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621679061009"><span class="annot"><span class="annottext">CUInt
+</span><a href="#local-6989586621679061009"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; IO CUInt
 forall b. Ptr b -&gt; Int -&gt; IO CUInt
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061003"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061006"><span class="hs-identifier hs-var">codeOffset</span></a></span><span>
-</span><span id="line-41"></span><span>    </span><span id="local-6989586621679061007"><span class="annot"><span class="annottext">Ptr a
-</span><a href="#local-6989586621679061007"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; IO (Ptr a)
+</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061011"><span class="hs-identifier hs-var">codeOffset</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span id="local-6989586621679061012"><span class="annot"><span class="annottext">Ptr a
+</span><a href="#local-6989586621679061012"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; IO (Ptr a)
 forall b. Ptr b -&gt; Int -&gt; IO (Ptr a)
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061003"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span>
-</span><span id="line-42"></span><span>    </span><span id="local-6989586621679061009"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061009"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061013"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span id="local-6989586621679061014"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061014"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061003"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061010"><span class="hs-identifier hs-var">errorMessageOffset</span></a></span><span>
+</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061015"><span class="hs-identifier hs-var">errorMessageOffset</span></a></span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">FFIResult a -&gt; IO (FFIResult a)
 forall a. a -&gt; IO a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -114,68 +114,68 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CUInt -&gt; Ptr a -&gt; CString -&gt; FFIResult a
 forall a. CUInt -&gt; Ptr a -&gt; CString -&gt; FFIResult a
 </span><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-var">FFIResult</span></a></span><span> </span><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061004"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Ptr a
-</span><a href="#local-6989586621679061007"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061009"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><a href="#local-6989586621679061009"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Ptr a
+</span><a href="#local-6989586621679061012"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061014"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
 </span><span id="line-44"></span><span>   </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>    </span><span id="local-6989586621679061006"><span class="annot"><span class="annottext">codeOffset :: Int
-</span><a href="#local-6989586621679061006"><span class="hs-identifier hs-var hs-var">codeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-45"></span><span>    </span><span id="local-6989586621679061011"><span class="annot"><span class="annottext">codeOffset :: Int
+</span><a href="#local-6989586621679061011"><span class="hs-identifier hs-var hs-var">codeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621679061008"><span class="annot"><span class="annottext">dataPtrOffset :: Int
-</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var hs-var">dataPtrOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621679061013"><span class="annot"><span class="annottext">dataPtrOffset :: Int
+</span><a href="#local-6989586621679061013"><span class="hs-identifier hs-var hs-var">dataPtrOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span>    </span><span id="local-6989586621679061010"><span class="annot"><span class="annottext">errorMessageOffset :: Int
-</span><a href="#local-6989586621679061010"><span class="hs-identifier hs-var hs-var">errorMessageOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061008"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-47"></span><span>    </span><span id="local-6989586621679061015"><span class="annot"><span class="annottext">errorMessageOffset :: Int
+</span><a href="#local-6989586621679061015"><span class="hs-identifier hs-var hs-var">errorMessageOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061013"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Ptr () -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ptr ()
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ptr</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621679061024"><span class="annot"><span class="annottext">poke :: Ptr (FFIResult a) -&gt; FFIResult a -&gt; IO ()
-</span><a href="#local-6989586621679061024"><span class="hs-identifier hs-var hs-var hs-var hs-var">poke</span></a></span></span><span> </span><span id="local-6989586621679061026"><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061026"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-type">FFIResult</span></a></span><span> </span><span id="local-6989586621679061027"><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061027"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621679061028"><span class="annot"><span class="annottext">Ptr a
-</span><a href="#local-6989586621679061028"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679061029"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061029"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679061029"><span class="annot"><span class="annottext">poke :: Ptr (FFIResult a) -&gt; FFIResult a -&gt; IO ()
+</span><a href="#local-6989586621679061029"><span class="hs-identifier hs-var hs-var hs-var hs-var">poke</span></a></span></span><span> </span><span id="local-6989586621679061031"><span class="annot"><span class="annottext">Ptr (FFIResult a)
+</span><a href="#local-6989586621679061031"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#FFIResult"><span class="hs-identifier hs-type">FFIResult</span></a></span><span> </span><span id="local-6989586621679061032"><span class="annot"><span class="annottext">CUInt
+</span><a href="#local-6989586621679061032"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621679061033"><span class="annot"><span class="annottext">Ptr a
+</span><a href="#local-6989586621679061033"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679061034"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061034"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; CUInt -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CUInt -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061026"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061031"><span class="hs-identifier hs-var">codeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061027"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679061031"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061036"><span class="hs-identifier hs-var">codeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CUInt
+</span><a href="#local-6989586621679061032"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; Ptr a -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; Ptr a -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061026"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061032"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Ptr a
-</span><a href="#local-6989586621679061028"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621679061031"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061037"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Ptr a
+</span><a href="#local-6989586621679061033"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">Ptr (FFIResult a) -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr (FFIResult a)
-</span><a href="#local-6989586621679061026"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061033"><span class="hs-identifier hs-var">errorMessageOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061029"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><a href="#local-6989586621679061031"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061038"><span class="hs-identifier hs-var">errorMessageOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061034"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
 </span><span id="line-52"></span><span>   </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>    </span><span id="local-6989586621679061031"><span class="annot"><span class="annottext">codeOffset :: Int
-</span><a href="#local-6989586621679061031"><span class="hs-identifier hs-var hs-var">codeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-53"></span><span>    </span><span id="local-6989586621679061036"><span class="annot"><span class="annottext">codeOffset :: Int
+</span><a href="#local-6989586621679061036"><span class="hs-identifier hs-var hs-var">codeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-54"></span><span>    </span><span id="local-6989586621679061032"><span class="annot"><span class="annottext">dataPtrOffset :: Int
-</span><a href="#local-6989586621679061032"><span class="hs-identifier hs-var hs-var">dataPtrOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621679061037"><span class="annot"><span class="annottext">dataPtrOffset :: Int
+</span><a href="#local-6989586621679061037"><span class="hs-identifier hs-var hs-var">dataPtrOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-55"></span><span>    </span><span id="local-6989586621679061033"><span class="annot"><span class="annottext">errorMessageOffset :: Int
-</span><a href="#local-6989586621679061033"><span class="hs-identifier hs-var hs-var">errorMessageOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061032"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621679061038"><span class="annot"><span class="annottext">errorMessageOffset :: Int
+</span><a href="#local-6989586621679061038"><span class="hs-identifier hs-var hs-var">errorMessageOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061037"><span class="hs-identifier hs-var">dataPtrOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Ptr () -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
@@ -190,8 +190,8 @@ forall a. HasCallStack =&gt; a
 </span><a href="OpenDAL.FFI.html#bsLen"><span class="hs-identifier hs-var hs-var">bsLen</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span>
 </span><span id="line-60"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679061049"><span id="local-6989586621679061053"><span id="local-6989586621679061056"><span id="local-6989586621679061059"><span class="annot"><span class="hs-identifier hs-type">Storable</span></span><span> </span><span class="annot"><a href="OpenDAL.FFI.html#ByteSlice"><span class="hs-identifier hs-type">ByteSlice</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-63"></span><span>  </span><span id="local-6989586621679061070"><span class="annot"><span class="annottext">sizeOf :: ByteSlice -&gt; Int
+</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679061054"><span id="local-6989586621679061058"><span id="local-6989586621679061061"><span id="local-6989586621679061064"><span class="annot"><span class="hs-identifier hs-type">Storable</span></span><span> </span><span class="annot"><a href="OpenDAL.FFI.html#ByteSlice"><span class="hs-identifier hs-type">ByteSlice</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621679061075"><span class="annot"><span class="annottext">sizeOf :: ByteSlice -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeOf</span></span></span><span> </span><span class="annot"><span class="annottext">ByteSlice
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
@@ -204,30 +204,30 @@ forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621679061074"><span class="annot"><span class="annottext">alignment :: ByteSlice -&gt; Int
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621679061079"><span class="annot"><span class="annottext">alignment :: ByteSlice -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">alignment</span></span></span><span> </span><span class="annot"><span class="annottext">ByteSlice
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">alignment</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621679061080"><span class="annot"><span class="annottext">peek :: Ptr ByteSlice -&gt; IO ByteSlice
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">peek</span></span></span><span> </span><span id="local-6989586621679061081"><span class="annot"><span class="annottext">Ptr ByteSlice
-</span><a href="#local-6989586621679061081"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-66"></span><span>    </span><span id="local-6989586621679061082"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061082"><span class="hs-identifier hs-var">bsDataPtr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice -&gt; Int -&gt; IO CString
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621679061085"><span class="annot"><span class="annottext">peek :: Ptr ByteSlice -&gt; IO ByteSlice
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">peek</span></span></span><span> </span><span id="local-6989586621679061086"><span class="annot"><span class="annottext">Ptr ByteSlice
+</span><a href="#local-6989586621679061086"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-66"></span><span>    </span><span id="local-6989586621679061087"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061087"><span class="hs-identifier hs-var">bsDataPtr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice
-</span><a href="#local-6989586621679061081"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061083"><span class="hs-identifier hs-var">dataOffset</span></a></span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621679061084"><span class="annot"><span class="annottext">CSize
-</span><a href="#local-6989586621679061084"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice -&gt; Int -&gt; IO CSize
+</span><a href="#local-6989586621679061086"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061088"><span class="hs-identifier hs-var">dataOffset</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621679061089"><span class="annot"><span class="annottext">CSize
+</span><a href="#local-6989586621679061089"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice -&gt; Int -&gt; IO CSize
 forall b. Ptr b -&gt; Int -&gt; IO CSize
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice
-</span><a href="#local-6989586621679061081"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061085"><span class="hs-identifier hs-var">lenOffset</span></a></span><span>
+</span><a href="#local-6989586621679061086"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061090"><span class="hs-identifier hs-var">lenOffset</span></a></span><span>
 </span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">ByteSlice -&gt; IO ByteSlice
 forall a. a -&gt; IO a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -235,43 +235,43 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; CSize -&gt; ByteSlice
 </span><a href="OpenDAL.FFI.html#ByteSlice"><span class="hs-identifier hs-var">ByteSlice</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061082"><span class="hs-identifier hs-var">bsDataPtr</span></a></span><span> </span><span class="annot"><span class="annottext">CSize
-</span><a href="#local-6989586621679061084"><span class="hs-identifier hs-var">len</span></a></span><span>
+</span><a href="#local-6989586621679061087"><span class="hs-identifier hs-var">bsDataPtr</span></a></span><span> </span><span class="annot"><span class="annottext">CSize
+</span><a href="#local-6989586621679061089"><span class="hs-identifier hs-var">len</span></a></span><span>
 </span><span id="line-69"></span><span>   </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>    </span><span id="local-6989586621679061083"><span class="annot"><span class="annottext">dataOffset :: Int
-</span><a href="#local-6989586621679061083"><span class="hs-identifier hs-var hs-var">dataOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-70"></span><span>    </span><span id="local-6989586621679061088"><span class="annot"><span class="annottext">dataOffset :: Int
+</span><a href="#local-6989586621679061088"><span class="hs-identifier hs-var hs-var">dataOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-71"></span><span>    </span><span id="local-6989586621679061085"><span class="annot"><span class="annottext">lenOffset :: Int
-</span><a href="#local-6989586621679061085"><span class="hs-identifier hs-var hs-var">lenOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Ptr () -&gt; Int
+</span><span id="line-71"></span><span>    </span><span id="local-6989586621679061090"><span class="annot"><span class="annottext">lenOffset :: Int
+</span><a href="#local-6989586621679061090"><span class="hs-identifier hs-var hs-var">lenOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Ptr () -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ptr ()
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ptr</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-72"></span><span>  </span><span id="local-6989586621679061093"><span class="annot"><span class="annottext">poke :: Ptr ByteSlice -&gt; ByteSlice -&gt; IO ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">poke</span></span></span><span> </span><span id="local-6989586621679061094"><span class="annot"><span class="annottext">Ptr ByteSlice
-</span><a href="#local-6989586621679061094"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#ByteSlice"><span class="hs-identifier hs-type">ByteSlice</span></a></span><span> </span><span id="local-6989586621679061095"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061095"><span class="hs-identifier hs-var">bsDataPtr</span></a></span></span><span> </span><span id="local-6989586621679061096"><span class="annot"><span class="annottext">CSize
-</span><a href="#local-6989586621679061096"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621679061098"><span class="annot"><span class="annottext">poke :: Ptr ByteSlice -&gt; ByteSlice -&gt; IO ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">poke</span></span></span><span> </span><span id="local-6989586621679061099"><span class="annot"><span class="annottext">Ptr ByteSlice
+</span><a href="#local-6989586621679061099"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#ByteSlice"><span class="hs-identifier hs-type">ByteSlice</span></a></span><span> </span><span id="local-6989586621679061100"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061100"><span class="hs-identifier hs-var">bsDataPtr</span></a></span></span><span> </span><span id="local-6989586621679061101"><span class="annot"><span class="annottext">CSize
+</span><a href="#local-6989586621679061101"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">Ptr ByteSlice -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice
-</span><a href="#local-6989586621679061094"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061097"><span class="hs-identifier hs-var">dataOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061095"><span class="hs-identifier hs-var">bsDataPtr</span></a></span><span>
+</span><a href="#local-6989586621679061099"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061102"><span class="hs-identifier hs-var">dataOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061100"><span class="hs-identifier hs-var">bsDataPtr</span></a></span><span>
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">Ptr ByteSlice -&gt; Int -&gt; CSize -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CSize -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr ByteSlice
-</span><a href="#local-6989586621679061094"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061098"><span class="hs-identifier hs-var">lenOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CSize
-</span><a href="#local-6989586621679061096"><span class="hs-identifier hs-var">len</span></a></span><span>
+</span><a href="#local-6989586621679061099"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061103"><span class="hs-identifier hs-var">lenOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CSize
+</span><a href="#local-6989586621679061101"><span class="hs-identifier hs-var">len</span></a></span><span>
 </span><span id="line-75"></span><span>   </span><span class="hs-keyword">where</span><span>
-</span><span id="line-76"></span><span>    </span><span id="local-6989586621679061097"><span class="annot"><span class="annottext">dataOffset :: Int
-</span><a href="#local-6989586621679061097"><span class="hs-identifier hs-var hs-var">dataOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621679061102"><span class="annot"><span class="annottext">dataOffset :: Int
+</span><a href="#local-6989586621679061102"><span class="hs-identifier hs-var hs-var">dataOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621679061098"><span class="annot"><span class="annottext">lenOffset :: Int
-</span><a href="#local-6989586621679061098"><span class="hs-identifier hs-var hs-var">lenOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Ptr () -&gt; Int
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679061103"><span class="annot"><span class="annottext">lenOffset :: Int
+</span><a href="#local-6989586621679061103"><span class="hs-identifier hs-var hs-var">lenOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Ptr () -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ptr ()
 forall a. HasCallStack =&gt; a
@@ -295,7 +295,7 @@ forall a. HasCallStack =&gt; a
 </span><span id="line-87"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ffiLastModified"><span class="annot"><span class="annottext">FFIMetadata -&gt; CString
 </span><a href="OpenDAL.FFI.html#ffiLastModified"><span class="hs-identifier hs-var hs-var">ffiLastModified</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679061113"><span id="local-6989586621679061125"><span id="local-6989586621679061129"><span class="annot"><span class="annottext">Int -&gt; FFIMetadata -&gt; ShowS
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679061118"><span id="local-6989586621679061130"><span id="local-6989586621679061134"><span class="annot"><span class="annottext">Int -&gt; FFIMetadata -&gt; ShowS
 [FFIMetadata] -&gt; ShowS
 FFIMetadata -&gt; String
 (Int -&gt; FFIMetadata -&gt; ShowS)
@@ -312,8 +312,8 @@ $cshowList :: [FFIMetadata] -&gt; ShowS
 showList :: [FFIMetadata] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679061134"><span id="local-6989586621679061138"><span id="local-6989586621679061141"><span id="local-6989586621679061144"><span class="annot"><span class="hs-identifier hs-type">Storable</span></span><span> </span><span class="annot"><a href="OpenDAL.FFI.html#FFIMetadata"><span class="hs-identifier hs-type">FFIMetadata</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621679061162"><span class="annot"><span class="annottext">sizeOf :: FFIMetadata -&gt; Int
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679061139"><span id="local-6989586621679061143"><span id="local-6989586621679061146"><span id="local-6989586621679061149"><span class="annot"><span class="hs-identifier hs-type">Storable</span></span><span> </span><span class="annot"><a href="OpenDAL.FFI.html#FFIMetadata"><span class="hs-identifier hs-type">FFIMetadata</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621679061167"><span class="annot"><span class="annottext">sizeOf :: FFIMetadata -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeOf</span></span></span><span> </span><span class="annot"><span class="annottext">FFIMetadata
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
@@ -335,72 +335,72 @@ forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CULong
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CULong</span></span><span class="hs-special">)</span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621679061167"><span class="annot"><span class="annottext">alignment :: FFIMetadata -&gt; Int
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621679061172"><span class="annot"><span class="annottext">alignment :: FFIMetadata -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">alignment</span></span></span><span> </span><span class="annot"><span class="annottext">FFIMetadata
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">alignment</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-94"></span><span>  </span><span id="local-6989586621679061185"><span class="annot"><span class="annottext">peek :: Ptr FFIMetadata -&gt; IO FFIMetadata
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">peek</span></span></span><span> </span><span id="local-6989586621679061186"><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-95"></span><span>    </span><span id="local-6989586621679061187"><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061187"><span class="hs-identifier hs-var">mode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CUInt
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621679061190"><span class="annot"><span class="annottext">peek :: Ptr FFIMetadata -&gt; IO FFIMetadata
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">peek</span></span></span><span> </span><span id="local-6989586621679061191"><span class="annot"><span class="annottext">Ptr FFIMetadata
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621679061192"><span class="annot"><span class="annottext">CUInt
+</span><a href="#local-6989586621679061192"><span class="hs-identifier hs-var">mode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CUInt
 forall b. Ptr b -&gt; Int -&gt; IO CUInt
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061188"><span class="hs-identifier hs-var">modeOffset</span></a></span><span>
-</span><span id="line-96"></span><span>    </span><span id="local-6989586621679061189"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061189"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061193"><span class="hs-identifier hs-var">modeOffset</span></a></span><span>
+</span><span id="line-96"></span><span>    </span><span id="local-6989586621679061194"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061194"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061190"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span>
-</span><span id="line-97"></span><span>    </span><span id="local-6989586621679061191"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">contentDisposition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061195"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621679061196"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061196"><span class="hs-identifier hs-var">contentDisposition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061192"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span>
-</span><span id="line-98"></span><span>    </span><span id="local-6989586621679061193"><span class="annot"><span class="annottext">CULong
-</span><a href="#local-6989586621679061193"><span class="hs-identifier hs-var">contentLength</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CULong
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061197"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span id="local-6989586621679061198"><span class="annot"><span class="annottext">CULong
+</span><a href="#local-6989586621679061198"><span class="hs-identifier hs-var">contentLength</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CULong
 forall b. Ptr b -&gt; Int -&gt; IO CULong
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061194"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span>
-</span><span id="line-99"></span><span>    </span><span id="local-6989586621679061195"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061195"><span class="hs-identifier hs-var">contentMD5</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061199"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span>
+</span><span id="line-99"></span><span>    </span><span id="local-6989586621679061200"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061200"><span class="hs-identifier hs-var">contentMD5</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061196"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span>
-</span><span id="line-100"></span><span>    </span><span id="local-6989586621679061197"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061197"><span class="hs-identifier hs-var">contentType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061201"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span>
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621679061202"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061202"><span class="hs-identifier hs-var">contentType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061198"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span>
-</span><span id="line-101"></span><span>    </span><span id="local-6989586621679061199"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061199"><span class="hs-identifier hs-var">eTag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061203"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621679061204"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061204"><span class="hs-identifier hs-var">eTag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061200"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span>
-</span><span id="line-102"></span><span>    </span><span id="local-6989586621679061201"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061201"><span class="hs-identifier hs-var">lastModified</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061205"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span>
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621679061206"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061206"><span class="hs-identifier hs-var">lastModified</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; IO CString
 forall b. Ptr b -&gt; Int -&gt; IO CString
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; IO a
 </span><span class="hs-identifier hs-var">peekByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061186"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061202"><span class="hs-identifier hs-var">lastModifiedOffset</span></a></span><span>
+</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061207"><span class="hs-identifier hs-var">lastModifiedOffset</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">FFIMetadata -&gt; IO FFIMetadata
 forall a. a -&gt; IO a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -416,209 +416,209 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; CString
 -&gt; FFIMetadata
 </span><a href="OpenDAL.FFI.html#FFIMetadata"><span class="hs-identifier hs-var">FFIMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061187"><span class="hs-identifier hs-var">mode</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061189"><span class="hs-identifier hs-var">cacheControl</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061191"><span class="hs-identifier hs-var">contentDisposition</span></a></span><span> </span><span class="annot"><span class="annottext">CULong
-</span><a href="#local-6989586621679061193"><span class="hs-identifier hs-var">contentLength</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061195"><span class="hs-identifier hs-var">contentMD5</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061197"><span class="hs-identifier hs-var">contentType</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061199"><span class="hs-identifier hs-var">eTag</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061201"><span class="hs-identifier hs-var">lastModified</span></a></span><span>
+</span><a href="#local-6989586621679061192"><span class="hs-identifier hs-var">mode</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061194"><span class="hs-identifier hs-var">cacheControl</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061196"><span class="hs-identifier hs-var">contentDisposition</span></a></span><span> </span><span class="annot"><span class="annottext">CULong
+</span><a href="#local-6989586621679061198"><span class="hs-identifier hs-var">contentLength</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061200"><span class="hs-identifier hs-var">contentMD5</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061202"><span class="hs-identifier hs-var">contentType</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061204"><span class="hs-identifier hs-var">eTag</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061206"><span class="hs-identifier hs-var">lastModified</span></a></span><span>
 </span><span id="line-104"></span><span>   </span><span class="hs-keyword">where</span><span>
-</span><span id="line-105"></span><span>    </span><span id="local-6989586621679061188"><span class="annot"><span class="annottext">modeOffset :: Int
-</span><a href="#local-6989586621679061188"><span class="hs-identifier hs-var hs-var">modeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-105"></span><span>    </span><span id="local-6989586621679061193"><span class="annot"><span class="annottext">modeOffset :: Int
+</span><a href="#local-6989586621679061193"><span class="hs-identifier hs-var hs-var">modeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-106"></span><span>    </span><span id="local-6989586621679061190"><span class="annot"><span class="annottext">cacheControlOffset :: Int
-</span><a href="#local-6989586621679061190"><span class="hs-identifier hs-var hs-var">cacheControlOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061188"><span class="hs-identifier hs-var">modeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621679061195"><span class="annot"><span class="annottext">cacheControlOffset :: Int
+</span><a href="#local-6989586621679061195"><span class="hs-identifier hs-var hs-var">cacheControlOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061193"><span class="hs-identifier hs-var">modeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-107"></span><span>    </span><span id="local-6989586621679061192"><span class="annot"><span class="annottext">contentDispositionOffset :: Int
-</span><a href="#local-6989586621679061192"><span class="hs-identifier hs-var hs-var">contentDispositionOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061190"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-107"></span><span>    </span><span id="local-6989586621679061197"><span class="annot"><span class="annottext">contentDispositionOffset :: Int
+</span><a href="#local-6989586621679061197"><span class="hs-identifier hs-var hs-var">contentDispositionOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061195"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-108"></span><span>    </span><span id="local-6989586621679061194"><span class="annot"><span class="annottext">contentLengthOffset :: Int
-</span><a href="#local-6989586621679061194"><span class="hs-identifier hs-var hs-var">contentLengthOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061192"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-108"></span><span>    </span><span id="local-6989586621679061199"><span class="annot"><span class="annottext">contentLengthOffset :: Int
+</span><a href="#local-6989586621679061199"><span class="hs-identifier hs-var hs-var">contentLengthOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061197"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-109"></span><span>    </span><span id="local-6989586621679061196"><span class="annot"><span class="annottext">contentMD5Offset :: Int
-</span><a href="#local-6989586621679061196"><span class="hs-identifier hs-var hs-var">contentMD5Offset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061194"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621679061201"><span class="annot"><span class="annottext">contentMD5Offset :: Int
+</span><a href="#local-6989586621679061201"><span class="hs-identifier hs-var hs-var">contentMD5Offset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061199"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CULong -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CULong
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CULong</span></span><span class="hs-special">)</span><span>
-</span><span id="line-110"></span><span>    </span><span id="local-6989586621679061198"><span class="annot"><span class="annottext">contentTypeOffset :: Int
-</span><a href="#local-6989586621679061198"><span class="hs-identifier hs-var hs-var">contentTypeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061196"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621679061203"><span class="annot"><span class="annottext">contentTypeOffset :: Int
+</span><a href="#local-6989586621679061203"><span class="hs-identifier hs-var hs-var">contentTypeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061201"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621679061200"><span class="annot"><span class="annottext">eTagOffset :: Int
-</span><a href="#local-6989586621679061200"><span class="hs-identifier hs-var hs-var">eTagOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061198"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621679061205"><span class="annot"><span class="annottext">eTagOffset :: Int
+</span><a href="#local-6989586621679061205"><span class="hs-identifier hs-var hs-var">eTagOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061203"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-112"></span><span>    </span><span id="local-6989586621679061202"><span class="annot"><span class="annottext">lastModifiedOffset :: Int
-</span><a href="#local-6989586621679061202"><span class="hs-identifier hs-var hs-var">lastModifiedOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061200"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621679061207"><span class="annot"><span class="annottext">lastModifiedOffset :: Int
+</span><a href="#local-6989586621679061207"><span class="hs-identifier hs-var hs-var">lastModifiedOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061205"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-113"></span><span>  </span><span id="local-6989586621679061247"><span class="annot"><span class="annottext">poke :: Ptr FFIMetadata -&gt; FFIMetadata -&gt; IO ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">poke</span></span></span><span> </span><span id="local-6989586621679061248"><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#FFIMetadata"><span class="hs-identifier hs-type">FFIMetadata</span></a></span><span> </span><span id="local-6989586621679061249"><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061249"><span class="hs-identifier hs-var">mode</span></a></span></span><span> </span><span id="local-6989586621679061250"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061250"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span id="local-6989586621679061251"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061251"><span class="hs-identifier hs-var">contentDisposition</span></a></span></span><span> </span><span id="local-6989586621679061252"><span class="annot"><span class="annottext">CULong
-</span><a href="#local-6989586621679061252"><span class="hs-identifier hs-var">contentLength</span></a></span></span><span> </span><span id="local-6989586621679061253"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">contentMD5</span></a></span></span><span> </span><span id="local-6989586621679061254"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061254"><span class="hs-identifier hs-var">contentType</span></a></span></span><span> </span><span id="local-6989586621679061255"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061255"><span class="hs-identifier hs-var">eTag</span></a></span></span><span> </span><span id="local-6989586621679061256"><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061256"><span class="hs-identifier hs-var">lastModified</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-113"></span><span>  </span><span id="local-6989586621679061252"><span class="annot"><span class="annottext">poke :: Ptr FFIMetadata -&gt; FFIMetadata -&gt; IO ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">poke</span></span></span><span> </span><span id="local-6989586621679061253"><span class="annot"><span class="annottext">Ptr FFIMetadata
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="OpenDAL.FFI.html#FFIMetadata"><span class="hs-identifier hs-type">FFIMetadata</span></a></span><span> </span><span id="local-6989586621679061254"><span class="annot"><span class="annottext">CUInt
+</span><a href="#local-6989586621679061254"><span class="hs-identifier hs-var">mode</span></a></span></span><span> </span><span id="local-6989586621679061255"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061255"><span class="hs-identifier hs-var">cacheControl</span></a></span></span><span> </span><span id="local-6989586621679061256"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061256"><span class="hs-identifier hs-var">contentDisposition</span></a></span></span><span> </span><span id="local-6989586621679061257"><span class="annot"><span class="annottext">CULong
+</span><a href="#local-6989586621679061257"><span class="hs-identifier hs-var">contentLength</span></a></span></span><span> </span><span id="local-6989586621679061258"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061258"><span class="hs-identifier hs-var">contentMD5</span></a></span></span><span> </span><span id="local-6989586621679061259"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061259"><span class="hs-identifier hs-var">contentType</span></a></span></span><span> </span><span id="local-6989586621679061260"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061260"><span class="hs-identifier hs-var">eTag</span></a></span></span><span> </span><span id="local-6989586621679061261"><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061261"><span class="hs-identifier hs-var">lastModified</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-114"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CUInt -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CUInt -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061257"><span class="hs-identifier hs-var">modeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CUInt
-</span><a href="#local-6989586621679061249"><span class="hs-identifier hs-var">mode</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061262"><span class="hs-identifier hs-var">modeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CUInt
+</span><a href="#local-6989586621679061254"><span class="hs-identifier hs-var">mode</span></a></span><span>
 </span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061258"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061250"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061263"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061255"><span class="hs-identifier hs-var">cacheControl</span></a></span><span>
 </span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061259"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061251"><span class="hs-identifier hs-var">contentDisposition</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061264"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061256"><span class="hs-identifier hs-var">contentDisposition</span></a></span><span>
 </span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CULong -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CULong -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061260"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CULong
-</span><a href="#local-6989586621679061252"><span class="hs-identifier hs-var">contentLength</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061265"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CULong
+</span><a href="#local-6989586621679061257"><span class="hs-identifier hs-var">contentLength</span></a></span><span>
 </span><span id="line-118"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061261"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">contentMD5</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061266"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061258"><span class="hs-identifier hs-var">contentMD5</span></a></span><span>
 </span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061262"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061254"><span class="hs-identifier hs-var">contentType</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061267"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061259"><span class="hs-identifier hs-var">contentType</span></a></span><span>
 </span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061263"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061255"><span class="hs-identifier hs-var">eTag</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061268"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061260"><span class="hs-identifier hs-var">eTag</span></a></span><span>
 </span><span id="line-121"></span><span>    </span><span class="annot"><span class="annottext">Ptr FFIMetadata -&gt; Int -&gt; CString -&gt; IO ()
 forall b. Ptr b -&gt; Int -&gt; CString -&gt; IO ()
 forall a b. Storable a =&gt; Ptr b -&gt; Int -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">pokeByteOff</span></span><span> </span><span class="annot"><span class="annottext">Ptr FFIMetadata
-</span><a href="#local-6989586621679061248"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061264"><span class="hs-identifier hs-var">lastModifiedOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
-</span><a href="#local-6989586621679061256"><span class="hs-identifier hs-var">lastModified</span></a></span><span>
+</span><a href="#local-6989586621679061253"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061269"><span class="hs-identifier hs-var">lastModifiedOffset</span></a></span><span> </span><span class="annot"><span class="annottext">CString
+</span><a href="#local-6989586621679061261"><span class="hs-identifier hs-var">lastModified</span></a></span><span>
 </span><span id="line-122"></span><span>   </span><span class="hs-keyword">where</span><span>
-</span><span id="line-123"></span><span>    </span><span id="local-6989586621679061257"><span class="annot"><span class="annottext">modeOffset :: Int
-</span><a href="#local-6989586621679061257"><span class="hs-identifier hs-var hs-var">modeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621679061262"><span class="annot"><span class="annottext">modeOffset :: Int
+</span><a href="#local-6989586621679061262"><span class="hs-identifier hs-var hs-var">modeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-124"></span><span>    </span><span id="local-6989586621679061258"><span class="annot"><span class="annottext">cacheControlOffset :: Int
-</span><a href="#local-6989586621679061258"><span class="hs-identifier hs-var hs-var">cacheControlOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061257"><span class="hs-identifier hs-var">modeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-124"></span><span>    </span><span id="local-6989586621679061263"><span class="annot"><span class="annottext">cacheControlOffset :: Int
+</span><a href="#local-6989586621679061263"><span class="hs-identifier hs-var hs-var">cacheControlOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061262"><span class="hs-identifier hs-var">modeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CSize -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CSize
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CSize</span></span><span class="hs-special">)</span><span>
-</span><span id="line-125"></span><span>    </span><span id="local-6989586621679061259"><span class="annot"><span class="annottext">contentDispositionOffset :: Int
-</span><a href="#local-6989586621679061259"><span class="hs-identifier hs-var hs-var">contentDispositionOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061258"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621679061264"><span class="annot"><span class="annottext">contentDispositionOffset :: Int
+</span><a href="#local-6989586621679061264"><span class="hs-identifier hs-var hs-var">contentDispositionOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061263"><span class="hs-identifier hs-var">cacheControlOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-126"></span><span>    </span><span id="local-6989586621679061260"><span class="annot"><span class="annottext">contentLengthOffset :: Int
-</span><a href="#local-6989586621679061260"><span class="hs-identifier hs-var hs-var">contentLengthOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061259"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-126"></span><span>    </span><span id="local-6989586621679061265"><span class="annot"><span class="annottext">contentLengthOffset :: Int
+</span><a href="#local-6989586621679061265"><span class="hs-identifier hs-var hs-var">contentLengthOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061264"><span class="hs-identifier hs-var">contentDispositionOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-127"></span><span>    </span><span id="local-6989586621679061261"><span class="annot"><span class="annottext">contentMD5Offset :: Int
-</span><a href="#local-6989586621679061261"><span class="hs-identifier hs-var hs-var">contentMD5Offset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061260"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-127"></span><span>    </span><span id="local-6989586621679061266"><span class="annot"><span class="annottext">contentMD5Offset :: Int
+</span><a href="#local-6989586621679061266"><span class="hs-identifier hs-var hs-var">contentMD5Offset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061265"><span class="hs-identifier hs-var">contentLengthOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CULong -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CULong
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CULong</span></span><span class="hs-special">)</span><span>
-</span><span id="line-128"></span><span>    </span><span id="local-6989586621679061262"><span class="annot"><span class="annottext">contentTypeOffset :: Int
-</span><a href="#local-6989586621679061262"><span class="hs-identifier hs-var hs-var">contentTypeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061261"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-128"></span><span>    </span><span id="local-6989586621679061267"><span class="annot"><span class="annottext">contentTypeOffset :: Int
+</span><a href="#local-6989586621679061267"><span class="hs-identifier hs-var hs-var">contentTypeOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061266"><span class="hs-identifier hs-var">contentMD5Offset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-129"></span><span>    </span><span id="local-6989586621679061263"><span class="annot"><span class="annottext">eTagOffset :: Int
-</span><a href="#local-6989586621679061263"><span class="hs-identifier hs-var hs-var">eTagOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061262"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621679061268"><span class="annot"><span class="annottext">eTagOffset :: Int
+</span><a href="#local-6989586621679061268"><span class="hs-identifier hs-var hs-var">eTagOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061267"><span class="hs-identifier hs-var">contentTypeOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">sizeOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CString
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-130"></span><span>    </span><span id="local-6989586621679061264"><span class="annot"><span class="annottext">lastModifiedOffset :: Int
-</span><a href="#local-6989586621679061264"><span class="hs-identifier hs-var hs-var">lastModifiedOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679061263"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621679061269"><span class="annot"><span class="annottext">lastModifiedOffset :: Int
+</span><a href="#local-6989586621679061269"><span class="hs-identifier hs-var hs-var">lastModifiedOffset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679061268"><span class="hs-identifier hs-var">eTagOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CString -&gt; Int
 forall a. Storable a =&gt; a -&gt; Int
