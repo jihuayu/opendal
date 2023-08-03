@@ -517,6 +517,12 @@
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -788,13 +794,19 @@
             })<span class="question-mark">?
         </span>};
 
-        <span class="kw">let </span>config = HuaweicloudObsConfig {
-            access_key_id: <span class="self">self</span>.access_key_id.take(),
-            secret_access_key: <span class="self">self</span>.secret_access_key.take(),
-            security_token: <span class="prelude-val">None</span>,
-        };
+        <span class="kw">let </span><span class="kw-2">mut </span>cfg = HuaweicloudObsConfig::default();
+        <span class="comment">// Load cfg from env first.
+        </span>cfg = cfg.from_env();
 
-        <span class="kw">let </span>cred_loader = HuaweicloudObsCredentialLoader::new(config);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="self">self</span>.access_key_id.take() {
+            cfg.access_key_id = <span class="prelude-val">Some</span>(v);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="self">self</span>.secret_access_key.take() {
+            cfg.secret_access_key = <span class="prelude-val">Some</span>(v);
+        }
+
+        <span class="kw">let </span>loader = HuaweicloudObsCredentialLoader::new(cfg);
 
         <span class="comment">// Set the bucket name in CanonicalizedResource.
         // 1. If the bucket is bound to a user domain name, use the user domain name as the bucket name,
@@ -826,7 +838,7 @@
                 root,
                 endpoint: <span class="macro">format!</span>(<span class="string">&quot;{}://{}&quot;</span>, <span class="kw-2">&amp;</span>scheme, <span class="kw-2">&amp;</span>endpoint),
                 signer,
-                loader: cred_loader,
+                loader,
                 client,
                 write_min_size,
             }),
