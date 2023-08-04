@@ -228,6 +228,9 @@
 <a href="#228" id="228">228</a>
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -273,6 +276,8 @@
     </span>Dashmap,
     <span class="doccomment">/// [etcd][crate::services::Etcd]: Etcd Services
     </span>Etcd,
+    <span class="doccomment">/// [foundationdb][crate::services::Foundationdb]: Foundationdb services.
+    </span>Foundationdb,
     <span class="doccomment">/// [fs][crate::services::Fs]: POSIX alike file system.
     </span>Fs,
     <span class="doccomment">/// [ftp][crate::services::Ftp]: FTP backend.
@@ -423,6 +428,7 @@
             Scheme::Ghac =&gt; <span class="string">&quot;ghac&quot;</span>,
             Scheme::Hdfs =&gt; <span class="string">&quot;hdfs&quot;</span>,
             Scheme::Http =&gt; <span class="string">&quot;http&quot;</span>,
+            Scheme::Foundationdb =&gt; <span class="string">&quot;foundationdb&quot;</span>,
             Scheme::Ftp =&gt; <span class="string">&quot;ftp&quot;</span>,
             Scheme::Ipfs =&gt; <span class="string">&quot;ipfs&quot;</span>,
             Scheme::Ipmfs =&gt; <span class="string">&quot;ipmfs&quot;</span>,

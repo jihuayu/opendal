@@ -198,6 +198,11 @@
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
 <a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -398,4 +403,9 @@
 </span><span class="kw">mod </span>tikv;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-tikv&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::tikv::Tikv;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-foundationdb&quot;</span>)]
+</span><span class="kw">mod </span>foundationdb;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-foundationdb&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::foundationdb::Foundationdb;
 </code></pre></div></section></main></body></html>
