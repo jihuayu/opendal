@@ -2035,7 +2035,7 @@
     <span class="macro">capability_test!</span>(rename, |op| {
         op.rename(<span class="string">&quot;/path/to/mock_file&quot;</span>, <span class="string">&quot;/path/to/mock_file_2&quot;</span>)
     });
-    <span class="macro">capability_test!</span>(list, |op| { op.list(<span class="string">&quot;/path/to/mock_dir/&quot;</span>) });
+    <span class="macro">capability_test!</span>(list, |op| { op.lister(<span class="string">&quot;/path/to/mock_dir/&quot;</span>) });
     <span class="macro">capability_test!</span>(presign, |op| {
         op.presign_read(<span class="string">&quot;/path/to/mock_file&quot;</span>, Duration::from_secs(<span class="number">1</span>))
     });
