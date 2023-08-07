@@ -238,7 +238,6 @@
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -257,22 +256,21 @@
 // under the License.
 
 </span><span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>tikv_client::Config;
-<span class="kw">use </span>tikv_client::RawClient;
-
-<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
-<span class="kw">use </span><span class="kw">crate</span>::Capability;
-<span class="kw">use </span><span class="kw">crate</span>::Scheme;
-<span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>tokio::sync::OnceCell;
-
-<span class="kw">use </span><span class="kw">crate</span>::Builder;
-<span class="kw">use </span><span class="kw">crate</span>::Error;
-<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
+
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>tikv_client::Config;
+<span class="kw">use </span>tikv_client::RawClient;
+<span class="kw">use </span>tokio::sync::OnceCell;
+
+<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
+<span class="kw">use </span><span class="kw">crate</span>::Builder;
+<span class="kw">use </span><span class="kw">crate</span>::Capability;
+<span class="kw">use </span><span class="kw">crate</span>::Error;
+<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
+<span class="kw">use </span><span class="kw">crate</span>::Scheme;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// TiKV backend builder
 </span><span class="attr">#[derive(Clone, Default)]

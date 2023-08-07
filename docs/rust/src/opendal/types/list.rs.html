@@ -177,53 +177,6 @@
 <a href="#177" id="177">177</a>
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -242,12 +195,12 @@
 // under the License.
 
 </span><span class="kw">use </span>std::collections::VecDeque;
-<span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
+<span class="kw">use </span>flagset::FlagSet;
 <span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>futures::Stream;
@@ -255,22 +208,26 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
+<span class="doccomment">/// Future constructed by listing.
+</span><span class="kw">type </span>ListFuture = BoxFuture&lt;<span class="lifetime">&#39;static</span>, (oio::Pager, <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt;)&gt;;
+<span class="doccomment">/// Future constructed by stating.
+</span><span class="kw">type </span>StatFuture = BoxFuture&lt;<span class="lifetime">&#39;static</span>, (String, <span class="prelude-ty">Result</span>&lt;RpStat&gt;)&gt;;
+
 <span class="doccomment">/// Lister is designed to list entries at given path in an asynchronous
 /// manner.
 ///
-/// Users can construct Lister by `list` or `scan`.
+/// Users can construct Lister by [`Operator::lister`].
 ///
-/// User can use lister as `Stream&lt;Item = Result&lt;Entry&gt;&gt;` or
-/// call `next_page` directly.
+/// User can use lister as `Stream&lt;Item = Result&lt;Entry&gt;&gt;`.
 </span><span class="kw">pub struct </span>Lister {
-    pager: <span class="prelude-ty">Option</span>&lt;oio::Pager&gt;,
+    acc: FusedAccessor,
+    <span class="doccomment">/// required_metakey is the metakey required by users.
+    </span>required_metakey: FlagSet&lt;Metakey&gt;,
 
     buf: VecDeque&lt;oio::Entry&gt;,
-    <span class="doccomment">/// We will move `pager` inside future and return it back while future is ready.
-    /// Thus, we should not allow calling other function while we already have
-    /// a future.
-    </span><span class="attr">#[allow(clippy::type_complexity)]
-    </span>fut: <span class="prelude-ty">Option</span>&lt;BoxFuture&lt;<span class="lifetime">&#39;static</span>, (oio::Pager, <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt;)&gt;&gt;,
+    pager: <span class="prelude-ty">Option</span>&lt;oio::Pager&gt;,
+    listing: <span class="prelude-ty">Option</span>&lt;ListFuture&gt;,
+    stating: <span class="prelude-ty">Option</span>&lt;StatFuture&gt;,
 }
 
 <span class="doccomment">/// # Safety
@@ -280,75 +237,19 @@
 
 <span class="kw">impl </span>Lister {
     <span class="doccomment">/// Create a new lister.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(pager: oio::Pager) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>create(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>required_metakey = args.metakey();
+        <span class="kw">let </span>(<span class="kw">_</span>, pager) = acc.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            acc,
+            required_metakey,
+
+            buf: VecDeque::new(),
             pager: <span class="prelude-val">Some</span>(pager),
-            buf: VecDeque::default(),
-            fut: <span class="prelude-val">None</span>,
-        }
-    }
-
-    <span class="doccomment">/// has_next can be used to check if there are more pages.
-    </span><span class="kw">pub async fn </span>has_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-        <span class="macro">debug_assert!</span>(
-            <span class="self">self</span>.fut.is_none(),
-            <span class="string">&quot;there are ongoing futures for next page&quot;
-        </span>);
-
-        <span class="kw">if </span>!<span class="self">self</span>.buf.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>);
-        }
-
-        <span class="kw">let </span>entries = <span class="kw">match </span><span class="self">self
-            </span>.pager
-            .as_mut()
-            .expect(<span class="string">&quot;pager must be valid&quot;</span>)
-            .next()
-            .<span class="kw">await</span><span class="question-mark">?
-        </span>{
-            <span class="comment">// Ideally, the convert from `Vec` to `VecDeque` will not do reallocation.
-            //
-            // However, this could be changed as described in [impl&lt;T, A&gt; From&lt;Vec&lt;T, A&gt;&gt; for VecDeque&lt;T, A&gt;](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#impl-From%3CVec%3CT%2C%20A%3E%3E-for-VecDeque%3CT%2C%20A%3E)
-            </span><span class="prelude-val">Some</span>(entries) =&gt; entries.into(),
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-        };
-        <span class="comment">// Push fetched entries into buffer.
-        </span><span class="self">self</span>.buf = entries;
-
-        <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-    }
-
-    <span class="doccomment">/// next_page can be used to fetch a new page.
-    ///
-    /// # Notes
-    ///
-    /// Don&#39;t mix the usage of `next_page` and `Stream&lt;Item = Result&lt;Entry&gt;&gt;`.
-    /// Always using the same calling style.
-    </span><span class="kw">pub async fn </span>next_page(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
-        <span class="macro">debug_assert!</span>(
-            <span class="self">self</span>.fut.is_none(),
-            <span class="string">&quot;there are ongoing futures for next page&quot;
-        </span>);
-
-        <span class="kw">let </span>entries = <span class="kw">if </span>!<span class="self">self</span>.buf.is_empty() {
-            mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buf)
-        } <span class="kw">else </span>{
-            <span class="kw">match </span><span class="self">self
-                </span>.pager
-                .as_mut()
-                .expect(<span class="string">&quot;pager must be valid&quot;</span>)
-                .next()
-                .<span class="kw">await</span><span class="question-mark">?
-            </span>{
-                <span class="comment">// Ideally, the convert from `Vec` to `VecDeque` will not do reallocation.
-                //
-                // However, this could be changed as described in [impl&lt;T, A&gt; From&lt;Vec&lt;T, A&gt;&gt; for VecDeque&lt;T, A&gt;](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#impl-From%3CVec%3CT%2C%20A%3E%3E-for-VecDeque%3CT%2C%20A%3E)
-                </span><span class="prelude-val">Some</span>(entries) =&gt; entries.into(),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            }
-        };
-
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries.into_iter().map(|v| v.into_entry()).collect()))
+            listing: <span class="prelude-val">None</span>,
+            stating: <span class="prelude-val">None</span>,
+        })
     }
 }
 
@@ -356,22 +257,44 @@
     <span class="kw">type </span>Item = <span class="prelude-ty">Result</span>&lt;Entry&gt;;
 
     <span class="kw">fn </span>poll_next(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt;&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(oe) = <span class="self">self</span>.buf.pop_front() {
-            <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(oe.into_entry())));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(fut) = <span class="self">self</span>.stating.as_mut() {
+            <span class="kw">let </span>(path, rp) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
+            <span class="kw">let </span>metadata = rp<span class="question-mark">?</span>.into_metadata();
+
+            <span class="self">self</span>.stating = <span class="prelude-val">None</span>;
+            <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(fut) = <span class="self">self</span>.fut.as_mut() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(oe) = <span class="self">self</span>.buf.pop_front() {
+            <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
+            <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
+            </span><span class="kw">if </span>metadata.contains_bit(<span class="self">self</span>.required_metakey) {
+                <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
+            }
+
+            <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
+            <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                <span class="kw">let </span>path = path;
+                <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
+
+                (path, res)
+            };
+            <span class="self">self</span>.stating = <span class="prelude-val">Some</span>(Box::pin(fut));
+            <span class="kw">return </span><span class="self">self</span>.poll_next(cx);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(fut) = <span class="self">self</span>.listing.as_mut() {
             <span class="kw">let </span>(op, res) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
             <span class="self">self</span>.pager = <span class="prelude-val">Some</span>(op);
 
             <span class="kw">return match </span>res<span class="question-mark">? </span>{
                 <span class="prelude-val">Some</span>(oes) =&gt; {
-                    <span class="self">self</span>.fut = <span class="prelude-val">None</span>;
+                    <span class="self">self</span>.listing = <span class="prelude-val">None</span>;
                     <span class="self">self</span>.buf = oes.into();
                     <span class="self">self</span>.poll_next(cx)
                 }
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="self">self</span>.fut = <span class="prelude-val">None</span>;
+                    <span class="self">self</span>.listing = <span class="prelude-val">None</span>;
                     Poll::Ready(<span class="prelude-val">None</span>)
                 }
             };
@@ -383,7 +306,7 @@
 
             (pager, res)
         };
-        <span class="self">self</span>.fut = <span class="prelude-val">Some</span>(Box::pin(fut));
+        <span class="self">self</span>.listing = <span class="prelude-val">Some</span>(Box::pin(fut));
         <span class="self">self</span>.poll_next(cx)
     }
 }
@@ -391,7 +314,7 @@
 <span class="doccomment">/// BlockingLister is designed to list entries at given path in a blocking
 /// manner.
 ///
-/// Users can construct Lister by `blocking_list` or `blocking_scan`.
+/// Users can construct Lister by `blocking_lister`.
 </span><span class="kw">pub struct </span>BlockingLister {
     pager: oio::BlockingPager,
     buf: VecDeque&lt;oio::Entry&gt;,
@@ -409,23 +332,6 @@
             pager,
             buf: VecDeque::default(),
         }
-    }
-
-    <span class="doccomment">/// next_page can be used to fetch a new page.
-    </span><span class="kw">pub fn </span>next_page(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
-        <span class="kw">let </span>entries = <span class="kw">if </span>!<span class="self">self</span>.buf.is_empty() {
-            mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buf)
-        } <span class="kw">else </span>{
-            <span class="kw">match </span><span class="self">self</span>.pager.next()<span class="question-mark">? </span>{
-                <span class="comment">// Ideally, the convert from `Vec` to `VecDeque` will not do reallocation.
-                //
-                // However, this could be changed as described in [impl&lt;T, A&gt; From&lt;Vec&lt;T, A&gt;&gt; for VecDeque&lt;T, A&gt;](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#impl-From%3CVec%3CT%2C%20A%3E%3E-for-VecDeque%3CT%2C%20A%3E)
-                </span><span class="prelude-val">Some</span>(entries) =&gt; entries.into(),
-                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            }
-        };
-
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries.into_iter().map(|v| v.into_entry()).collect()))
     }
 }
 

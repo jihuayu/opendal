@@ -499,6 +499,58 @@
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -586,6 +638,18 @@
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Check if there metadata already contains given bit.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>contains_bit(<span class="kw-2">&amp;</span><span class="self">self</span>, bit: <span class="kw">impl </span>Into&lt;FlagSet&lt;Metakey&gt;&gt;) -&gt; bool {
+        <span class="kw">let </span>input_bit = bit.into();
+
+        <span class="comment">// If meta already contains complete, we don&#39;t need to check.
+        </span><span class="kw">if </span><span class="self">self</span>.bit.contains(Metakey::Complete) {
+            <span class="kw">return </span><span class="bool-val">true</span>;
+        }
+
+        <span class="self">self</span>.bit.contains(input_bit)
+    }
+
     <span class="doccomment">/// mode represent this entry&#39;s mode.
     </span><span class="kw">pub fn </span>mode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; EntryMode {
         <span class="macro">debug_assert!</span>(
@@ -656,6 +720,11 @@
     ///
     /// `Content-Length` is defined by [RFC 7230](https://httpwg.org/specs/rfc7230.html#header.content-length)
     /// Refer to [MDN Content-Length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Length) for more information.
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::ContentLength`], otherwise it will panic.
     </span><span class="kw">pub fn </span>content_length(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::ContentLength) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -690,6 +759,11 @@
     /// And removed by [RFC 7231](https://www.rfc-editor.org/rfc/rfc7231).
     ///
     /// OpenDAL will try its best to set this value, but not guarantee this value is the md5 of content.
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::ContentMd5`], otherwise it will panic.
     </span><span class="kw">pub fn </span>content_md5(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::ContentMd5) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -722,6 +796,11 @@
     <span class="doccomment">/// Content Type of this entry.
     ///
     /// Content Type is defined by [RFC 9110](https://httpwg.org/specs/rfc9110.html#field.content-type).
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::ContentType`], otherwise it will panic.
     </span><span class="kw">pub fn </span>content_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::ContentType) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -752,6 +831,11 @@
     <span class="doccomment">/// Content Range of this entry.
     ///
     /// Content Range is defined by [RFC 9110](https://httpwg.org/specs/rfc9110.html#field.content-range).
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::ContentRange`], otherwise it will panic.
     </span><span class="kw">pub fn </span>content_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;BytesContentRange&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::ContentRange) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -785,6 +869,11 @@
     /// Refer to [MDN Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified) for more information.
     ///
     /// OpenDAL parse the raw value into [`DateTime`] for convenient.
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::LastModified`], otherwise it will panic.
     </span><span class="kw">pub fn </span>last_modified(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::LastModified) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -825,6 +914,11 @@
     /// - `W/&quot;0815&quot;`
     ///
     /// `&quot;` is part of etag.
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::Etag`], otherwise it will panic.
     </span><span class="kw">pub fn </span>etag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::Etag) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -879,6 +973,11 @@
     /// - &quot;inline&quot;
     /// - &quot;attachment&quot;
     /// - &quot;attachment; filename=\&quot;filename.jpg\&quot;&quot;
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::ContentDisposition`], otherwise it will panic.
     </span><span class="kw">pub fn </span>content_disposition(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::ContentDisposition) || <span class="self">self</span>.bit.contains(Metakey::Complete),
@@ -927,6 +1026,11 @@
     /// Version is a string that can be used to identify the version of this entry.
     ///
     /// This field may come out from the version control system, like object versioning in AWS S3.
+    ///
+    /// # Panics
+    ///
+    /// This value is only available when calling on result of `stat` or `list` with
+    /// [`Metakey::Version`], otherwise it will panic.
     </span><span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.bit.contains(Metakey::Version) || <span class="self">self</span>.bit.contains(Metakey::Complete),

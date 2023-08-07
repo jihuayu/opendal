@@ -163,7 +163,7 @@
     ///
     /// NOTE: implement this by hand to avoid leaking raw entry to end-users.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_entry(<span class="self">self</span>) -&gt; <span class="kw">crate</span>::Entry {
-        <span class="kw">crate</span>::Entry::new_with(<span class="self">self</span>.path, <span class="self">self</span>.meta)
+        <span class="kw">crate</span>::Entry::new(<span class="self">self</span>.path, <span class="self">self</span>.meta)
     }
 }
 </code></pre></div></section></main></body></html>
