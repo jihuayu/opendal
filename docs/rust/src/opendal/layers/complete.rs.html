@@ -1019,6 +1019,37 @@
 <a href="#1019" id="1019">1019</a>
 <a href="#1020" id="1020">1020</a>
 <a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1239,7 +1270,9 @@
         <span class="kw">let </span>seekable = capability.read_can_seek;
         <span class="kw">let </span>streamable = capability.read_can_next;
 
+        <span class="kw">let </span>range = args.range();
         <span class="kw">let </span>(rp, r) = <span class="self">self</span>.inner.blocking_read(path, args)<span class="question-mark">?</span>;
+        <span class="kw">let </span>content_length = rp.metadata().content_length();
 
         <span class="kw">match </span>(seekable, streamable) {
             (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>((rp, CompleteReader::AlreadyComplete(r))),
@@ -1247,10 +1280,36 @@
                 <span class="kw">let </span>r = oio::into_streamable_read(r, <span class="number">256 </span>* <span class="number">1024</span>);
                 <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedStreamable(r)))
             }
-            (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::Unsupported,
-                <span class="string">&quot;non seekable blocking reader is not supported&quot;</span>,
-            )),
+            <span class="kw">_ </span>=&gt; {
+                <span class="kw">let </span>(offset, size) = <span class="kw">match </span>(range.offset(), range.size()) {
+                    (<span class="prelude-val">Some</span>(offset), <span class="kw">_</span>) =&gt; (offset, content_length),
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; (<span class="number">0</span>, content_length),
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(size)) =&gt; {
+                        <span class="comment">// TODO: we can read content range to calculate
+                        // the total content length.
+                        </span><span class="kw">let </span>om = <span class="self">self
+                            </span>.inner
+                            .blocking_stat(path, OpStat::new())<span class="question-mark">?
+                            </span>.into_metadata();
+                        <span class="kw">let </span>total_size = om.content_length();
+                        <span class="kw">let </span>(offset, size) = <span class="kw">if </span>size &gt; total_size {
+                            (<span class="number">0</span>, total_size)
+                        } <span class="kw">else </span>{
+                            (total_size - size, size)
+                        };
+
+                        (offset, size)
+                    }
+                };
+                <span class="kw">let </span>r = oio::into_seekable_read_by_range(<span class="self">self</span>.inner.clone(), path, r, offset, size);
+
+                <span class="kw">if </span>streamable {
+                    <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedSeekable(r)))
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>r = oio::into_streamable_read(r, <span class="number">256 </span>* <span class="number">1024</span>);
+                    <span class="prelude-val">Ok</span>((rp, CompleteReader::NeedBoth(r)))
+                }
+            }
         }
     }
 
@@ -1553,9 +1612,9 @@
 
 <span class="kw">pub enum </span>CompleteReader&lt;A: Accessor, R&gt; {
     AlreadyComplete(R),
-    NeedSeekable(ByRangeSeekableReader&lt;A&gt;),
+    NeedSeekable(ByRangeSeekableReader&lt;A, R&gt;),
     NeedStreamable(StreamableReader&lt;R&gt;),
-    NeedBoth(StreamableReader&lt;ByRangeSeekableReader&lt;A&gt;&gt;),
+    NeedBoth(StreamableReader&lt;ByRangeSeekableReader&lt;A, R&gt;&gt;),
 }
 
 <span class="kw">impl</span>&lt;A, R&gt; oio::Read <span class="kw">for </span>CompleteReader&lt;A, R&gt;
@@ -1607,8 +1666,9 @@
 
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(r) =&gt; r.read(buf),
+            NeedSeekable(r) =&gt; r.read(buf),
             NeedStreamable(r) =&gt; r.read(buf),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;not supported types of complete reader&quot;</span>),
+            NeedBoth(r) =&gt; r.read(buf),
         }
     }
 
@@ -1617,8 +1677,9 @@
 
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(r) =&gt; r.seek(pos),
+            NeedSeekable(r) =&gt; r.seek(pos),
             NeedStreamable(r) =&gt; r.seek(pos),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;not supported types of complete reader&quot;</span>),
+            NeedBoth(r) =&gt; r.seek(pos),
         }
     }
 
@@ -1627,8 +1688,9 @@
 
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(r) =&gt; r.next(),
+            NeedSeekable(r) =&gt; r.next(),
             NeedStreamable(r) =&gt; r.next(),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;not supported types of complete reader&quot;</span>),
+            NeedBoth(r) =&gt; r.next(),
         }
     }
 }
