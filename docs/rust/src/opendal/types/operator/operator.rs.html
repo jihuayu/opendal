@@ -2310,7 +2310,7 @@
                         .with_context(<span class="string">&quot;path&quot;</span>, path));
                     }
 
-                    Reader::create_dir(inner.clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
+                    Reader::create(inner.clone(), <span class="kw-2">&amp;</span>path, args).<span class="kw">await
                 </span>};
 
                 Box::pin(fut)

@@ -95,6 +95,9 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -125,6 +128,9 @@
 
 <span class="kw">mod </span>timeout;
 <span class="kw">pub use </span>timeout::TimeoutLayer;
+
+<span class="kw">mod </span>blocking;
+<span class="kw">pub use </span>blocking::BlockingLayer;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;layers-chaos&quot;</span>)]
 </span><span class="kw">mod </span>chaos;
