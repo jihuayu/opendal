@@ -1230,13 +1230,6 @@
 <a href="#1230" id="1230">1230</a>
 <a href="#1231" id="1231">1231</a>
 <a href="#1232" id="1232">1232</a>
-<a href="#1233" id="1233">1233</a>
-<a href="#1234" id="1234">1234</a>
-<a href="#1235" id="1235">1235</a>
-<a href="#1236" id="1236">1236</a>
-<a href="#1237" id="1237">1237</a>
-<a href="#1238" id="1238">1238</a>
-<a href="#1239" id="1239">1239</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1398,7 +1391,7 @@
     ///
     /// If using a custom endpoint,
     /// - If region is set, we will take user&#39;s input first.
-    /// - If not, the default `us-east-1` will be used.
+    /// - If not, we will try to load it from environment.
     </span><span class="kw">pub fn </span>region(<span class="kw-2">&amp;mut </span><span class="self">self</span>, region: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!region.is_empty() {
             <span class="self">self</span>.region = <span class="prelude-val">Some</span>(region.to_string())
@@ -2011,19 +2004,12 @@
             cfg.region = <span class="prelude-val">Some</span>(v);
         }
         <span class="kw">if </span>cfg.region.is_none() {
-            <span class="comment">// AWS S3 requires region to be set.
-            </span><span class="kw">if </span><span class="self">self</span>.endpoint.is_none()
-                || <span class="self">self</span>.endpoint.as_deref() == <span class="prelude-val">Some</span>(<span class="string">&quot;https://s3.amazonaws.com&quot;</span>)
-            {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(ErrorKind::ConfigInvalid, <span class="string">&quot;region is missing&quot;</span>)
-                    .with_operation(<span class="string">&quot;Builder::build&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, Scheme::S3));
-            }
-
-            <span class="comment">// For other compatible services, if we don&#39;t know region
-            // after loading from builder and env, we can use `us-east-1`
-            // as default.
-            </span>cfg.region = <span class="prelude-val">Some</span>(<span class="string">&quot;us-east-1&quot;</span>.to_string());
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::ConfigInvalid,
+                <span class="string">&quot;region is missing. Please find it by S3::detect_region() or set them in env.&quot;</span>,
+            )
+            .with_operation(<span class="string">&quot;Builder::build&quot;</span>)
+            .with_context(<span class="string">&quot;service&quot;</span>, Scheme::S3));
         }
 
         <span class="kw">let </span>region = cfg.region.to_owned().unwrap();
