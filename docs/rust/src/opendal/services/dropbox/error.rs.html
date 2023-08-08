@@ -81,6 +81,7 @@
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -121,6 +122,7 @@
     <span class="kw">let </span>(<span class="kw-2">mut </span>kind, <span class="kw-2">mut </span>retryable) = <span class="kw">match </span>parts.status {
         StatusCode::NOT_FOUND =&gt; (ErrorKind::NotFound, <span class="bool-val">false</span>),
         StatusCode::FORBIDDEN =&gt; (ErrorKind::PermissionDenied, <span class="bool-val">false</span>),
+        StatusCode::TOO_MANY_REQUESTS =&gt; (ErrorKind::RateLimited, <span class="bool-val">true</span>),
         StatusCode::INTERNAL_SERVER_ERROR
         | StatusCode::BAD_GATEWAY
         | StatusCode::SERVICE_UNAVAILABLE

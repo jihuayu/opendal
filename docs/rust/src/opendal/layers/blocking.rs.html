@@ -257,7 +257,6 @@
 <a href="#257" id="257">257</a>
 <a href="#258" id="258">258</a>
 <a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -449,8 +448,7 @@
 
 <span class="kw">impl</span>&lt;I: oio::Read + <span class="lifetime">&#39;static</span>&gt; oio::BlockingRead <span class="kw">for </span>BlockingWrapper&lt;I&gt; {
     <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="self">self</span>.handle
-            .block_on(oio::ReadExt::read(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, buf))
+        <span class="self">self</span>.handle.block_on(<span class="self">self</span>.inner.read(buf))
     }
 
     <span class="kw">fn </span>seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: std::io::SeekFrom) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
@@ -464,11 +462,11 @@
 
 <span class="kw">impl</span>&lt;I: oio::Write + <span class="lifetime">&#39;static</span>&gt; oio::BlockingWrite <span class="kw">for </span>BlockingWrapper&lt;I&gt; {
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.handle.block_on(oio::Write::write(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, bs))
+        <span class="self">self</span>.handle.block_on(<span class="self">self</span>.inner.write(bs))
     }
 
     <span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.handle.block_on(oio::Write::close(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner))
+        <span class="self">self</span>.handle.block_on(<span class="self">self</span>.inner.close())
     }
 }
 
