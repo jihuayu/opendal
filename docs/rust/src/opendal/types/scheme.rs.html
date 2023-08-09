@@ -231,6 +231,10 @@
 <a href="#231" id="231">231</a>
 <a href="#232" id="232">232</a>
 <a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -317,6 +321,8 @@
     </span>Persy,
     <span class="doccomment">/// [redis][crate::services::Redis]: Redis services
     </span>Redis,
+    <span class="doccomment">/// [postgresql][crate::services::Postgresql]: Postgresql services
+    </span>Postgresql,
     <span class="doccomment">/// [rocksdb][crate::services::Rocksdb]: RocksDB services
     </span>Rocksdb,
     <span class="doccomment">/// [s3][crate::services::S3]: AWS S3 alike services.
@@ -396,6 +402,7 @@
             <span class="string">&quot;obs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Obs),
             <span class="string">&quot;onedrive&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Onedrive),
             <span class="string">&quot;persy&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Persy),
+            <span class="string">&quot;postgresql&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Postgresql),
             <span class="string">&quot;redb&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Redb),
             <span class="string">&quot;redis&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Redis),
             <span class="string">&quot;rocksdb&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Rocksdb),
@@ -439,6 +446,7 @@
             Scheme::Obs =&gt; <span class="string">&quot;obs&quot;</span>,
             Scheme::Onedrive =&gt; <span class="string">&quot;onedrive&quot;</span>,
             Scheme::Persy =&gt; <span class="string">&quot;persy&quot;</span>,
+            Scheme::Postgresql =&gt; <span class="string">&quot;postgresql&quot;</span>,
             Scheme::Gdrive =&gt; <span class="string">&quot;gdrive&quot;</span>,
             Scheme::Dropbox =&gt; <span class="string">&quot;dropbox&quot;</span>,
             Scheme::Redis =&gt; <span class="string">&quot;redis&quot;</span>,

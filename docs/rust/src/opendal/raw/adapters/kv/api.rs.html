@@ -207,7 +207,7 @@
 /// By implement this trait, any kv service can work as an OpenDAL Service.
 </span><span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>Adapter: Send + Sync + Debug + Unpin + <span class="lifetime">&#39;static </span>{
-    <span class="doccomment">/// Return the medata of this key value accessor.
+    <span class="doccomment">/// Return the metadata of this key value accessor.
     </span><span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Metadata;
 
     <span class="doccomment">/// Get a key from service.
