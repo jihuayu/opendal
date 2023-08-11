@@ -243,7 +243,6 @@
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -274,23 +273,8 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// [moka](https://github.com/moka-rs/moka) backend support.
-///
-/// # Capabilities
-///
-/// This service can be used to:
-///
-/// - [x] stat
-/// - [x] read
-/// - [x] write
-/// - [x] create_dir
-/// - [x] delete
-/// - [ ] copy
-/// - [ ] rename
-/// - [ ] list
-/// - [ ] ~~scan~~
-/// - [ ] presign
-/// - [ ] blocking
-</span><span class="attr">#[derive(Default, Debug)]
+</span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
+#[derive(Default, Debug)]
 </span><span class="kw">pub struct </span>MokaBuilder {
     <span class="doccomment">/// Name for this cache instance.
     </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -454,6 +438,7 @@
                 get: <span class="bool-val">true</span>,
                 set: <span class="bool-val">true</span>,
                 delete: <span class="bool-val">true</span>,
+                scan: <span class="bool-val">true</span>,
                 ..Default::default()
             },
         )
@@ -488,6 +473,19 @@
         <span class="self">self</span>.inner.invalidate(path);
 
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
+        <span class="self">self</span>.blocking_scan(path)
+    }
+
+    <span class="kw">fn </span>blocking_scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
+        <span class="kw">let </span>keys = <span class="self">self</span>.inner.iter().map(|kv| kv.<span class="number">0</span>.to_string());
+        <span class="kw">if </span>path.is_empty() {
+            <span class="prelude-val">Ok</span>(keys.collect())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(keys.filter(|k| k.starts_with(path)).collect())
+        }
     }
 }
 </code></pre></div></section></main></body></html>
