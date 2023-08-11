@@ -33,6 +33,25 @@ blocking</li>
 <li><code>key_field</code>: Set the key field of postgresql</li>
 <li><code>value_field</code>: Set the value field of postgresql</li>
 </ul>
+<h3 id="example"><a href="#example">Example</a></h3><h4 id="via-builder"><a href="#via-builder">Via Builder</a></h4>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>opendal::services::Postgresql;
+<span class="kw">use </span>opendal::Operator;
+
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>builder = Postgresql::default();
+    builder.root(<span class="string">&quot;/&quot;</span>);
+    builder.connection_string(<span class="string">&quot;postgresql://you_username:your_password@127.0.0.1:5432/your_database&quot;</span>);
+    builder.table(<span class="string">&quot;your_table&quot;</span>);
+    <span class="comment">// key field type in the table should be compatible with Rust&#39;s &amp;str like text
+    </span>builder.key_field(<span class="string">&quot;key&quot;</span>);
+    <span class="comment">// value field type in the table should be compatible with Rust&#39;s Vec&lt;u8&gt; like bytea
+    </span>builder.value_field(<span class="string">&quot;value&quot;</span>);
+
+    <span class="kw">let </span>op = Operator::new(builder)<span class="question-mark">?</span>.finish();
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
 </div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-PostgresqlBuilder" class="impl"><a class="srclink rightside" href="../../src/opendal/services/postgresql/backend.rs.html#49-124">source</a><a href="#impl-PostgresqlBuilder" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.Postgresql.html" title="struct opendal::services::Postgresql">PostgresqlBuilder</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.connection_string" class="method"><a class="srclink rightside" href="../../src/opendal/services/postgresql/backend.rs.html#80-85">source</a><h4 class="code-header">pub fn <a href="#method.connection_string" class="fn">connection_string</a>(&amp;mut self, v: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.str.html">str</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.reference.html">&amp;mut Self</a></h4></section></summary><div class="docblock"><p>Set the connection_string of the postgresql service.</p>
 <p>This connection string is <code>libpq-style connection strings</code>. There are two formats:</p>
 <h6 id="key-value"><a href="#key-value">Key Value</a></h6>
