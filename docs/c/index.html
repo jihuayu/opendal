@@ -147,6 +147,19 @@ Prerequisites</h1>
 <div class="line"> </div>
 <div class="line"># install and build GTest library under /usr/lib and softlink to /usr/local/lib</div>
 <div class="line">sudo apt-get install libgtest-dev</div>
+<div class="line"> </div>
+<div class="line"># install CMake</div>
+<div class="line">sudo apt-get install cmake</div>
+<div class="line"> </div>
+<div class="line"># install Rust</div>
+<div class="line">curl --proto &#39;=https&#39; --tlsv1.2 -sSf https://sh.rustup.rs | sh</div>
+<div class="line"> </div>
+<div class="line"># If you run the tests, install additional components</div>
+<div class="line"> </div>
+<div class="line"># install Valgrind</div>
+<div class="line">sudo apt-get install Valgrind</div>
+<div class="line"> </div>
+<div class="line"># install GTest</div>
 <div class="line">cd /usr/src/gtest</div>
 <div class="line">sudo cmake CMakeLists.txt</div>
 <div class="line">sudo make</div>
@@ -166,7 +179,7 @@ Makefile</h1>
 <p>To <b>clean</b> the build results.</p>
 <div class="fragment"><div class="line">make clean</div>
 </div><!-- fragment --><ul>
-<li>To build and run the <b>tests</b>. (Note that you need to install GTest)</li>
+<li>To build and run the <b>tests</b>. (Note that you need to install Valgrind and GTest)</li>
 </ul>
 <div class="fragment"><div class="line">make test</div>
 </div><!-- fragment --><ul>
