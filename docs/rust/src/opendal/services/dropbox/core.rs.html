@@ -441,6 +441,10 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -476,16 +480,7 @@
 <span class="kw">use </span>serde::Serialize;
 <span class="kw">use </span>tokio::sync::Mutex;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::build_rooted_abs_path;
-<span class="kw">use </span><span class="kw">crate</span>::raw::new_json_deserialize_error;
-<span class="kw">use </span><span class="kw">crate</span>::raw::new_json_serialize_error;
-<span class="kw">use </span><span class="kw">crate</span>::raw::new_request_build_error;
-<span class="kw">use </span><span class="kw">crate</span>::raw::AsyncBody;
-<span class="kw">use </span><span class="kw">crate</span>::raw::BatchedReply;
-<span class="kw">use </span><span class="kw">crate</span>::raw::HttpClient;
-<span class="kw">use </span><span class="kw">crate</span>::raw::IncomingAsyncBody;
-<span class="kw">use </span><span class="kw">crate</span>::raw::RpBatch;
-<span class="kw">use </span><span class="kw">crate</span>::raw::RpDelete;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::services::dropbox::backend::DropboxDeleteBatchResponse;
 <span class="kw">use </span><span class="kw">crate</span>::services::dropbox::backend::DropboxDeleteBatchResponseEntry;
 <span class="kw">use </span><span class="kw">crate</span>::services::dropbox::error::parse_error;
@@ -501,8 +496,9 @@
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>DropboxCore {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        <span class="kw">let </span><span class="kw-2">mut </span>de = f.debug_struct(<span class="string">&quot;DropboxCore&quot;</span>);
-        de.finish()
+        f.debug_struct(<span class="string">&quot;DropboxCore&quot;</span>)
+            .field(<span class="string">&quot;root&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root)
+            .finish()
     }
 }
 
@@ -514,16 +510,28 @@
         </span>path.trim_end_matches(<span class="string">&#39;/&#39;</span>).to_string()
     }
 
-    <span class="kw">pub async fn </span>dropbox_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
+    <span class="kw">pub async fn </span>dropbox_get(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+        args: OpRead,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>url: String = <span class="string">&quot;https://content.dropboxapi.com/2/files/download&quot;</span>.to_string();
         <span class="kw">let </span>download_args = DropboxDownloadArgs {
             path: build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path),
         };
         <span class="kw">let </span>request_payload =
             serde_json::to_string(<span class="kw-2">&amp;</span>download_args).map_err(new_json_serialize_error)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>request = Request::post(<span class="kw-2">&amp;</span>url)
+
+        <span class="kw">let </span><span class="kw-2">mut </span>req = Request::post(<span class="kw-2">&amp;</span>url)
             .header(<span class="string">&quot;Dropbox-API-Arg&quot;</span>, request_payload)
-            .header(CONTENT_LENGTH, <span class="number">0</span>)
+            .header(CONTENT_LENGTH, <span class="number">0</span>);
+
+        <span class="kw">let </span>range = args.range();
+        <span class="kw">if </span>!range.is_full() {
+            req = req.header(header::RANGE, range.to_header());
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>request = req
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
