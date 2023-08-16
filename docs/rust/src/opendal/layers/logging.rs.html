@@ -1699,56 +1699,6 @@
 <a href="#1699" id="1699">1699</a>
 <a href="#1700" id="1700">1700</a>
 <a href="#1701" id="1701">1701</a>
-<a href="#1702" id="1702">1702</a>
-<a href="#1703" id="1703">1703</a>
-<a href="#1704" id="1704">1704</a>
-<a href="#1705" id="1705">1705</a>
-<a href="#1706" id="1706">1706</a>
-<a href="#1707" id="1707">1707</a>
-<a href="#1708" id="1708">1708</a>
-<a href="#1709" id="1709">1709</a>
-<a href="#1710" id="1710">1710</a>
-<a href="#1711" id="1711">1711</a>
-<a href="#1712" id="1712">1712</a>
-<a href="#1713" id="1713">1713</a>
-<a href="#1714" id="1714">1714</a>
-<a href="#1715" id="1715">1715</a>
-<a href="#1716" id="1716">1716</a>
-<a href="#1717" id="1717">1717</a>
-<a href="#1718" id="1718">1718</a>
-<a href="#1719" id="1719">1719</a>
-<a href="#1720" id="1720">1720</a>
-<a href="#1721" id="1721">1721</a>
-<a href="#1722" id="1722">1722</a>
-<a href="#1723" id="1723">1723</a>
-<a href="#1724" id="1724">1724</a>
-<a href="#1725" id="1725">1725</a>
-<a href="#1726" id="1726">1726</a>
-<a href="#1727" id="1727">1727</a>
-<a href="#1728" id="1728">1728</a>
-<a href="#1729" id="1729">1729</a>
-<a href="#1730" id="1730">1730</a>
-<a href="#1731" id="1731">1731</a>
-<a href="#1732" id="1732">1732</a>
-<a href="#1733" id="1733">1733</a>
-<a href="#1734" id="1734">1734</a>
-<a href="#1735" id="1735">1735</a>
-<a href="#1736" id="1736">1736</a>
-<a href="#1737" id="1737">1737</a>
-<a href="#1738" id="1738">1738</a>
-<a href="#1739" id="1739">1739</a>
-<a href="#1740" id="1740">1740</a>
-<a href="#1741" id="1741">1741</a>
-<a href="#1742" id="1742">1742</a>
-<a href="#1743" id="1743">1743</a>
-<a href="#1744" id="1744">1744</a>
-<a href="#1745" id="1745">1745</a>
-<a href="#1746" id="1746">1746</a>
-<a href="#1747" id="1747">1747</a>
-<a href="#1748" id="1748">1748</a>
-<a href="#1749" id="1749">1749</a>
-<a href="#1750" id="1750">1750</a>
-<a href="#1751" id="1751">1751</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1838,6 +1788,7 @@
 </span><span class="kw">pub struct </span>LoggingLayer {
     error_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
     failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
+    backtrace_output: bool,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>LoggingLayer {
@@ -1845,6 +1796,7 @@
         <span class="self">Self </span>{
             error_level: <span class="prelude-val">Some</span>(Level::Warn),
             failure_level: <span class="prelude-val">Some</span>(Level::Error),
+            backtrace_output: <span class="bool-val">false</span>,
         }
     }
 }
@@ -1885,6 +1837,17 @@
         }
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
+
+    <span class="doccomment">/// Setting whether to output backtrace while unexpected failure happened.
+    ///
+    /// # Notes
+    ///
+    /// - When the error is an expected error, backtrace will not be output.
+    /// - backtrace output is disable by default.
+    </span><span class="kw">pub fn </span>with_backtrace_output(<span class="kw-2">mut </span><span class="self">self</span>, enable: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.backtrace_output = enable;
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl</span>&lt;A: Accessor&gt; Layer&lt;A&gt; <span class="kw">for </span>LoggingLayer {
@@ -1893,45 +1856,60 @@
     <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: A) -&gt; <span class="self">Self</span>::LayeredAccessor {
         <span class="kw">let </span>meta = inner.info();
         LoggingAccessor {
-            scheme: meta.scheme(),
             inner,
 
-            error_level: <span class="self">self</span>.error_level,
-            failure_level: <span class="self">self</span>.failure_level,
+            ctx: LoggingContext {
+                scheme: meta.scheme(),
+                error_level: <span class="self">self</span>.error_level,
+                failure_level: <span class="self">self</span>.failure_level,
+                backtrace_output: <span class="self">self</span>.backtrace_output,
+            },
         }
     }
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>LoggingAccessor&lt;A: Accessor&gt; {
+</span><span class="kw">pub struct </span>LoggingContext {
     scheme: Scheme,
-    inner: A,
-
     error_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
     failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
+    backtrace_output: bool,
 }
 
-<span class="kw">static </span>LOGGING_TARGET: <span class="kw-2">&amp;</span>str = <span class="string">&quot;opendal::services&quot;</span>;
-
-<span class="kw">impl</span>&lt;A: Accessor&gt; LoggingAccessor&lt;A&gt; {
+<span class="kw">impl </span>LoggingContext {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>err_status(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>Error) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
-        <span class="kw">if </span>err.kind() == ErrorKind::Unexpected {
-            <span class="string">&quot;failed&quot;
-        </span>} <span class="kw">else </span>{
-            <span class="string">&quot;errored&quot;
-        </span>}
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>err_level(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>Error) -&gt; <span class="prelude-ty">Option</span>&lt;Level&gt; {
+    </span><span class="kw">fn </span>error_level(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>Error) -&gt; <span class="prelude-ty">Option</span>&lt;Level&gt; {
         <span class="kw">if </span>err.kind() == ErrorKind::Unexpected {
             <span class="self">self</span>.failure_level
         } <span class="kw">else </span>{
             <span class="self">self</span>.error_level
         }
     }
+
+    <span class="doccomment">/// Print error with backtrace if it&#39;s unexpected error.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">fn </span>error_print(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>Error) -&gt; String {
+        <span class="comment">// Don&#39;t print backtrace if it&#39;s not unexpected error.
+        </span><span class="kw">if </span>err.kind() != ErrorKind::Unexpected {
+            <span class="kw">return </span><span class="macro">format!</span>(<span class="string">&quot;{err}&quot;</span>);
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.backtrace_output {
+            <span class="macro">format!</span>(<span class="string">&quot;{err:?}&quot;</span>)
+        } <span class="kw">else </span>{
+            <span class="macro">format!</span>(<span class="string">&quot;{err}&quot;</span>)
+        }
+    }
 }
+
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>LoggingAccessor&lt;A: Accessor&gt; {
+    inner: A,
+
+    ctx: LoggingContext,
+}
+
+<span class="kw">static </span>LOGGING_TARGET: <span class="kw-2">&amp;</span>str = <span class="string">&quot;opendal::services&quot;</span>;
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;A: Accessor&gt; LayeredAccessor <span class="kw">for </span>LoggingAccessor&lt;A&gt; {
@@ -1952,14 +1930,14 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Info
         );
         <span class="kw">let </span>result = <span class="self">self</span>.inner.info();
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} -&gt; finished: {:?}&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Info,
             result
         );
@@ -1971,7 +1949,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::CreateDir,
             path
         );
@@ -1983,22 +1961,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::CreateDir,
                     path
                 );
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::CreateDir,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     )
                 };
                 err
@@ -2009,7 +1987,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} range={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Read,
             path,
             args.range()
@@ -2024,27 +2002,27 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} range={} -&gt; got reader&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Read,
                     path,
                     range
                 );
                 (
                     rp,
-                    LoggingReader::new(<span class="self">self</span>.scheme, Operation::Read, path, r, <span class="self">self</span>.failure_level),
+                    LoggingReader::new(<span class="self">self</span>.ctx.clone(), Operation::Read, path, r),
                 )
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} range={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} range={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Read,
                         path,
                         range,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     )
                 }
                 err
@@ -2055,7 +2033,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Write,
             path
         );
@@ -2067,24 +2045,23 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; start writing&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Write,
                     path,
                 );
-                <span class="kw">let </span>w =
-                    LoggingWriter::new(<span class="self">self</span>.scheme, Operation::Write, path, w, <span class="self">self</span>.failure_level);
+                <span class="kw">let </span>w = LoggingWriter::new(<span class="self">self</span>.ctx.clone(), Operation::Write, path, w);
                 (rp, w)
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Write,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     )
                 };
                 err
@@ -2095,7 +2072,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Append,
             path
         );
@@ -2107,29 +2084,23 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; start appending&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Append,
                     path,
                 );
-                <span class="kw">let </span>a = LoggingAppender::new(
-                    <span class="self">self</span>.scheme,
-                    Operation::Append,
-                    path,
-                    a,
-                    <span class="self">self</span>.failure_level,
-                );
+                <span class="kw">let </span>a = LoggingAppender::new(<span class="self">self</span>.ctx.clone(), Operation::Append, path, a);
                 (rp, a)
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Append,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     )
                 };
                 err
@@ -2140,7 +2111,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} from={} to={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Copy,
             from,
             to
@@ -2153,7 +2124,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} from={} to={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Copy,
                     from,
                     to
@@ -2161,16 +2132,17 @@
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Copy,
                         from,
                         to,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
+
                     )
                 };
                 err
@@ -2181,7 +2153,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} from={} to={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Rename,
             from,
             to
@@ -2194,7 +2166,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} from={} to={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Rename,
                     from,
                     to
@@ -2202,16 +2174,16 @@
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Rename,
                         from,
                         to,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     )
                 };
                 err
@@ -2222,7 +2194,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Stat,
             path
         );
@@ -2234,22 +2206,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished: {v:?}&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Stat,
                     path
                 );
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Stat,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 };
                 err
@@ -2260,7 +2232,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Delete,
             path
         );
@@ -2272,21 +2244,21 @@
                     <span class="macro">debug!</span>(
                         target: LOGGING_TARGET,
                         <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Delete,
                         path
                     );
                 }
                 <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(err) {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(err) {
                         <span class="macro">log!</span>(
                             target: LOGGING_TARGET,
                             lvl,
-                            <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                            <span class="self">self</span>.scheme,
+                            <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                            <span class="self">self</span>.ctx.scheme,
                             Operation::Delete,
                             path,
-                            <span class="self">self</span>.err_status(err)
+                            <span class="self">self</span>.ctx.error_print(err)
                         );
                     }
                 }
@@ -2298,7 +2270,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::List,
             path
         );
@@ -2310,30 +2282,23 @@
                     <span class="macro">debug!</span>(
                         target: LOGGING_TARGET,
                         <span class="string">&quot;service={} operation={} path={} -&gt; start listing dir&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::List,
                         path
                     );
-                    <span class="kw">let </span>streamer = LoggingPager::new(
-                        <span class="self">self</span>.scheme,
-                        path,
-                        Operation::List,
-                        v,
-                        <span class="self">self</span>.error_level,
-                        <span class="self">self</span>.failure_level,
-                    );
+                    <span class="kw">let </span>streamer = LoggingPager::new(<span class="self">self</span>.ctx.clone(), path, Operation::List, v);
                     <span class="prelude-val">Ok</span>((rp, streamer))
                 }
                 <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                         <span class="macro">log!</span>(
                             target: LOGGING_TARGET,
                             lvl,
-                            <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                            <span class="self">self</span>.scheme,
+                            <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                            <span class="self">self</span>.ctx.scheme,
                             Operation::List,
                             path,
-                            <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                            <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                         );
                     }
                     <span class="prelude-val">Err</span>(err)
@@ -2346,7 +2311,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Presign,
             path
         );
@@ -2358,22 +2323,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished: {v:?}&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Presign,
                     path
                 );
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Presign,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2386,7 +2351,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={}-{op} count={count} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::Batch,
         );
 
@@ -2396,7 +2361,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={}-{op} count={count} -&gt; finished: {}, succeed: {}, failed: {}&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::Batch,
                     v.results().len(),
                     v.results().iter().filter(|(<span class="kw">_</span>, v)|v.is_ok()).count(),
@@ -2405,14 +2370,14 @@
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={}-{op} count={count} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={}-{op} count={count} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::Batch,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2424,7 +2389,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingCreateDir,
             path
         );
@@ -2435,22 +2400,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingCreateDir,
                     path
                 );
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingCreateDir,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2461,7 +2426,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} range={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingRead,
             path,
             args.range(),
@@ -2473,31 +2438,25 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} range={} -&gt; got reader&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingRead,
                     path,
                     args.range(),
                 );
-                <span class="kw">let </span>r = LoggingReader::new(
-                    <span class="self">self</span>.scheme,
-                    Operation::BlockingRead,
-                    path,
-                    r,
-                    <span class="self">self</span>.failure_level,
-                );
+                <span class="kw">let </span>r = LoggingReader::new(<span class="self">self</span>.ctx.clone(), Operation::BlockingRead, path, r);
                 (rp, r)
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} range={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} range={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingRead,
                         path,
                         args.range(),
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2508,7 +2467,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingWrite,
             path,
         );
@@ -2519,29 +2478,23 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; start writing&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingWrite,
                     path,
                 );
-                <span class="kw">let </span>w = LoggingWriter::new(
-                    <span class="self">self</span>.scheme,
-                    Operation::BlockingWrite,
-                    path,
-                    w,
-                    <span class="self">self</span>.failure_level,
-                );
+                <span class="kw">let </span>w = LoggingWriter::new(<span class="self">self</span>.ctx.clone(), Operation::BlockingWrite, path, w);
                 (rp, w)
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingWrite,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2552,7 +2505,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} from={} to={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingCopy,
             from,
             to,
@@ -2564,7 +2517,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} from={} to={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingCopy,
                     from,
                     to,
@@ -2572,16 +2525,16 @@
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingCopy,
                         from,
                         to,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2592,7 +2545,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} from={} to={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingRename,
             from,
             to,
@@ -2604,7 +2557,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} from={} to={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingRename,
                     from,
                     to,
@@ -2612,16 +2565,16 @@
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} from={} to={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingRename,
                         from,
                         to,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2632,7 +2585,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingStat,
             path
         );
@@ -2643,22 +2596,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished: {v:?}&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingStat,
                     path
                 );
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingStat,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2669,7 +2622,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingDelete,
             path
         );
@@ -2680,22 +2633,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingDelete,
                     path
                 );
                 v
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingDelete,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2706,7 +2659,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             Operation::BlockingList,
             path
         );
@@ -2717,30 +2670,23 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; got dir&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     Operation::BlockingList,
                     path
                 );
-                <span class="kw">let </span>li = LoggingPager::new(
-                    <span class="self">self</span>.scheme,
-                    path,
-                    Operation::BlockingList,
-                    v,
-                    <span class="self">self</span>.error_level,
-                    <span class="self">self</span>.failure_level,
-                );
+                <span class="kw">let </span>li = LoggingPager::new(<span class="self">self</span>.ctx.clone(), path, Operation::BlockingList, v);
                 (rp, li)
             })
             .map_err(|err| {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(<span class="kw-2">&amp;</span>err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         Operation::BlockingList,
                         path,
-                        <span class="self">self</span>.err_status(<span class="kw-2">&amp;</span>err)
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     );
                 }
                 err
@@ -2750,33 +2696,23 @@
 
 <span class="doccomment">/// `LoggingReader` is a wrapper of `BytesReader`, with logging functionality.
 </span><span class="kw">pub struct </span>LoggingReader&lt;R&gt; {
-    scheme: Scheme,
+    ctx: LoggingContext,
     path: String,
     op: Operation,
 
     read: u64,
-    failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-
     inner: R,
 }
 
 <span class="kw">impl</span>&lt;R&gt; LoggingReader&lt;R&gt; {
-    <span class="kw">fn </span>new(
-        scheme: Scheme,
-        op: Operation,
-        path: <span class="kw-2">&amp;</span>str,
-        reader: R,
-        failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>new(ctx: LoggingContext, op: Operation, path: <span class="kw-2">&amp;</span>str, reader: R) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            scheme,
+            ctx,
             op,
             path: path.to_string(),
 
             read: <span class="number">0</span>,
-
             inner: reader,
-            failure_level,
         }
     }
 }
@@ -2786,7 +2722,7 @@
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read finished&quot;</span>,
-            <span class="self">self</span>.scheme,
+            <span class="self">self</span>.ctx.scheme,
             <span class="self">self</span>.op,
             <span class="self">self</span>.path,
             <span class="self">self</span>.read
@@ -2803,7 +2739,7 @@
                     <span class="macro">trace!</span>(
                         target: LOGGING_TARGET,
                         <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read {}B &quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="self">self</span>.ctx.scheme,
                         ReadOperation::Read,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.read,
@@ -2812,15 +2748,16 @@
                     Poll::Ready(<span class="prelude-val">Ok</span>(n))
                 }
                 <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                         <span class="macro">log!</span>(
                             target: LOGGING_TARGET,
                             lvl,
-                            <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {err:?}&quot;</span>,
-                            <span class="self">self</span>.scheme,
+                            <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {}&quot;</span>,
+                            <span class="self">self</span>.ctx.scheme,
                             ReadOperation::Read,
                             <span class="self">self</span>.path,
                             <span class="self">self</span>.read,
+                            <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                         )
                     }
                     Poll::Ready(<span class="prelude-val">Err</span>(err))
@@ -2830,7 +2767,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read pending&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     ReadOperation::Read,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.read
@@ -2847,7 +2784,7 @@
                     <span class="macro">trace!</span>(
                         target: LOGGING_TARGET,
                         <span class="string">&quot;service={} operation={} path={} read={} -&gt; data seek to offset {n}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="self">self</span>.ctx.scheme,
                         ReadOperation::Seek,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.read,
@@ -2855,15 +2792,16 @@
                     Poll::Ready(<span class="prelude-val">Ok</span>(n))
                 }
                 <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                         <span class="macro">log!</span>(
                             target: LOGGING_TARGET,
                             lvl,
-                            <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {err:?}&quot;</span>,
-                            <span class="self">self</span>.scheme,
+                            <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {}&quot;</span>,
+                            <span class="self">self</span>.ctx.scheme,
                             ReadOperation::Seek,
                             <span class="self">self</span>.path,
                             <span class="self">self</span>.read,
+                            <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                         )
                     }
                     Poll::Ready(<span class="prelude-val">Err</span>(err))
@@ -2873,7 +2811,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} read={} -&gt; data seek pending&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     ReadOperation::Seek,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.read
@@ -2891,7 +2829,7 @@
                     <span class="macro">trace!</span>(
                         target: LOGGING_TARGET,
                         <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read {}B&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="self">self</span>.ctx.scheme,
                         ReadOperation::Next,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.read,
@@ -2900,15 +2838,16 @@
                     Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs)))
                 }
                 <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)) =&gt; {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                         <span class="macro">log!</span>(
                             target: LOGGING_TARGET,
                             lvl,
-                            <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {err:?}&quot;</span>,
-                            <span class="self">self</span>.scheme,
+                            <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {}&quot;</span>,
+                            <span class="self">self</span>.ctx.scheme,
                             ReadOperation::Next,
                             <span class="self">self</span>.path,
                             <span class="self">self</span>.read,
+                            <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                         )
                     }
                     Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)))
@@ -2919,7 +2858,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read pending&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     ReadOperation::Next,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.read
@@ -2938,7 +2877,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read {}B&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     ReadOperation::BlockingRead,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.read,
@@ -2947,15 +2886,16 @@
                 <span class="prelude-val">Ok</span>(n)
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         ReadOperation::BlockingRead,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.read,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     );
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -2970,7 +2910,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} read={} -&gt; data seek to offset {n}&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     ReadOperation::BlockingSeek,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.read,
@@ -2978,15 +2918,16 @@
                 <span class="prelude-val">Ok</span>(n)
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         ReadOperation::BlockingSeek,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.read,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     );
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3001,7 +2942,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read {}B&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     ReadOperation::BlockingNext,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.read,
@@ -3010,15 +2951,16 @@
                 <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs))
             }
             <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} read={} -&gt; data read failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         ReadOperation::BlockingNext,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.read,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err))
@@ -3029,32 +2971,23 @@
 }
 
 <span class="kw">pub struct </span>LoggingWriter&lt;W&gt; {
-    scheme: Scheme,
+    ctx: LoggingContext,
     op: Operation,
     path: String,
 
     written: u64,
-    failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-
     inner: W,
 }
 
 <span class="kw">impl</span>&lt;W&gt; LoggingWriter&lt;W&gt; {
-    <span class="kw">fn </span>new(
-        scheme: Scheme,
-        op: Operation,
-        path: <span class="kw-2">&amp;</span>str,
-        writer: W,
-        failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>new(ctx: LoggingContext, op: Operation, path: <span class="kw-2">&amp;</span>str, writer: W) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            scheme,
+            ctx,
             op,
             path: path.to_string(),
 
             written: <span class="number">0</span>,
             inner: writer,
-            failure_level,
         }
     }
 }
@@ -3069,7 +3002,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write {}B&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     WriteOperation::Write,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written,
@@ -3078,15 +3011,16 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         WriteOperation::Write,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.written,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3101,7 +3035,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data sink {}B&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     WriteOperation::Sink,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written,
@@ -3110,15 +3044,16 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data sink failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data sink failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         WriteOperation::Sink,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.written,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3132,7 +3067,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; abort writer&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     WriteOperation::Abort,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written,
@@ -3140,15 +3075,16 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; abort writer failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; abort writer failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         WriteOperation::Abort,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.written,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3162,7 +3098,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data written finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written
@@ -3170,15 +3106,16 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data close failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data close failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         WriteOperation::Close,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.written,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3196,7 +3133,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write {}B&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     WriteOperation::BlockingWrite,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written,
@@ -3205,15 +3142,16 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         WriteOperation::BlockingWrite,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.written,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3227,7 +3165,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data written finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written
@@ -3235,15 +3173,16 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data close failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} written={} -&gt; data close failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         WriteOperation::BlockingClose,
                         <span class="self">self</span>.path,
                         <span class="self">self</span>.written,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3253,29 +3192,19 @@
 }
 
 <span class="kw">pub struct </span>LoggingAppender&lt;A&gt; {
-    scheme: Scheme,
+    ctx: LoggingContext,
     op: Operation,
     path: String,
-
-    failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
 
     inner: A,
 }
 
 <span class="kw">impl</span>&lt;A&gt; LoggingAppender&lt;A&gt; {
-    <span class="kw">fn </span>new(
-        scheme: Scheme,
-        op: Operation,
-        path: <span class="kw-2">&amp;</span>str,
-        appender: A,
-        failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>new(ctx: LoggingContext, op: Operation, path: <span class="kw-2">&amp;</span>str, appender: A) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            scheme,
+            ctx,
             op,
             path: path.to_string(),
-
-            failure_level,
 
             inner: appender,
         }
@@ -3292,7 +3221,7 @@
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; data append {}B&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
                     len
@@ -3300,14 +3229,15 @@
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; data append failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; data append failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         <span class="self">self</span>.op,
                         <span class="self">self</span>.path,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err)
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3321,21 +3251,22 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; data appended finished&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
                 );
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.failure_level {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(<span class="kw-2">&amp;</span>err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; data appender close failed: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; data appender close failed: {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         <span class="self">self</span>.op,
                         <span class="self">self</span>.path,
+                        <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
                     )
                 }
                 <span class="prelude-val">Err</span>(err)
@@ -3345,33 +3276,22 @@
 }
 
 <span class="kw">pub struct </span>LoggingPager&lt;P&gt; {
-    scheme: Scheme,
+    ctx: LoggingContext,
     path: String,
     op: Operation,
 
     finished: bool,
     inner: P,
-    error_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-    failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
 }
 
 <span class="kw">impl</span>&lt;P&gt; LoggingPager&lt;P&gt; {
-    <span class="kw">fn </span>new(
-        scheme: Scheme,
-        path: <span class="kw-2">&amp;</span>str,
-        op: Operation,
-        inner: P,
-        error_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-        failure_level: <span class="prelude-ty">Option</span>&lt;Level&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>new(ctx: LoggingContext, path: <span class="kw-2">&amp;</span>str, op: Operation, inner: P) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            scheme,
+            ctx,
             path: path.to_string(),
             op,
             finished: <span class="bool-val">false</span>,
             inner,
-            error_level,
-            failure_level,
         }
     }
 }
@@ -3382,7 +3302,7 @@
             <span class="macro">debug!</span>(
                 target: LOGGING_TARGET,
                 <span class="string">&quot;service={} operation={} path={} -&gt; all entries read finished&quot;</span>,
-                <span class="self">self</span>.scheme,
+                <span class="self">self</span>.ctx.scheme,
                 <span class="self">self</span>.op,
                 <span class="self">self</span>.path
             );
@@ -3390,30 +3310,10 @@
             <span class="macro">debug!</span>(
                 target: LOGGING_TARGET,
                 <span class="string">&quot;service={} operation={} path={} -&gt; partial entries read finished&quot;</span>,
-                <span class="self">self</span>.scheme,
+                <span class="self">self</span>.ctx.scheme,
                 <span class="self">self</span>.op,
                 <span class="self">self</span>.path
             );
-        }
-    }
-}
-
-<span class="kw">impl</span>&lt;P&gt; LoggingPager&lt;P&gt; {
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>err_status(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>Error) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
-        <span class="kw">if </span>err.kind() == ErrorKind::Unexpected {
-            <span class="string">&quot;failed&quot;
-        </span>} <span class="kw">else </span>{
-            <span class="string">&quot;errored&quot;
-        </span>}
-    }
-
-    <span class="attr">#[inline]
-    </span><span class="kw">fn </span>err_level(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>Error) -&gt; <span class="prelude-ty">Option</span>&lt;Level&gt; {
-        <span class="kw">if </span>err.kind() == ErrorKind::Unexpected {
-            <span class="self">self</span>.failure_level
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.error_level
         }
     }
 }
@@ -3428,7 +3328,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; listed {} entries&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
                     des.len(),
@@ -3437,20 +3337,20 @@
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
-                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>, <span class="self">self</span>.scheme, <span class="self">self</span>.op, <span class="self">self</span>.path
+                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>, <span class="self">self</span>.ctx.scheme, <span class="self">self</span>.op, <span class="self">self</span>.path
                 );
                 <span class="self">self</span>.finished = <span class="bool-val">true</span>;
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         <span class="self">self</span>.op,
                         <span class="self">self</span>.path,
-                        <span class="self">self</span>.err_status(err)
+                        <span class="self">self</span>.ctx.error_print(err)
                     )
                 }
             }
@@ -3469,7 +3369,7 @@
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} -&gt; got {} entries&quot;</span>,
-                    <span class="self">self</span>.scheme,
+                    <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
                     des.len(),
@@ -3478,20 +3378,20 @@
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
-                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>, <span class="self">self</span>.scheme, <span class="self">self</span>.op, <span class="self">self</span>.path
+                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>, <span class="self">self</span>.ctx.scheme, <span class="self">self</span>.op, <span class="self">self</span>.path
                 );
                 <span class="self">self</span>.finished = <span class="bool-val">true</span>;
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.err_level(err) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(lvl) = <span class="self">self</span>.ctx.error_level(err) {
                     <span class="macro">log!</span>(
                         target: LOGGING_TARGET,
                         lvl,
-                        <span class="string">&quot;service={} operation={} path={} -&gt; {}: {err:?}&quot;</span>,
-                        <span class="self">self</span>.scheme,
+                        <span class="string">&quot;service={} operation={} path={} -&gt; {}&quot;</span>,
+                        <span class="self">self</span>.ctx.scheme,
                         <span class="self">self</span>.op,
                         <span class="self">self</span>.path,
-                        <span class="self">self</span>.err_status(err)
+                        <span class="self">self</span>.ctx.error_print(err)
                     )
                 }
             }
