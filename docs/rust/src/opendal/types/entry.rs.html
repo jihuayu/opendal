@@ -190,10 +190,6 @@
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -371,11 +367,7 @@
     ///     let (path, meta) = entry.into_parts();
     ///     match meta.mode() {
     ///         EntryMode::FILE =&gt; {
-    ///             println!(
-    ///                 &quot;Handling file {} with size {}&quot;,
-    ///                 path,
-    ///                 meta.content_length()
-    ///             )
+    ///             println!(&quot;Handling file {} with size {}&quot;, path, meta.content_length())
     ///         }
     ///         EntryMode::DIR =&gt; {
     ///             println!(&quot;Handling dir {}&quot;, path)

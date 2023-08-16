@@ -1776,9 +1776,9 @@
     ///
     /// ```no_run
     /// # use anyhow::Result;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// #  fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut entries = op.list(&quot;path/to/dir/&quot;)?;
     /// for entry in entries {
@@ -1825,9 +1825,9 @@
     ///
     /// ```no_run
     /// # use anyhow::Result;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut entries = op.list_with(&quot;prefix/&quot;).delimiter(&quot;&quot;).call()?;
     /// for entry in entries {
@@ -1849,9 +1849,9 @@
     ///
     /// ```no_run
     /// # use anyhow::Result;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut entries = op
     ///     .list_with(&quot;dir/&quot;)
@@ -1927,9 +1927,9 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// use futures::TryStreamExt;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut ds = op.lister(&quot;path/to/dir/&quot;)?;
     /// for de in ds {
@@ -1965,9 +1965,9 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// use futures::TryStreamExt;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut ds = op
     ///     .lister_with(&quot;path/to/dir/&quot;)
@@ -1996,9 +1996,9 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// use futures::TryStreamExt;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut ds = op.lister_with(&quot;path/to/dir/&quot;).delimiter(&quot;&quot;).call()?;
     /// for entry in ds {
@@ -2023,9 +2023,9 @@
     /// # use anyhow::Result;
     /// # use futures::io;
     /// use futures::TryStreamExt;
+    /// use opendal::BlockingOperator;
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
-    /// use opendal::BlockingOperator;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
     /// let mut ds = op
     ///     .lister_with(&quot;path/to/dir/&quot;)

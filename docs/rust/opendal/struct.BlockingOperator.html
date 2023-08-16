@@ -188,9 +188,9 @@ a streaming way.</p>
 <p>The only metadata that is guaranteed to be available is the <code>Mode</code>.
 For fetching more metadata, please use <a href="struct.BlockingOperator.html#method.list_with" title="method opendal::BlockingOperator::list_with"><code>BlockingOperator::list_with</code></a> and <code>metakey</code>.</p>
 <h5 id="examples-18"><a href="#examples-18">Examples</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::EntryMode;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::BlockingOperator;
+<span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>entries = op.list(<span class="string">&quot;path/to/dir/&quot;</span>)<span class="question-mark">?</span>;
 <span class="kw">for </span>entry <span class="kw">in </span>entries {
     <span class="kw">match </span>entry.metadata().mode() {
@@ -216,9 +216,9 @@ For fetching more metadata, please specify the <code>metakey</code>.</p>
 <h5 id="examples-19"><a href="#examples-19">Examples</a></h5><h6 id="list-entries-with-prefix"><a href="#list-entries-with-prefix">List entries with prefix</a></h6>
 <p>This function can also be used to list entries in recursive way.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::EntryMode;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::BlockingOperator;
+<span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>entries = op.list_with(<span class="string">&quot;prefix/&quot;</span>).delimiter(<span class="string">&quot;&quot;</span>).call()<span class="question-mark">?</span>;
 <span class="kw">for </span>entry <span class="kw">in </span>entries {
     <span class="kw">match </span>entry.metadata().mode() {
@@ -232,9 +232,9 @@ For fetching more metadata, please specify the <code>metakey</code>.</p>
     }
 }</code></pre></div>
 <h6 id="list-entries-with-metakey-for-more-metadata"><a href="#list-entries-with-metakey-for-more-metadata">List entries with metakey for more metadata</a></h6>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::EntryMode;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::BlockingOperator;
+<span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>entries = op
     .list_with(<span class="string">&quot;dir/&quot;</span>)
     .metakey(Metakey::ContentLength | Metakey::LastModified)
@@ -267,9 +267,9 @@ instead.</p>
 For fetching more metadata, please use <a href="struct.BlockingOperator.html#method.lister_with" title="method opendal::BlockingOperator::lister_with"><code>BlockingOperator::lister_with</code></a> and <code>metakey</code>.</p>
 <h5 id="examples-20"><a href="#examples-20">Examples</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>futures::TryStreamExt;
+<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>ds = op.lister(<span class="string">&quot;path/to/dir/&quot;</span>)<span class="question-mark">?</span>;
 <span class="kw">for </span>de <span class="kw">in </span>ds {
     <span class="kw">let </span>de = de<span class="question-mark">?</span>;
@@ -288,9 +288,9 @@ For fetching more metadata, please use <a href="struct.BlockingOperator.html#met
 <p>An error will be returned if given path doesn’t end with <code>/</code>.</p>
 <h5 id="examples-21"><a href="#examples-21">Examples</a></h5><h6 id="list-current-dir"><a href="#list-current-dir">List current dir</a></h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>futures::TryStreamExt;
+<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>ds = op
     .lister_with(<span class="string">&quot;path/to/dir/&quot;</span>)
     .limit(<span class="number">10</span>)
@@ -310,9 +310,9 @@ For fetching more metadata, please use <a href="struct.BlockingOperator.html#met
 }</code></pre></div>
 <h6 id="list-all-files-recursively"><a href="#list-all-files-recursively">List all files recursively</a></h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>futures::TryStreamExt;
+<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>ds = op.lister_with(<span class="string">&quot;path/to/dir/&quot;</span>).delimiter(<span class="string">&quot;&quot;</span>).call()<span class="question-mark">?</span>;
 <span class="kw">for </span>entry <span class="kw">in </span>ds {
     <span class="kw">let </span>entry = entry<span class="question-mark">?</span>;
@@ -328,9 +328,9 @@ For fetching more metadata, please use <a href="struct.BlockingOperator.html#met
 }</code></pre></div>
 <h6 id="list-files-with-required-metadata"><a href="#list-files-with-required-metadata">List files with required metadata</a></h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>futures::TryStreamExt;
+<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">let </span><span class="kw-2">mut </span>ds = op
     .lister_with(<span class="string">&quot;path/to/dir/&quot;</span>)
     .metakey(Metakey::ContentLength | Metakey::LastModified)

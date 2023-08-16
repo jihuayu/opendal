@@ -28,7 +28,7 @@ metadata you want, please use <code>list_with</code> or <code>lister_with</code>
         EntryMode::Unknown =&gt; <span class="kw">continue</span>,
     }
 }</code></pre></div>
-</div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Entry" class="impl"><a class="srclink rightside" href="../src/opendal/types/entry.rs.html#70-196">source</a><a href="#impl-Entry" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.Entry.html" title="struct opendal::Entry">Entry</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.path" class="method"><a class="srclink rightside" href="../src/opendal/types/entry.rs.html#87-89">source</a><h4 class="code-header">pub fn <a href="#method.path" class="fn">path</a>(&amp;self) -&gt; &amp;<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.str.html">str</a></h4></section></summary><div class="docblock"><p>Path of entry. Path is relative to operator’s root.</p>
+</div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Entry" class="impl"><a class="srclink rightside" href="../src/opendal/types/entry.rs.html#70-192">source</a><a href="#impl-Entry" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.Entry.html" title="struct opendal::Entry">Entry</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.path" class="method"><a class="srclink rightside" href="../src/opendal/types/entry.rs.html#87-89">source</a><h4 class="code-header">pub fn <a href="#method.path" class="fn">path</a>(&amp;self) -&gt; &amp;<a class="primitive" href="https://doc.rust-lang.org/1.71.1/std/primitive.str.html">str</a></h4></section></summary><div class="docblock"><p>Path of entry. Path is relative to operator’s root.</p>
 <p>Only valid in current operator.</p>
 <p>If this entry is a dir, <code>path</code> MUST end with <code>/</code>
 Otherwise, <code>path</code> MUST NOT end with <code>/</code>.</p>
@@ -69,7 +69,7 @@ Otherwise, <code>name</code> MUST NOT end with <code>/</code>.</p>
         EntryMode::Unknown =&gt; <span class="kw">continue</span>,
     }
 }</code></pre></div>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.into_parts" class="method"><a class="srclink rightside" href="../src/opendal/types/entry.rs.html#193-195">source</a><h4 class="code-header">pub fn <a href="#method.into_parts" class="fn">into_parts</a>(self) -&gt; (<a class="struct" href="https://doc.rust-lang.org/1.71.1/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>, <a class="struct" href="struct.Metadata.html" title="struct opendal::Metadata">Metadata</a>)</h4></section></summary><div class="docblock"><p>Consume this entry to get it’s path and metadata.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.into_parts" class="method"><a class="srclink rightside" href="../src/opendal/types/entry.rs.html#189-191">source</a><h4 class="code-header">pub fn <a href="#method.into_parts" class="fn">into_parts</a>(self) -&gt; (<a class="struct" href="https://doc.rust-lang.org/1.71.1/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>, <a class="struct" href="struct.Metadata.html" title="struct opendal::Metadata">Metadata</a>)</h4></section></summary><div class="docblock"><p>Consume this entry to get it’s path and metadata.</p>
 <h5 id="notes-2"><a href="#notes-2">Notes</a></h5>
 <p>Metadata only guaranteed to have results of <code>metakey</code> (which default to <code>Metakey::Mode</code>).</p>
 <ul>
@@ -91,11 +91,7 @@ Otherwise, <code>name</code> MUST NOT end with <code>/</code>.</p>
     <span class="kw">let </span>(path, meta) = entry.into_parts();
     <span class="kw">match </span>meta.mode() {
         EntryMode::FILE =&gt; {
-            <span class="macro">println!</span>(
-                <span class="string">&quot;Handling file {} with size {}&quot;</span>,
-                path,
-                meta.content_length()
-            )
+            <span class="macro">println!</span>(<span class="string">&quot;Handling file {} with size {}&quot;</span>, path, meta.content_length())
         }
         EntryMode::DIR =&gt; {
             <span class="macro">println!</span>(<span class="string">&quot;Handling dir {}&quot;</span>, path)
