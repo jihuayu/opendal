@@ -1050,6 +1050,15 @@
 <a href="#1050" id="1050">1050</a>
 <a href="#1051" id="1051">1051</a>
 <a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1183,9 +1192,8 @@
     <span class="kw">type </span>LayeredAccessor = CompleteReaderAccessor&lt;A&gt;;
 
     <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, inner: A) -&gt; <span class="self">Self</span>::LayeredAccessor {
-        <span class="kw">let </span>meta = inner.info();
         CompleteReaderAccessor {
-            meta,
+            meta: inner.info(),
             inner: Arc::new(inner),
         }
     }
@@ -1209,7 +1217,7 @@
         path: <span class="kw-2">&amp;</span>str,
         args: OpRead,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, CompleteReader&lt;A, A::Reader&gt;)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.read {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Read);
         }
@@ -1262,7 +1270,7 @@
         path: <span class="kw-2">&amp;</span>str,
         args: OpRead,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, CompleteReader&lt;A, A::BlockingReader&gt;)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.read || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingRead);
         }
@@ -1318,7 +1326,7 @@
         path: <span class="kw-2">&amp;</span>str,
         args: OpList,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompletePager&lt;A, A::Pager&gt;)&gt; {
-        <span class="kw">let </span>cap = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>cap = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!cap.list {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
                 Error::new(ErrorKind::Unsupported, <span class="string">&quot;operation is not supported&quot;</span>)
@@ -1367,7 +1375,7 @@
         path: <span class="kw-2">&amp;</span>str,
         args: OpList,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompletePager&lt;A, A::BlockingPager&gt;)&gt; {
-        <span class="kw">let </span>cap = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>cap = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!cap.list {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
                 Error::new(ErrorKind::Unsupported, <span class="string">&quot;operation is not supported&quot;</span>)
@@ -1428,6 +1436,16 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
     }
 
+    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
+        <span class="kw">let </span><span class="kw-2">mut </span>meta = <span class="self">self</span>.meta.clone();
+        <span class="kw">let </span>cap = meta.full_capability_mut();
+        <span class="kw">if </span>cap.read {
+            cap.read_can_next = <span class="bool-val">true</span>;
+            cap.read_can_seek = <span class="bool-val">true</span>;
+        }
+        meta
+    }
+
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="self">self</span>.complete_reader(path, args).<span class="kw">await
     </span>}
@@ -1437,7 +1455,7 @@
     }
 
     <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.stat {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Stat);
         }
@@ -1451,7 +1469,7 @@
     }
 
     <span class="kw">fn </span>blocking_stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.stat || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingStat);
         }
@@ -1465,7 +1483,7 @@
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.write {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Write);
         }
@@ -1478,7 +1496,7 @@
     }
 
     <span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.write || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingWrite);
         }
@@ -1490,7 +1508,7 @@
     }
 
     <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.append {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Append);
         }
@@ -1502,7 +1520,7 @@
     }
 
     <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.create_dir {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::CreateDir);
         }
@@ -1511,7 +1529,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.create_dir || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingCreateDir);
         }
@@ -1520,7 +1538,7 @@
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.delete {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Delete);
         }
@@ -1529,7 +1547,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.delete || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingDelete);
         }
@@ -1538,7 +1556,7 @@
     }
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.copy {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Copy);
         }
@@ -1547,7 +1565,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.copy || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingCopy);
         }
@@ -1556,7 +1574,7 @@
     }
 
     <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.rename {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Rename);
         }
@@ -1565,7 +1583,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.rename || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingRename);
         }
@@ -1574,7 +1592,7 @@
     }
 
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.list {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::List);
         }
@@ -1583,7 +1601,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.list || !capability.blocking {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::BlockingList);
         }
@@ -1592,7 +1610,7 @@
     }
 
     <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.presign {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Presign);
         }
@@ -1601,7 +1619,7 @@
     </span>}
 
     <span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {
-        <span class="kw">let </span>capability = <span class="self">self</span>.meta.capability();
+        <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.batch {
             <span class="kw">return </span>new_capability_unsupported_error(Operation::Batch);
         }
@@ -2004,7 +2022,7 @@
 
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>info = AccessorInfo::default();
-            info.set_capability(<span class="self">self</span>.capability);
+            info.set_full_capability(<span class="self">self</span>.capability);
 
             info
         }

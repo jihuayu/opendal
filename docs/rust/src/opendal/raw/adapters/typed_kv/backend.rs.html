@@ -511,7 +511,7 @@
         am.set_scheme(kv_info.scheme());
         am.set_name(kv_info.name());
         <span class="kw">let </span>kv_cap = kv_info.capabilities();
-        <span class="kw">let </span>cap = am.capability_mut();
+        <span class="kw">let </span>cap = am.full_capability_mut();
         <span class="kw">if </span>kv_cap.get {
             cap.read = <span class="bool-val">true</span>;
             cap.read_can_seek = <span class="bool-val">true</span>;

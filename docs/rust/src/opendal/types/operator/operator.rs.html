@@ -1758,7 +1758,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_inner(accessor: FusedAccessor) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>limit = accessor
             .info()
-            .capability()
+            .full_capability()
             .batch_max_operations
             .unwrap_or(<span class="number">1000</span>);
         <span class="self">Self </span>{ accessor, limit }
@@ -2737,7 +2737,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>remove_via(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw">impl </span>Stream&lt;Item = String&gt; + Unpin) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">if </span><span class="self">self</span>.info().can_batch() {
+        <span class="kw">if </span><span class="self">self</span>.info().full_capability().batch {
             <span class="kw">let </span><span class="kw-2">mut </span>input = input
                 .map(|v| (v, OpDelete::default().into()))
                 .chunks(<span class="self">self</span>.limit());
@@ -2805,7 +2805,7 @@
 
         <span class="kw">let </span>obs = <span class="self">self</span>.lister_with(path).delimiter(<span class="string">&quot;&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">if </span><span class="self">self</span>.info().can_batch() {
+        <span class="kw">if </span><span class="self">self</span>.info().full_capability().batch {
             <span class="kw">let </span><span class="kw-2">mut </span>obs = obs.try_chunks(<span class="self">self</span>.limit());
 
             <span class="kw">while let </span><span class="prelude-val">Some</span>(batches) = obs.next().<span class="kw">await </span>{

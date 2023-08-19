@@ -569,6 +569,13 @@
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -969,7 +976,8 @@
             scheme: Scheme::Custom(<span class="string">&quot;dummy&quot;</span>),
             root: <span class="string">&quot;&quot;</span>.to_string(),
             name: <span class="string">&quot;dummy&quot;</span>.to_string(),
-            capability: Capability::default(),
+            native_capability: Capability::default(),
+            full_capability: Capability::default(),
         }
     }
 }
@@ -1080,7 +1088,8 @@
     root: String,
     name: String,
 
-    capability: Capability,
+    native_capability: Capability,
+    full_capability: Capability,
 }
 
 <span class="kw">impl </span>AccessorInfo {
@@ -1124,19 +1133,24 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Get backend&#39;s capabilities.
-    </span><span class="kw">pub fn </span>capability(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Capability {
-        <span class="self">self</span>.capability
+    <span class="doccomment">/// Get backend&#39;s native capabilities.
+    </span><span class="kw">pub fn </span>native_capability(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Capability {
+        <span class="self">self</span>.native_capability
     }
 
-    <span class="doccomment">/// Get backend&#39;s capabilities.
-    </span><span class="kw">pub fn </span>capability_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Capability {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.capability
+    <span class="doccomment">/// Get service&#39;s full capabilities.
+    </span><span class="kw">pub fn </span>full_capability(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Capability {
+        <span class="self">self</span>.full_capability
     }
 
-    <span class="doccomment">/// Set capabilities for backend.
-    </span><span class="kw">pub fn </span>set_capability(<span class="kw-2">&amp;mut </span><span class="self">self</span>, capability: Capability) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.capability = capability;
+    <span class="doccomment">/// Get service&#39;s full capabilities.
+    </span><span class="kw">pub fn </span>full_capability_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Capability {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.full_capability
+    }
+
+    <span class="doccomment">/// Set full capabilities for service.
+    </span><span class="kw">pub fn </span>set_full_capability(<span class="kw-2">&amp;mut </span><span class="self">self</span>, capability: Capability) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.full_capability = capability;
         <span class="self">self
     </span>}
 }

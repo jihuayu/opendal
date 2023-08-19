@@ -615,7 +615,7 @@
     </span><span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>meta = <span class="self">self</span>.inner.info();
 
-        <span class="kw">let </span>cap = meta.capability_mut();
+        <span class="kw">let </span>cap = meta.full_capability_mut();
         cap.list = <span class="bool-val">true</span>;
         cap.list_with_delimiter_slash = <span class="bool-val">true</span>;
         cap.list_without_delimiter = <span class="bool-val">true</span>;
