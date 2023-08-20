@@ -362,30 +362,6 @@
 <a href="#362" id="362">362</a>
 <a href="#363" id="363">363</a>
 <a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -406,7 +382,6 @@
 </span><span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::io;
-<span class="kw">use </span>std::marker::PhantomPinned;
 <span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
@@ -575,40 +550,25 @@
 </span><span class="kw">pub trait </span>ReadExt: Read {
     <span class="doccomment">/// Build a future for `poll_read`.
     </span><span class="kw">fn </span>read&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u8]) -&gt; ReadFuture&lt;<span class="lifetime">&#39;a</span>, <span class="self">Self</span>&gt; {
-        ReadFuture {
-            reader: <span class="self">self</span>,
-            buf,
-            _pin: PhantomPinned,
-        }
+        ReadFuture { reader: <span class="self">self</span>, buf }
     }
 
     <span class="doccomment">/// Build a future for `poll_seek`.
     </span><span class="kw">fn </span>seek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pos: io::SeekFrom) -&gt; SeekFuture&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
-        SeekFuture {
-            reader: <span class="self">self</span>,
-            pos,
-            _pin: PhantomPinned,
-        }
+        SeekFuture { reader: <span class="self">self</span>, pos }
     }
 
     <span class="doccomment">/// Build a future for `poll_next`
     </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NextFuture&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
-        NextFuture {
-            reader: <span class="self">self</span>,
-            _pin: PhantomPinned,
-        }
+        NextFuture { reader: <span class="self">self </span>}
     }
 }
 
-<span class="attr">#[pin_project]
+<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
+</span><span class="attr">#[pin_project(!Unpin)]
 </span><span class="kw">pub struct </span>ReadFuture&lt;<span class="lifetime">&#39;a</span>, R: Read + Unpin + <span class="question-mark">?</span>Sized&gt; {
     reader: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>R,
     buf: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u8],
-    <span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-    ///
-    /// Borrowed from tokio.
-    </span><span class="attr">#[pin]
-    </span>_pin: PhantomPinned,
 }
 
 <span class="kw">impl</span>&lt;R&gt; Future <span class="kw">for </span>ReadFuture&lt;<span class="lifetime">&#39;_</span>, R&gt;
@@ -623,15 +583,11 @@
     }
 }
 
-<span class="attr">#[pin_project]
+<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
+</span><span class="attr">#[pin_project(!Unpin)]
 </span><span class="kw">pub struct </span>SeekFuture&lt;<span class="lifetime">&#39;a</span>, R: Read + Unpin + <span class="question-mark">?</span>Sized&gt; {
     reader: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>R,
     pos: io::SeekFrom,
-    <span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-    ///
-    /// Borrowed from tokio.
-    </span><span class="attr">#[pin]
-    </span>_pin: PhantomPinned,
 }
 
 <span class="kw">impl</span>&lt;R&gt; Future <span class="kw">for </span>SeekFuture&lt;<span class="lifetime">&#39;_</span>, R&gt;
@@ -646,14 +602,10 @@
     }
 }
 
-<span class="attr">#[pin_project]
+<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
+</span><span class="attr">#[pin_project(!Unpin)]
 </span><span class="kw">pub struct </span>NextFuture&lt;<span class="lifetime">&#39;a</span>, R: Read + Unpin + <span class="question-mark">?</span>Sized&gt; {
     reader: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>R,
-    <span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-    ///
-    /// Borrowed from tokio.
-    </span><span class="attr">#[pin]
-    </span>_pin: PhantomPinned,
 }
 
 <span class="kw">impl</span>&lt;R&gt; Future <span class="kw">for </span>NextFuture&lt;<span class="lifetime">&#39;_</span>, R&gt;
