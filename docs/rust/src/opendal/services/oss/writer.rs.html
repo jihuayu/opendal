@@ -186,6 +186,38 @@
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -222,19 +254,12 @@
 }
 
 <span class="kw">impl </span>OssWriter {
-    <span class="kw">pub fn </span>new(
-        core: Arc&lt;OssCore&gt;,
-        path: <span class="kw-2">&amp;</span>str,
-        op: OpWrite,
-    ) -&gt; oio::MultipartUploadWriter&lt;OssWriter&gt; {
-        <span class="kw">let </span>write_min_size = core.write_min_size;
-        <span class="kw">let </span>total_size = op.content_length();
-        <span class="kw">let </span>oss_writer = OssWriter {
+    <span class="kw">pub fn </span>new(core: Arc&lt;OssCore&gt;, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="self">Self </span>{
+        OssWriter {
             core,
             path: path.to_string(),
             op,
-        };
-        oio::MultipartUploadWriter::new(oss_writer, total_size).with_write_min_size(write_min_size)
+        }
     }
 }
 
@@ -370,6 +395,45 @@
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>oio::AppendObjectWrite <span class="kw">for </span>OssWriter {
+    <span class="kw">async fn </span>offset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.oss_head_object(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                <span class="kw">let </span>content_length = parse_content_length(resp.headers())<span class="question-mark">?</span>.ok_or_else(|| {
+                    Error::new(
+                        ErrorKind::Unexpected,
+                        <span class="string">&quot;Content-Length not present in returning response&quot;</span>,
+                    )
+                })<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(content_length)
+            }
+            StatusCode::NOT_FOUND =&gt; <span class="prelude-val">Ok</span>(<span class="number">0</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: u64, size: u64, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self
+            </span>.core
+            .oss_append_object_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, offset, size, <span class="kw-2">&amp;</span><span class="self">self</span>.op, body)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }

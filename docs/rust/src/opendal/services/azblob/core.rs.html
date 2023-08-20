@@ -928,7 +928,7 @@
     </span><span class="kw">pub fn </span>azblob_append_blob_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
-        size: usize,
+        size: u64,
         position: <span class="prelude-ty">Option</span>&lt;u64&gt;,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {

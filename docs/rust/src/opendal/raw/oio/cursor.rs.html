@@ -330,6 +330,8 @@
 <a href="#330" id="330">330</a>
 <a href="#331" id="331">331</a>
 <a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -599,6 +601,8 @@
 
     <span class="doccomment">/// peak all will read and copy all bytes from current cursor
     /// without change it&#39;s content.
+    ///
+    /// TODO: we need to find a way to avoid copy all content here.
     </span><span class="kw">pub fn </span>peak_all(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bytes {
         <span class="comment">// Avoid data copy if we only have one bytes.
         </span><span class="kw">if </span><span class="self">self</span>.inner.len() == <span class="number">1 </span>{

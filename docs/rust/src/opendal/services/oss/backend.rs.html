@@ -644,6 +644,7 @@
 <a href="#644" id="644">644</a>
 <a href="#645" id="645">645</a>
 <a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -676,7 +677,6 @@
 <span class="kw">use </span>reqsign::AliyunLoader;
 <span class="kw">use </span>reqsign::AliyunOssSigner;
 
-<span class="kw">use </span><span class="kw">super</span>::appender::OssAppender;
 <span class="kw">use </span><span class="kw">super</span>::core::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::pager::OssPager;
@@ -1032,9 +1032,11 @@
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>OssBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
-    <span class="kw">type </span>Writer = oio::MultipartUploadWriter&lt;OssWriter&gt;;
+    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;
+        oio::MultipartUploadWriter&lt;OssWriter&gt;,
+        oio::AppendObjectWriter&lt;OssWriter&gt;,
+    &gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Appender = OssAppender;
     <span class="kw">type </span>Pager = OssPager;
     <span class="kw">type </span>BlockingPager = ();
 
@@ -1055,6 +1057,7 @@
                 read_with_if_none_match: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
+                write_can_append: <span class="bool-val">true</span>,
                 write_can_sink: <span class="bool-val">true</span>,
                 write_with_cache_control: <span class="bool-val">true</span>,
                 write_with_content_type: <span class="bool-val">true</span>,
@@ -1063,11 +1066,6 @@
                 delete: <span class="bool-val">true</span>,
                 create_dir: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
-
-                append: <span class="bool-val">true</span>,
-                append_with_cache_control: <span class="bool-val">true</span>,
-                append_with_content_type: <span class="bool-val">true</span>,
-                append_with_content_disposition: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
                 list_with_delimiter_slash: <span class="bool-val">true</span>,
@@ -1127,17 +1125,21 @@
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="prelude-val">Ok</span>((
-            RpWrite::default(),
-            OssWriter::new(<span class="self">self</span>.core.clone(), path, args),
-        ))
-    }
+        <span class="kw">let </span>writer = OssWriter::new(<span class="self">self</span>.core.clone(), path, args.clone());
 
-    <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpAppend) -&gt; <span class="prelude-ty">Result</span>&lt;(RpAppend, <span class="self">Self</span>::Appender)&gt; {
-        <span class="prelude-val">Ok</span>((
-            RpAppend::default(),
-            OssAppender::new(<span class="self">self</span>.core.clone(), path, args),
-        ))
+        <span class="kw">let </span>tw = <span class="kw">if </span>args.append() {
+            <span class="kw">let </span>w =
+                oio::AppendObjectWriter::new(writer).with_write_min_size(<span class="self">self</span>.core.write_min_size);
+
+            oio::TwoWaysWriter::Right(w)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>w = oio::MultipartUploadWriter::new(writer, args.content_length())
+                .with_write_min_size(<span class="self">self</span>.core.write_min_size);
+
+            oio::TwoWaysWriter::Left(w)
+        };
+
+        <span class="kw">return </span><span class="prelude-val">Ok</span>((RpWrite::default(), tw));
     }
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {

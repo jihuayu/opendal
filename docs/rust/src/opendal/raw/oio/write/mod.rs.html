@@ -26,6 +26,13 @@
 <a href="#26" id="26">26</a>
 <a href="#27" id="27">27</a>
 <a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -50,8 +57,15 @@
 <span class="kw">pub use </span>api::WriteOperation;
 <span class="kw">pub use </span>api::Writer;
 
+<span class="kw">mod </span>two_ways_write;
+<span class="kw">pub use </span>two_ways_write::TwoWaysWriter;
+
 <span class="kw">mod </span>multipart_upload_write;
 <span class="kw">pub use </span>multipart_upload_write::MultipartUploadPart;
 <span class="kw">pub use </span>multipart_upload_write::MultipartUploadWrite;
 <span class="kw">pub use </span>multipart_upload_write::MultipartUploadWriter;
+
+<span class="kw">mod </span>append_object_write;
+<span class="kw">pub use </span>append_object_write::AppendObjectWrite;
+<span class="kw">pub use </span>append_object_write::AppendObjectWriter;
 </code></pre></div></section></main></body></html>
