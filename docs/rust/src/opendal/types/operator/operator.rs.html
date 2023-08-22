@@ -1469,53 +1469,6 @@
 <a href="#1469" id="1469">1469</a>
 <a href="#1470" id="1470">1470</a>
 <a href="#1471" id="1471">1471</a>
-<a href="#1472" id="1472">1472</a>
-<a href="#1473" id="1473">1473</a>
-<a href="#1474" id="1474">1474</a>
-<a href="#1475" id="1475">1475</a>
-<a href="#1476" id="1476">1476</a>
-<a href="#1477" id="1477">1477</a>
-<a href="#1478" id="1478">1478</a>
-<a href="#1479" id="1479">1479</a>
-<a href="#1480" id="1480">1480</a>
-<a href="#1481" id="1481">1481</a>
-<a href="#1482" id="1482">1482</a>
-<a href="#1483" id="1483">1483</a>
-<a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a>
-<a href="#1486" id="1486">1486</a>
-<a href="#1487" id="1487">1487</a>
-<a href="#1488" id="1488">1488</a>
-<a href="#1489" id="1489">1489</a>
-<a href="#1490" id="1490">1490</a>
-<a href="#1491" id="1491">1491</a>
-<a href="#1492" id="1492">1492</a>
-<a href="#1493" id="1493">1493</a>
-<a href="#1494" id="1494">1494</a>
-<a href="#1495" id="1495">1495</a>
-<a href="#1496" id="1496">1496</a>
-<a href="#1497" id="1497">1497</a>
-<a href="#1498" id="1498">1498</a>
-<a href="#1499" id="1499">1499</a>
-<a href="#1500" id="1500">1500</a>
-<a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a>
-<a href="#1503" id="1503">1503</a>
-<a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a>
-<a href="#1506" id="1506">1506</a>
-<a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
-<a href="#1511" id="1511">1511</a>
-<a href="#1512" id="1512">1512</a>
-<a href="#1513" id="1513">1513</a>
-<a href="#1514" id="1514">1514</a>
-<a href="#1515" id="1515">1515</a>
-<a href="#1516" id="1516">1516</a>
-<a href="#1517" id="1517">1517</a>
-<a href="#1518" id="1518">1518</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1533,8 +1486,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::ops::RangeBounds;
-<span class="kw">use </span>std::time::Duration;
+</span><span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>futures::stream;
@@ -1845,7 +1797,7 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt; {
-        <span class="self">self</span>.range_read(path, ..).<span class="kw">await
+        <span class="self">self</span>.read_with(path).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Read the whole path into a bytes with extra options.
@@ -1862,6 +1814,7 @@
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
     /// let bs = op.read_with(&quot;path/to/file&quot;).await?;
+    /// let bs = op.read_with(&quot;path/to/file&quot;).range(0..10).await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -1879,7 +1832,7 @@
                             ErrorKind::IsADirectory,
                             <span class="string">&quot;read path is a directory&quot;</span>,
                         )
-                        .with_operation(<span class="string">&quot;range_read&quot;</span>)
+                        .with_operation(<span class="string">&quot;read&quot;</span>)
                         .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme())
                         .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
                     }
@@ -1899,7 +1852,7 @@
                     <span class="comment">// TODO: use native read api
                     </span>s.read_exact(buf.initialized_mut()).<span class="kw">await</span>.map_err(|err| {
                         Error::new(ErrorKind::Unexpected, <span class="string">&quot;read from storage&quot;</span>)
-                            .with_operation(<span class="string">&quot;range_read&quot;</span>)
+                            .with_operation(<span class="string">&quot;read&quot;</span>)
                             .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
                             .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path)
                             .with_context(<span class="string">&quot;range&quot;</span>, br.to_string())
@@ -1919,31 +1872,6 @@
         fut
     }
 
-    <span class="doccomment">/// Read the specified range of path into a bytes.
-    ///
-    /// This function will allocate a new bytes internally. For more precise memory control or
-    /// reading data lazily, please use [`Operator::range_reader`]
-    ///
-    /// # Notes
-    ///
-    /// - The returning content&#39;s length may be smaller than the range specified.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::io::Result;
-    /// # use opendal::Operator;
-    /// # use futures::TryStreamExt;
-    /// # #[tokio::main]
-    /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let bs = op.range_read(&quot;path/to/file&quot;, 1024..2048).await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    </span><span class="kw">pub async fn </span>range_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, range: <span class="kw">impl </span>RangeBounds&lt;u64&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt; {
-        <span class="self">self</span>.read_with(path).range(range).<span class="kw">await
-    </span>}
-
     <span class="doccomment">/// Create a new reader which can read the whole path.
     ///
     /// # Examples
@@ -1961,28 +1889,6 @@
     /// ```
     </span><span class="kw">pub async fn </span>reader(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Reader&gt; {
         <span class="self">self</span>.reader_with(path).<span class="kw">await
-    </span>}
-
-    <span class="doccomment">/// Create a new reader which can read the specified range.
-    ///
-    /// # Notes
-    ///
-    /// - The returning content&#39;s length may be smaller than the range specified.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// # use std::io::Result;
-    /// # use opendal::Operator;
-    /// # use futures::TryStreamExt;
-    /// # #[tokio::main]
-    /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let r = op.range_reader(&quot;path/to/file&quot;, 1024..2048).await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    </span><span class="kw">pub async fn </span>range_reader(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, range: <span class="kw">impl </span>RangeBounds&lt;u64&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Reader&gt; {
-        <span class="self">self</span>.reader_with(path).range(range).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Create a new reader with extra options
@@ -2014,7 +1920,7 @@
                             ErrorKind::IsADirectory,
                             <span class="string">&quot;read path is a directory&quot;</span>,
                         )
-                        .with_operation(<span class="string">&quot;Operator::range_reader&quot;</span>)
+                        .with_operation(<span class="string">&quot;Operator::reader&quot;</span>)
                         .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme())
                         .with_context(<span class="string">&quot;path&quot;</span>, path));
                     }

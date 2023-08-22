@@ -1575,6 +1575,11 @@
 <a href="#1575" id="1575">1575</a>
 <a href="#1576" id="1576">1576</a>
 <a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1978,7 +1983,6 @@
                         from,
                         to,
                         <span class="self">self</span>.ctx.error_print(<span class="kw-2">&amp;</span>err),
-
                     )
                 };
                 err
@@ -3089,7 +3093,10 @@
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
-                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>, <span class="self">self</span>.ctx.scheme, <span class="self">self</span>.op, <span class="self">self</span>.path
+                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
+                    <span class="self">self</span>.ctx.scheme,
+                    <span class="self">self</span>.op,
+                    <span class="self">self</span>.path
                 );
                 <span class="self">self</span>.finished = <span class="bool-val">true</span>;
             }
@@ -3130,7 +3137,10 @@
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
-                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>, <span class="self">self</span>.ctx.scheme, <span class="self">self</span>.op, <span class="self">self</span>.path
+                    <span class="string">&quot;service={} operation={} path={} -&gt; finished&quot;</span>,
+                    <span class="self">self</span>.ctx.scheme,
+                    <span class="self">self</span>.op,
+                    <span class="self">self</span>.path
                 );
                 <span class="self">self</span>.finished = <span class="bool-val">true</span>;
             }
