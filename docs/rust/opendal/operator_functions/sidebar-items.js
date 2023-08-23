@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FunctionDelete","FunctionList","FunctionLister","FunctionWrite"]};
+window.SIDEBAR_ITEMS = {"struct":["FunctionDelete","FunctionList","FunctionLister","FunctionRead","FunctionReader","FunctionWrite"]};

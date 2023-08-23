@@ -1037,6 +1037,18 @@
 <a href="#1037" id="1037">1037</a>
 <a href="#1038" id="1038">1038</a>
 <a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1055,7 +1067,6 @@
 // under the License.
 
 </span><span class="kw">use </span>std::io::Read;
-<span class="kw">use </span>std::ops::RangeBounds;
 
 <span class="kw">use </span>bytes::Bytes;
 
@@ -1269,54 +1280,61 @@
     /// # }
     /// ```
     </span><span class="kw">pub fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt; {
-        <span class="self">self</span>.range_read(path, ..)
+        <span class="self">self</span>.read_with(path).call()
     }
 
-    <span class="doccomment">/// Read the specified range of path into a bytes.
+    <span class="doccomment">/// Read the whole path into a bytes with extra options.
     ///
     /// This function will allocate a new bytes internally. For more precise memory control or
-    /// reading data lazily, please use [`BlockingOperator::range_reader`]
+    /// reading data lazily, please use [`BlockingOperator::reader`]
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// # use std::io::Result;
-    /// # use opendal::BlockingOperator;
-    /// # use futures::TryStreamExt;
-    /// # use opendal::Scheme;
+    /// # use anyhow::Result;
+    /// use opendal::BlockingOperator;
+    /// use opendal::EntryMode;
+    /// use opendal::Metakey;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
-    /// let bs = op.range_read(&quot;path/to/file&quot;, 1024..2048)?;
+    /// let bs = op.read_with(&quot;path/to/file&quot;).range(0..10).call()?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub fn </span>range_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, range: <span class="kw">impl </span>RangeBounds&lt;u64&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt; {
+    </span><span class="kw">pub fn </span>read_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FunctionRead {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;read path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;BlockingOperator::range_read&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
+        FunctionRead(OperatorFunction::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpRead::default(),
+            |inner, path, args| {
+                <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        Error::new(ErrorKind::IsADirectory, <span class="string">&quot;read path is a directory&quot;</span>)
+                            .with_operation(<span class="string">&quot;BlockingOperator::read_with&quot;</span>)
+                            .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
+                    );
+                }
 
-        <span class="kw">let </span>br = BytesRange::from(range);
-        <span class="kw">let </span>(rp, <span class="kw-2">mut </span>s) = <span class="self">self
-            </span>.inner()
-            .blocking_read(<span class="kw-2">&amp;</span>path, OpRead::new().with_range(br))<span class="question-mark">?</span>;
+                <span class="kw">let </span>(rp, <span class="kw-2">mut </span>s) = inner.blocking_read(<span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>buffer = Vec::with_capacity(rp.into_metadata().content_length() <span class="kw">as </span>usize);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>buffer = Vec::with_capacity(rp.into_metadata().content_length() <span class="kw">as </span>usize);
-        s.read_to_end(<span class="kw-2">&amp;mut </span>buffer).map_err(|err| {
-            Error::new(ErrorKind::Unexpected, <span class="string">&quot;blocking range read failed&quot;</span>)
-                .with_operation(<span class="string">&quot;BlockingOperator::range_read&quot;</span>)
-                .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-                .with_context(<span class="string">&quot;path&quot;</span>, path)
-                .with_context(<span class="string">&quot;range&quot;</span>, br.to_string())
-                .set_source(err)
-        })<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(buffer)
+                <span class="kw">match </span>s.read_to_end(<span class="kw-2">&amp;mut </span>buffer) {
+                    <span class="prelude-val">Ok</span>(n) =&gt; {
+                        buffer.truncate(n);
+                        <span class="prelude-val">Ok</span>(buffer)
+                    }
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(
+                        Error::new(ErrorKind::Unexpected, <span class="string">&quot;blocking read_with failed&quot;</span>)
+                            .with_operation(<span class="string">&quot;BlockingOperator::read_with&quot;</span>)
+                            .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path)
+                            .set_source(err),
+                    ),
+                }
+            },
+        ))
     }
 
     <span class="doccomment">/// Create a new reader which can read the whole path.
@@ -1333,37 +1351,43 @@
     /// # }
     /// ```
     </span><span class="kw">pub fn </span>reader(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;BlockingReader&gt; {
-        <span class="self">self</span>.range_reader(path, ..)
+        <span class="self">self</span>.reader_with(path).call()
     }
 
-    <span class="doccomment">/// Create a new reader which can read the specified range.
+    <span class="doccomment">/// Create a new reader with extra options
     ///
     /// # Examples
     ///
     /// ```no_run
-    /// # use std::io::Result;
-    /// # use opendal::BlockingOperator;
-    /// # use futures::TryStreamExt;
+    /// # use anyhow::Result;
+    /// use opendal::BlockingOperator;
+    /// use opendal::EntryMode;
+    /// use opendal::Metakey;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
-    /// let r = op.range_reader(&quot;path/to/file&quot;, 1024..2048)?;
+    /// let r = op.reader_with(&quot;path/to/file&quot;).range(0..10).call()?;
     /// # Ok(())
     /// # }
     /// ```
-    </span><span class="kw">pub fn </span>range_reader(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, range: <span class="kw">impl </span>RangeBounds&lt;u64&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;BlockingReader&gt; {
+    </span><span class="kw">pub fn </span>reader_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FunctionReader {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;read path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;BlockingOperator::range_reader&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
+        FunctionReader(OperatorFunction::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpRead::default(),
+            |inner, path, args| {
+                <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        Error::new(ErrorKind::IsADirectory, <span class="string">&quot;reader path is a directory&quot;</span>)
+                            .with_operation(<span class="string">&quot;BlockingOperator::reader_with&quot;</span>)
+                            .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
+                    );
+                }
 
-        <span class="kw">let </span>op = OpRead::new().with_range(range.into());
-
-        BlockingReader::create(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, op)
+                BlockingReader::create(inner.clone(), <span class="kw-2">&amp;</span>path, args)
+            },
+        ))
     }
 
     <span class="doccomment">/// Write bytes into given path.
