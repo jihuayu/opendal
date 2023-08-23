@@ -368,7 +368,7 @@
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>DropboxBuilder {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        f.debug_struct(<span class="string">&quot;Builder&quot;</span>).finish()
+        f.debug_struct(<span class="string">&quot;Builder&quot;</span>).field(<span class="string">&quot;root&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root).finish()
     }
 }
 

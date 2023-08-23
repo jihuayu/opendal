@@ -445,6 +445,8 @@
 <a href="#445" id="445">445</a>
 <a href="#446" id="446">446</a>
 <a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -489,9 +491,11 @@
 <span class="kw">use </span><span class="kw">crate</span>::types::Result;
 
 <span class="kw">pub struct </span>DropboxCore {
-    <span class="kw">pub </span>signer: Arc&lt;Mutex&lt;DropboxSigner&gt;&gt;,
-    <span class="kw">pub </span>client: HttpClient,
     <span class="kw">pub </span>root: String,
+
+    <span class="kw">pub </span>client: HttpClient,
+
+    <span class="kw">pub </span>signer: Arc&lt;Mutex&lt;DropboxSigner&gt;&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>DropboxCore {
@@ -807,11 +811,11 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>DropboxSigner {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         DropboxSigner {
-            refresh_token: <span class="string">&quot;&quot;</span>.to_string(),
+            refresh_token: String::new(),
             client_id: String::new(),
             client_secret: String::new(),
 
-            access_token: <span class="string">&quot;&quot;</span>.to_string(),
+            access_token: String::new(),
             expires_in: DateTime::&lt;Utc&gt;::MIN_UTC,
         }
     }
