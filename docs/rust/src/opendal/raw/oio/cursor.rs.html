@@ -423,6 +423,41 @@
 <a href="#423" id="423">423</a>
 <a href="#424" id="424">424</a>
 <a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -595,7 +630,12 @@
     }
 }
 
-<span class="doccomment">/// # TODO
+<span class="doccomment">/// ChunkedCursor is used represents a non-contiguous bytes in memory.
+///
+/// This is useful when we buffer users&#39; random writes without copy. ChunkedCursor implements
+/// [`oio::Stream`] so it can be used in [`oio::Write::sink`] directly.
+///
+/// # TODO
 ///
 /// we can do some compaction during runtime. For example, merge 4K data
 /// into the same bytes instead.
@@ -630,11 +670,6 @@
         <span class="self">self</span>.inner.iter().skip(<span class="self">self</span>.idx).map(|v| v.len()).sum()
     }
 
-    <span class="doccomment">/// Reset current cursor to start.
-    </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.idx = <span class="number">0</span>;
-    }
-
     <span class="doccomment">/// Clear the entire cursor.
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.idx = <span class="number">0</span>;
@@ -659,7 +694,7 @@
     }
 
     <span class="kw">fn </span>poll_reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
-        <span class="self">self</span>.reset();
+        <span class="self">self</span>.idx = <span class="number">0</span>;
         Poll::Ready(<span class="prelude-val">Ok</span>(()))
     }
 }
@@ -827,6 +862,8 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamExt;
+    <span class="kw">use </span>pretty_assertions::assert_eq;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_vector_cursor() {
@@ -846,6 +883,39 @@
         <span class="macro">assert_eq!</span>(vc.peak_exact(<span class="number">1</span>), Bytes::from(<span class="string">&quot;l&quot;</span>));
         vc.take(<span class="number">5</span>);
         <span class="macro">assert_eq!</span>(vc.peak_exact(<span class="number">1</span>), Bytes::from(<span class="string">&quot;r&quot;</span>));
+    }
+
+    <span class="attr">#[tokio::test]
+    </span><span class="kw">async fn </span>test_chunked_cursor() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>c = ChunkedCursor::new();
+
+        c.push(Bytes::from(<span class="string">&quot;hello&quot;</span>));
+        <span class="macro">assert_eq!</span>(c.len(), <span class="number">5</span>);
+        <span class="macro">assert!</span>(!c.is_empty());
+
+        c.push(Bytes::from(<span class="string">&quot;world&quot;</span>));
+        <span class="macro">assert_eq!</span>(c.len(), <span class="number">10</span>);
+        <span class="macro">assert!</span>(!c.is_empty());
+
+        <span class="kw">let </span>bs = c.next().<span class="kw">await</span>.unwrap().unwrap();
+        <span class="macro">assert_eq!</span>(bs, Bytes::from(<span class="string">&quot;hello&quot;</span>));
+        <span class="macro">assert_eq!</span>(c.len(), <span class="number">5</span>);
+        <span class="macro">assert!</span>(!c.is_empty());
+
+        <span class="kw">let </span>bs = c.next().<span class="kw">await</span>.unwrap().unwrap();
+        <span class="macro">assert_eq!</span>(bs, Bytes::from(<span class="string">&quot;world&quot;</span>));
+        <span class="macro">assert_eq!</span>(c.len(), <span class="number">0</span>);
+        <span class="macro">assert!</span>(c.is_empty());
+
+        c.reset().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="macro">assert_eq!</span>(c.len(), <span class="number">10</span>);
+        <span class="macro">assert!</span>(!c.is_empty());
+
+        c.clear();
+        <span class="macro">assert_eq!</span>(c.len(), <span class="number">0</span>);
+        <span class="macro">assert!</span>(c.is_empty());
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>
