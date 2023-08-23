@@ -1229,6 +1229,18 @@
 <a href="#1229" id="1229">1229</a>
 <a href="#1230" id="1230">1230</a>
 <a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1246,7 +1258,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::cmp::max;
+<span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
@@ -1274,6 +1287,7 @@
 <span class="kw">use </span><span class="kw">super</span>::pager::S3Pager;
 <span class="kw">use </span><span class="kw">super</span>::writer::S3Writer;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::services::s3::writer::S3Writers;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Allow constructing correct region endpoint if user gives a global endpoint.
@@ -1287,7 +1301,10 @@
     m
 });
 
-<span class="kw">const </span>DEFAULT_WRITE_MIN_SIZE: usize = <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
+<span class="doccomment">/// The minimum multipart size of S3 is 5 MiB.
+///
+/// ref: &lt;https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html&gt;
+</span><span class="kw">const </span>MINIMUM_MULTIPART_SIZE: usize = <span class="number">5 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
 <span class="kw">const </span>DEFAULT_BATCH_MAX_OPERATIONS: usize = <span class="number">1000</span>;
 
 <span class="doccomment">/// Aws S3 and compatible services (including minio, digitalocean space, Tencent Cloud Object Storage(COS) and so on) support.
@@ -2078,14 +2095,6 @@
 
         <span class="kw">let </span>signer = AwsV4Signer::new(<span class="string">&quot;s3&quot;</span>, <span class="kw-2">&amp;</span>region);
 
-        <span class="kw">let </span>write_min_size = <span class="self">self</span>.write_min_size.unwrap_or(DEFAULT_WRITE_MIN_SIZE);
-        <span class="kw">if </span>write_min_size &lt; <span class="number">5 </span>* <span class="number">1024 </span>* <span class="number">1024 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::ConfigInvalid,
-                <span class="string">&quot;The write minimum buffer size is misconfigured&quot;</span>,
-            )
-            .with_context(<span class="string">&quot;service&quot;</span>, Scheme::S3));
-        }
         <span class="kw">let </span>batch_max_operations = <span class="self">self
             </span>.batch_max_operations
             .unwrap_or(DEFAULT_BATCH_MAX_OPERATIONS);
@@ -2105,7 +2114,6 @@
                 signer,
                 loader,
                 client,
-                write_min_size,
                 batch_max_operations,
             }),
         })
@@ -2122,7 +2130,7 @@
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>S3Backend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
-    <span class="kw">type </span>Writer = oio::MultipartUploadWriter&lt;S3Writer&gt;;
+    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;S3Writers, oio::AtLeastBufWriter&lt;S3Writers&gt;&gt;;
     <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Pager = S3Pager;
     <span class="kw">type </span>BlockingPager = ();
@@ -2210,10 +2218,26 @@
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="prelude-val">Ok</span>((
-            RpWrite::default(),
-            S3Writer::new(<span class="self">self</span>.core.clone(), path, args),
-        ))
+        <span class="kw">let </span>writer = S3Writer::new(<span class="self">self</span>.core.clone(), path, args.clone());
+
+        <span class="kw">let </span>w = <span class="kw">if </span>args.content_length().is_some() {
+            S3Writers::One(oio::OneShotWriter::new(writer))
+        } <span class="kw">else </span>{
+            S3Writers::Two(oio::MultipartUploadWriter::new(writer))
+        };
+
+        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
+            <span class="kw">let </span>buffer_size = max(MINIMUM_MULTIPART_SIZE, buffer_size);
+
+            <span class="kw">let </span>w =
+                oio::AtLeastBufWriter::new(w, buffer_size).with_total_size(args.content_length());
+
+            oio::TwoWaysWriter::Two(w)
+        } <span class="kw">else </span>{
+            oio::TwoWaysWriter::One(w)
+        };
+
+        <span class="prelude-val">Ok</span>((RpWrite::default(), w))
     }
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {

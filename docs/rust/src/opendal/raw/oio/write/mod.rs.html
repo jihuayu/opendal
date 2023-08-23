@@ -33,6 +33,14 @@
 <a href="#33" id="33">33</a>
 <a href="#34" id="34">34</a>
 <a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -57,8 +65,9 @@
 <span class="kw">pub use </span>api::WriteOperation;
 <span class="kw">pub use </span>api::Writer;
 
-<span class="kw">mod </span>two_ways_write;
-<span class="kw">pub use </span>two_ways_write::TwoWaysWriter;
+<span class="kw">mod </span>compose_write;
+<span class="kw">pub use </span>compose_write::ThreeWaysWriter;
+<span class="kw">pub use </span>compose_write::TwoWaysWriter;
 
 <span class="kw">mod </span>multipart_upload_write;
 <span class="kw">pub use </span>multipart_upload_write::MultipartUploadPart;
@@ -68,4 +77,11 @@
 <span class="kw">mod </span>append_object_write;
 <span class="kw">pub use </span>append_object_write::AppendObjectWrite;
 <span class="kw">pub use </span>append_object_write::AppendObjectWriter;
+
+<span class="kw">mod </span>at_least_buf_write;
+<span class="kw">pub use </span>at_least_buf_write::AtLeastBufWriter;
+
+<span class="kw">mod </span>one_shot_write;
+<span class="kw">pub use </span>one_shot_write::OneShotWrite;
+<span class="kw">pub use </span>one_shot_write::OneShotWriter;
 </code></pre></div></section></main></body></html>

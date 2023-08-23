@@ -449,20 +449,6 @@
 <a href="#449" id="449">449</a>
 <a href="#450" id="450">450</a>
 <a href="#451" id="451">451</a>
-<a href="#452" id="452">452</a>
-<a href="#453" id="453">453</a>
-<a href="#454" id="454">454</a>
-<a href="#455" id="455">455</a>
-<a href="#456" id="456">456</a>
-<a href="#457" id="457">457</a>
-<a href="#458" id="458">458</a>
-<a href="#459" id="459">459</a>
-<a href="#460" id="460">460</a>
-<a href="#461" id="461">461</a>
-<a href="#462" id="462">462</a>
-<a href="#463" id="463">463</a>
-<a href="#464" id="464">464</a>
-<a href="#465" id="465">465</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -480,7 +466,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::cmp::max;
+<span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::sync::Arc;
 
@@ -497,9 +484,13 @@
 <span class="kw">use </span><span class="kw">super</span>::pager::CosPager;
 <span class="kw">use </span><span class="kw">super</span>::writer::CosWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::services::cos::writer::CosWriters;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="kw">const </span>DEFAULT_WRITE_MIN_SIZE: usize = <span class="number">1024 </span>* <span class="number">1024</span>;
+<span class="doccomment">/// The minimum multipart size of COS is 1 MiB.
+///
+/// ref: &lt;https://www.tencentcloud.com/document/product/436/14112&gt;
+</span><span class="kw">const </span>MINIMUM_MULTIPART_SIZE: usize = <span class="number">1024 </span>* <span class="number">1024</span>;
 
 <span class="doccomment">/// Tencent-Cloud COS services support.
 </span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
@@ -511,10 +502,6 @@
     secret_key: <span class="prelude-ty">Option</span>&lt;String&gt;,
     bucket: <span class="prelude-ty">Option</span>&lt;String&gt;,
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
-
-    <span class="doccomment">/// the part size of cos multipart upload, which should be 1 MB to 5 GB.
-    /// There is no minimum size limit on the last part of your multipart upload
-    </span>write_min_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 
     disable_config_load: bool,
 }
@@ -590,14 +577,6 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// set the minimum size of unsized write, it should be greater than 1 MB.
-    /// Reference: [Upload Part | Tencent Cloud](https://www.tencentcloud.com/document/product/436/7750)
-    </span><span class="kw">pub fn </span>write_min_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, write_min_size: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.write_min_size = <span class="prelude-val">Some</span>(write_min_size);
-
-        <span class="self">self
-    </span>}
-
     <span class="doccomment">/// Disable config load so that opendal will not load config from
     /// environment.
     ///
@@ -633,8 +612,6 @@
         map.get(<span class="string">&quot;endpoint&quot;</span>).map(|v| builder.endpoint(v));
         map.get(<span class="string">&quot;secret_id&quot;</span>).map(|v| builder.secret_id(v));
         map.get(<span class="string">&quot;secret_key&quot;</span>).map(|v| builder.secret_key(v));
-        map.get(<span class="string">&quot;write_min_size&quot;</span>)
-            .map(|v| builder.write_min_size(v.parse().expect(<span class="string">&quot;input must be a number&quot;</span>)));
 
         builder
     }
@@ -698,14 +675,6 @@
         <span class="kw">let </span>cred_loader = TencentCosCredentialLoader::new(client.client(), cfg);
 
         <span class="kw">let </span>signer = TencentCosSigner::new();
-        <span class="kw">let </span>write_min_size = <span class="self">self</span>.write_min_size.unwrap_or(DEFAULT_WRITE_MIN_SIZE);
-        <span class="kw">if </span>write_min_size &lt; <span class="number">1024 </span>* <span class="number">1024 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::ConfigInvalid,
-                <span class="string">&quot;The write minimum buffer size is misconfigured&quot;</span>,
-            )
-            .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Cos));
-        }
 
         <span class="macro">debug!</span>(<span class="string">&quot;backend build finished&quot;</span>);
         <span class="prelude-val">Ok</span>(CosBackend {
@@ -716,7 +685,6 @@
                 signer,
                 loader: cred_loader,
                 client,
-                write_min_size,
             }),
         })
     }
@@ -732,10 +700,7 @@
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>CosBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
-    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;
-        oio::MultipartUploadWriter&lt;CosWriter&gt;,
-        oio::AppendObjectWriter&lt;CosWriter&gt;,
-    &gt;;
+    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;CosWriters, oio::AtLeastBufWriter&lt;CosWriters&gt;&gt;;
     <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Pager = CosPager;
     <span class="kw">type </span>BlockingPager = ();
@@ -823,19 +788,26 @@
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="kw">let </span>writer = CosWriter::new(<span class="self">self</span>.core.clone(), path, args.clone());
 
-        <span class="kw">let </span>tw = <span class="kw">if </span>args.append() {
-            <span class="kw">let </span>w =
-                oio::AppendObjectWriter::new(writer).with_write_min_size(<span class="self">self</span>.core.write_min_size);
-
-            oio::TwoWaysWriter::Right(w)
+        <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
+            CosWriters::Three(oio::AppendObjectWriter::new(writer))
+        } <span class="kw">else if </span>args.content_length().is_some() {
+            CosWriters::One(oio::OneShotWriter::new(writer))
         } <span class="kw">else </span>{
-            <span class="kw">let </span>w = oio::MultipartUploadWriter::new(writer, args.content_length())
-                .with_write_min_size(<span class="self">self</span>.core.write_min_size);
-
-            oio::TwoWaysWriter::Left(w)
+            CosWriters::Two(oio::MultipartUploadWriter::new(writer))
         };
 
-        <span class="kw">return </span><span class="prelude-val">Ok</span>((RpWrite::default(), tw));
+        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
+            <span class="kw">let </span>buffer_size = max(MINIMUM_MULTIPART_SIZE, buffer_size);
+
+            <span class="kw">let </span>w =
+                oio::AtLeastBufWriter::new(w, buffer_size).with_total_size(args.content_length());
+
+            oio::TwoWaysWriter::Two(w)
+        } <span class="kw">else </span>{
+            oio::TwoWaysWriter::One(w)
+        };
+
+        <span class="prelude-val">Ok</span>((RpWrite::default(), w))
     }
 
     <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {

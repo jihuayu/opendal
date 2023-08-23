@@ -207,6 +207,16 @@
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -232,9 +242,15 @@
 
 <span class="kw">use </span><span class="kw">super</span>::core::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::MultipartUploadPart;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::{MultipartUploadPart, Streamer};
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
+
+<span class="kw">pub type </span>ObsWriters = oio::ThreeWaysWriter&lt;
+    oio::OneShotWriter&lt;ObsWriter&gt;,
+    oio::MultipartUploadWriter&lt;ObsWriter&gt;,
+    oio::AppendObjectWriter&lt;ObsWriter&gt;,
+&gt;;
 
 <span class="kw">pub struct </span>ObsWriter {
     core: Arc&lt;ObsCore&gt;,
@@ -252,15 +268,16 @@
         }
     }
 }
+
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::MultipartUploadWrite <span class="kw">for </span>ObsWriter {
-    <span class="kw">async fn </span>write_once(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+</span><span class="kw">impl </span>oio::OneShotWrite <span class="kw">for </span>ObsWriter {
+    <span class="kw">async fn </span>write_once(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, stream: Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self</span>.core.obs_put_object_request(
             <span class="kw-2">&amp;</span><span class="self">self</span>.path,
             <span class="prelude-val">Some</span>(size),
             <span class="self">self</span>.op.content_type(),
             <span class="self">self</span>.op.cache_control(),
-            body,
+            AsyncBody::Stream(stream),
         )<span class="question-mark">?</span>;
 
         <span class="self">self</span>.core.sign(<span class="kw-2">&amp;mut </span>req).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -277,7 +294,10 @@
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
+}
 
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>oio::MultipartUploadWrite <span class="kw">for </span>ObsWriter {
     <span class="kw">async fn </span>initiate_part(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
