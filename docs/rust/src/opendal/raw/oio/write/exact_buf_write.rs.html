@@ -269,6 +269,20 @@
 <a href="#269" id="269">269</a>
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -363,15 +377,7 @@
     <span class="doccomment">/// # TODO
     ///
     /// We know every stream size, we can collect them into a buffer without chain them every time.
-    </span><span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, <span class="kw-2">mut </span>s: Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="comment">// Collect the stream into buffer directly if the buffet is not full.
-        </span><span class="kw">if </span><span class="self">self</span>.buffer_stream.is_none()
-            &amp;&amp; <span class="self">self</span>.buffer.len() <span class="kw">as </span>u64 + size &lt;= <span class="self">self</span>.buffer_size <span class="kw">as </span>u64
-        {
-            <span class="self">self</span>.buffer.push(s.collect().<span class="kw">await</span><span class="question-mark">?</span>);
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-        }
-
+    </span><span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: u64, <span class="kw-2">mut </span>s: Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if </span><span class="self">self</span>.buffer.len() &gt;= <span class="self">self</span>.buffer_size {
             <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buffer.clone();
             <span class="kw">let </span>to_write = buf.split_to(<span class="self">self</span>.buffer_size);
@@ -422,17 +428,14 @@
     </span>}
 
     <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">loop </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(stream) = <span class="self">self</span>.buffer_stream.as_mut() {
-                <span class="kw">let </span>bs = stream.next().<span class="kw">await</span>.transpose()<span class="question-mark">?</span>;
-                <span class="kw">match </span>bs {
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="self">self</span>.buffer_stream = <span class="prelude-val">None</span>;
-                        <span class="kw">break</span>;
-                    }
-                    <span class="prelude-val">Some</span>(bs) =&gt; {
-                        <span class="self">self</span>.buffer.push(bs);
-                    }
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(stream) = <span class="self">self</span>.buffer_stream.as_mut() {
+            <span class="kw">let </span>bs = stream.next().<span class="kw">await</span>.transpose()<span class="question-mark">?</span>;
+            <span class="kw">match </span>bs {
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="self">self</span>.buffer_stream = <span class="prelude-val">None</span>;
+                }
+                <span class="prelude-val">Some</span>(bs) =&gt; {
+                    <span class="self">self</span>.buffer.push(bs);
                 }
             }
 
@@ -504,6 +507,31 @@
         <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
             <span class="prelude-val">Ok</span>(())
         }
+    }
+
+    <span class="attr">#[tokio::test]
+    </span><span class="kw">async fn </span>test_exact_buf_writer_short_write() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let _ </span>= tracing_subscriber::fmt()
+            .pretty()
+            .with_test_writer()
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .try_init();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = thread_rng();
+        <span class="kw">let </span><span class="kw-2">mut </span>expected = <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">5</span>];
+        rng.fill_bytes(<span class="kw-2">&amp;mut </span>expected);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>w = ExactBufWriter::new(MockWriter { buf: <span class="macro">vec!</span>[] }, <span class="number">10</span>);
+
+        w.write(Bytes::from(expected.clone())).<span class="kw">await</span><span class="question-mark">?</span>;
+        w.close().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="macro">assert_eq!</span>(w.inner.buf.len(), expected.len());
+        <span class="macro">assert_eq!</span>(
+            <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, Sha256::digest(<span class="kw-2">&amp;</span>w.inner.buf)),
+            <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, Sha256::digest(<span class="kw-2">&amp;</span>expected))
+        );
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attr">#[tokio::test]
