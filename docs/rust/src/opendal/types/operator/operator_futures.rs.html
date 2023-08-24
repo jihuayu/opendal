@@ -611,6 +611,12 @@
 <a href="#611" id="611">611</a>
 <a href="#612" id="612">612</a>
 <a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1159,6 +1165,12 @@
 </span><span class="kw">pub struct </span>FutureList(<span class="kw">pub</span>(<span class="kw">crate</span>) OperatorFuture&lt;OpList, Vec&lt;Entry&gt;&gt;);
 
 <span class="kw">impl </span>FutureList {
+    <span class="doccomment">/// Change the limit of this list operation.
+    </span><span class="kw">pub fn </span>limit(<span class="kw-2">mut </span><span class="self">self</span>, v: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_limit(v));
+        <span class="self">self
+    </span>}
+
     <span class="doccomment">/// Change the start_after of this list operation.
     </span><span class="kw">pub fn </span>start_after(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_start_after(v));

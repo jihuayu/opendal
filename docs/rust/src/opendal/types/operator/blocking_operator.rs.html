@@ -1090,6 +1090,35 @@
 <a href="#1090" id="1090">1090</a>
 <a href="#1091" id="1091">1091</a>
 <a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1685,19 +1714,48 @@
     /// # }
     /// ```
     </span><span class="kw">pub fn </span>writer(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;BlockingWriter&gt; {
+        <span class="self">self</span>.writer_with(path).call()
+    }
+
+    <span class="doccomment">/// Create a new reader with extra options
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use anyhow::Result;
+    /// use opendal::BlockingOperator;
+    /// use opendal::EntryMode;
+    /// use opendal::Metakey;
+    /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
+    /// let mut w = op.writer_with(&quot;path/to/file&quot;).call()?;
+    /// w.write(vec![0; 4096])?;
+    /// w.write(vec![1; 4096])?;
+    /// w.close()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    </span><span class="kw">pub fn </span>writer_with(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; FunctionWriter {
         <span class="kw">let </span>path = normalize_path(path);
 
-        <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(
-                Error::new(ErrorKind::IsADirectory, <span class="string">&quot;write path is a directory&quot;</span>)
-                    .with_operation(<span class="string">&quot;BlockingOperator::writer&quot;</span>)
-                    .with_context(<span class="string">&quot;service&quot;</span>, <span class="self">self</span>.info().scheme().into_static())
-                    .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
-            );
-        }
+        FunctionWriter(OperatorFunction::new(
+            <span class="self">self</span>.inner().clone(),
+            path,
+            OpWrite::default(),
+            |inner, path, args| {
+                <span class="kw">let </span>path = normalize_path(<span class="kw-2">&amp;</span>path);
 
-        <span class="kw">let </span>op = OpWrite::default();
-        BlockingWriter::create(<span class="self">self</span>.inner().clone(), <span class="kw-2">&amp;</span>path, op)
+                <span class="kw">if </span>!validate_path(<span class="kw-2">&amp;</span>path, EntryMode::FILE) {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(
+                        Error::new(ErrorKind::IsADirectory, <span class="string">&quot;write path is a directory&quot;</span>)
+                            .with_operation(<span class="string">&quot;BlockingOperator::writer_with&quot;</span>)
+                            .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
+                            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path),
+                    );
+                }
+
+                BlockingWriter::create(inner.clone(), <span class="kw-2">&amp;</span>path, args)
+            },
+        ))
     }
 
     <span class="doccomment">/// Delete given path.
