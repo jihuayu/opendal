@@ -123,6 +123,12 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -140,15 +146,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::raw::oio::{StreamExt, Streamer};
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>async_trait::async_trait;
+</span><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bytes::Bytes;
 
-<span class="doccomment">/// AtLeastBufWrite is used to implement [`Write`] based on at least buffer.
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamExt;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::Streamer;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+
+<span class="doccomment">/// AtLeastBufWriter is used to implement [`oio::Write`] based on at least buffer strategy: flush
+/// the underlying storage when the buffered size is larger.
 ///
-/// Users can wrap a writer and a buffer together.
+/// AtLeastBufWriter makes sure that the size of the data written to the underlying storage is at
+/// least `buffer_size` bytes. It&#39;s useful when the underlying storage has a minimum size limit.
+///
+/// For example, S3 requires at least 5MiB for multipart uploads.
 </span><span class="kw">pub struct </span>AtLeastBufWriter&lt;W: oio::Write&gt; {
     inner: W,
 
