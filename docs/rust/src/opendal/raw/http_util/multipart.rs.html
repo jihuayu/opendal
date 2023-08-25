@@ -1215,6 +1215,14 @@
 <a href="#1215" id="1215">1215</a>
 <a href="#1216" id="1216">1216</a>
 <a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1627,7 +1635,15 @@
                 bs.len() <span class="kw">as </span>u64,
                 <span class="prelude-val">Some</span>(Box::new(oio::Cursor::from(bs)) <span class="kw">as </span>Streamer),
             ),
-            AsyncBody::Stream(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;multipart request can&#39;t contain stream body&quot;</span>),
+            AsyncBody::Stream(stream) =&gt; {
+                <span class="kw">let </span>len = parts
+                    .headers
+                    .get(CONTENT_LENGTH)
+                    .and_then(|v| v.to_str().ok())
+                    .and_then(|v| v.parse::&lt;u64&gt;().ok())
+                    .expect(<span class="string">&quot;the content length of a mixed part must be valid&quot;</span>);
+                (len, <span class="prelude-val">Some</span>(stream))
+            }
         };
 
         <span class="self">Self </span>{
