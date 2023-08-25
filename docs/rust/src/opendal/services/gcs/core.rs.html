@@ -579,6 +579,16 @@
 <a href="#579" id="579">579</a>
 <a href="#580" id="580">580</a>
 <a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -604,7 +614,6 @@
 <span class="kw">use </span>backon::ExponentialBuilder;
 <span class="kw">use </span>backon::Retryable;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>bytes::BytesMut;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_RANGE;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
@@ -618,6 +627,7 @@
 <span class="kw">use </span>reqsign::GoogleSigner;
 <span class="kw">use </span>reqsign::GoogleToken;
 <span class="kw">use </span>reqsign::GoogleTokenLoader;
+<span class="kw">use </span>serde_json::json;
 
 <span class="kw">use </span><span class="kw">super</span>::uri::percent_encode_path;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -815,28 +825,38 @@
         req = req.header(CONTENT_LENGTH, size.unwrap_or_default());
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
-            req = req.header(CONTENT_TYPE, <span class="string">&quot;multipart/related; boundary=my-boundary&quot;</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>multipart = Multipart::new();
 
-            <span class="kw">let </span><span class="kw-2">mut </span>req_body = BytesMut::with_capacity(<span class="number">100</span>);
-            <span class="macro">write!</span>(
-                <span class="kw-2">&amp;mut </span>req_body,
-                <span class="string">&quot;--my-boundary\nContent-Type: application/json; charset=UTF-8\n\n{{\&quot;storageClass\&quot;: \&quot;{}\&quot;}}\n\n--my-boundary\n&quot;</span>,
-                storage_class
-            ).unwrap();
+            multipart = multipart.part(
+                FormDataPart::new(<span class="string">&quot;metadata&quot;</span>)
+                    .header(
+                        CONTENT_TYPE,
+                        <span class="string">&quot;application/json; charset=UTF-8&quot;</span>.parse().unwrap(),
+                    )
+                    .content(<span class="macro">json!</span>({<span class="string">&quot;storageClass&quot;</span>: storage_class}).to_string()),
+            );
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(mime) = content_type {
-                <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>req_body, <span class="string">&quot;Content-Type: {}\n\n&quot;</span>, mime).unwrap();
-            } <span class="kw">else </span>{
-                <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>req_body, <span class="string">&quot;Content-Type: application/octet-stream\n\n&quot;</span>).unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>media_part = FormDataPart::new(<span class="string">&quot;media&quot;</span>).header(
+                CONTENT_TYPE,
+                content_type
+                    .unwrap_or(<span class="string">&quot;application/octet-stream&quot;</span>)
+                    .parse()
+                    .unwrap(),
+            );
+
+            <span class="kw">match </span>body {
+                AsyncBody::Empty =&gt; {}
+                AsyncBody::Bytes(bytes) =&gt; {
+                    media_part = media_part.content(bytes);
+                }
+                AsyncBody::Stream(stream) =&gt; {
+                    media_part = media_part.stream(size.unwrap(), stream);
+                }
             }
 
-            <span class="kw">if let </span>AsyncBody::Bytes(bytes) = body {
-                req_body.extend_from_slice(<span class="kw-2">&amp;</span>bytes);
-            }
-            <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>req_body, <span class="string">&quot;\n--my-boundary&quot;</span>).unwrap();
+            multipart = multipart.part(media_part);
 
-            <span class="kw">let </span>req_body = AsyncBody::Bytes(req_body.freeze());
-            <span class="kw">let </span>req = req.body(req_body).map_err(new_request_build_error)<span class="question-mark">?</span>;
+            <span class="kw">let </span>req = multipart.apply(Request::post(url))<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(req)
         } <span class="kw">else </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
