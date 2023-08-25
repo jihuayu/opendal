@@ -664,6 +664,7 @@
 <a href="#664" id="664">664</a>
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -710,7 +711,8 @@
 </span><span class="kw">const </span>DEFAULT_WRITE_FIXED_SIZE: usize = <span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
 
 <span class="doccomment">/// [Google Cloud Storage](https://cloud.google.com/storage) services support.
-</span><span class="attr">#[derive(Default)]
+</span><span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
+#[derive(Default)]
 </span><span class="kw">pub struct </span>GcsBuilder {
     <span class="doccomment">/// root URI, all operations happens under `root`
     </span>root: <span class="prelude-ty">Option</span>&lt;String&gt;,
