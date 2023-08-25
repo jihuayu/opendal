@@ -1241,6 +1241,15 @@
 <a href="#1241" id="1241">1241</a>
 <a href="#1242" id="1242">1242</a>
 <a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1330,7 +1339,7 @@
     allow_anonymous: bool,
     customed_credential_load: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>AwsCredentialLoad&gt;&gt;,
 
-    <span class="comment">// S3 features flags
+    <span class="comment">// S3 feature
     </span>server_side_encryption: <span class="prelude-ty">Option</span>&lt;String&gt;,
     server_side_encryption_aws_kms_key_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
     server_side_encryption_customer_algorithm: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -1338,12 +1347,8 @@
     server_side_encryption_customer_key_md5: <span class="prelude-ty">Option</span>&lt;String&gt;,
     default_storage_class: <span class="prelude-ty">Option</span>&lt;String&gt;,
     enable_virtual_host_style: bool,
-
-    <span class="doccomment">/// the part size of s3 multipart upload, which should be 5 MiB to 5 GiB.
-    /// There is no minimum size limit on the last part of your multipart upload
-    </span>write_min_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    <span class="doccomment">/// batch_max_operations
-    </span>batch_max_operations: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    batch_max_operations: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    enable_exact_buf_write: bool,
 
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
 }
@@ -1762,16 +1767,19 @@
         endpoint
     }
 
-    <span class="doccomment">/// set the minimum size of unsized write, it should be greater than 5 MB.
-    /// Reference: [Amazon S3 multipart upload limits](https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html)
-    </span><span class="kw">pub fn </span>write_min_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, write_min_size: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.write_min_size = <span class="prelude-val">Some</span>(write_min_size);
-
-        <span class="self">self
-    </span>}
     <span class="doccomment">/// Set maximum batch operations of this backend.
     </span><span class="kw">pub fn </span>batch_max_operations(<span class="kw-2">&amp;mut </span><span class="self">self</span>, batch_max_operations: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.batch_max_operations = <span class="prelude-val">Some</span>(batch_max_operations);
+
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Enable exact buf write so that opendal will write data with exact size.
+    ///
+    /// This option is used for services like R2 which requires all parts must be the same size
+    /// except the last part.
+    </span><span class="kw">pub fn </span>enable_exact_buf_write(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.enable_exact_buf_write = <span class="bool-val">true</span>;
 
         <span class="self">self
     </span>}
@@ -1928,10 +1936,11 @@
             .map(|<span class="kw">_</span>| builder.allow_anonymous());
         map.get(<span class="string">&quot;default_storage_class&quot;</span>)
             .map(|v: <span class="kw-2">&amp;</span>String| builder.default_storage_class(v));
-        map.get(<span class="string">&quot;write_min_size&quot;</span>)
-            .map(|v| builder.write_min_size(v.parse().expect(<span class="string">&quot;input must be a number&quot;</span>)));
         map.get(<span class="string">&quot;batch_max_operations&quot;</span>)
             .map(|v| builder.batch_max_operations(v.parse().expect(<span class="string">&quot;input must be a number&quot;</span>)));
+        map.get(<span class="string">&quot;enable_exact_buf_write&quot;</span>)
+            .filter(|v| <span class="kw-2">*</span>v == <span class="string">&quot;on&quot; </span>|| <span class="kw-2">*</span>v == <span class="string">&quot;true&quot;</span>)
+            .map(|<span class="kw">_</span>| builder.enable_exact_buf_write());
 
         builder
     }
@@ -2111,6 +2120,7 @@
                 server_side_encryption_customer_key_md5,
                 default_storage_class,
                 allow_anonymous: <span class="self">self</span>.allow_anonymous,
+                enable_exact_buf_write: <span class="self">self</span>.enable_exact_buf_write,
                 signer,
                 loader,
                 client,
@@ -2130,7 +2140,11 @@
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>S3Backend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
-    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;S3Writers, oio::AtLeastBufWriter&lt;S3Writers&gt;&gt;;
+    <span class="kw">type </span>Writer = oio::ThreeWaysWriter&lt;
+        S3Writers,
+        oio::AtLeastBufWriter&lt;S3Writers&gt;,
+        oio::ExactBufWriter&lt;S3Writers&gt;,
+    &gt;;
     <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Pager = S3Pager;
     <span class="kw">type </span>BlockingPager = ();
@@ -2229,12 +2243,16 @@
         <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
             <span class="kw">let </span>buffer_size = max(MINIMUM_MULTIPART_SIZE, buffer_size);
 
-            <span class="kw">let </span>w =
-                oio::AtLeastBufWriter::new(w, buffer_size).with_total_size(args.content_length());
-
-            oio::TwoWaysWriter::Two(w)
+            <span class="kw">if </span><span class="self">self</span>.core.enable_exact_buf_write {
+                oio::ThreeWaysWriter::Three(oio::ExactBufWriter::new(w, buffer_size))
+            } <span class="kw">else </span>{
+                oio::ThreeWaysWriter::Two(
+                    oio::AtLeastBufWriter::new(w, buffer_size)
+                        .with_total_size(args.content_length()),
+                )
+            }
         } <span class="kw">else </span>{
-            oio::TwoWaysWriter::One(w)
+            oio::ThreeWaysWriter::One(w)
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))
