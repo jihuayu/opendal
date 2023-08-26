@@ -103,7 +103,7 @@ blocking</li>
     </span>builder.root(<span class="string">&quot;/path/to/dir&quot;</span>);
     <span class="comment">// Set the bucket name. This is required.
     </span>builder.bucket(<span class="string">&quot;test&quot;</span>);
-    <span class="comment">// Set the region. This is only required for aws s3.
+    <span class="comment">// Set the region. This is required for some services, if you don&#39;t care about it, for example Minio service, just set it to &quot;auto&quot;, it will be ignored.
     </span>builder.region(<span class="string">&quot;us-east-1&quot;</span>);
     <span class="comment">// Set the endpoint.
     //
@@ -276,7 +276,7 @@ builder.enable_virtual_host_style();</code></pre></div>
 <p>To connect to minio, we need to set:</p>
 <ul>
 <li><code>endpoint</code>: The endpoint of minio, for example: <code>http://127.0.0.1:9000</code></li>
-<li><code>region</code>: The region of minio. If not specified, it could be ignored.</li>
+<li><code>region</code>: The region of minio. If you don’t care about it, just set it to “auto”, it will be ignored.</li>
 <li><code>bucket</code>: The bucket name of minio.</li>
 </ul>
 

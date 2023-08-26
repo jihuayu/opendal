@@ -2827,7 +2827,7 @@
         <span class="prelude-val">Ok</span>(rp.into_presigned_request())
     }
 
-    <span class="doccomment">/// Presign an operation for read option described in OpenDAL [rfc-1735][crate::docs::rfcs::1735_operation_extension.md].
+    <span class="doccomment">/// Presign an operation for read option described in OpenDAL [RFC-1735][`crate::docs::rfcs::rfc_1735_operation_extension`].
     ///
     /// You can pass `OpRead` to this method to specify the content disposition.
     ///
@@ -2897,7 +2897,7 @@
         <span class="self">self</span>.presign_write_with(path, expire).<span class="kw">await
     </span>}
 
-    <span class="doccomment">/// Presign an operation for write with option described in OpenDAL [rfc-0661][crate::docs::rfcs::0661-path-in-accessor.md]
+    <span class="doccomment">/// Presign an operation for write with option described in OpenDAL [RFC-0661][`crate::docs::rfcs::rfc_0661_path_in_accessor`]
     ///
     /// You can pass `OpWrite` to this method to specify the content length and content type.
     ///

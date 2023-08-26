@@ -434,7 +434,7 @@ For fetching more metadata, please use <a href="struct.Operator.html#method.list
     &amp;self,
     path: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.72.0/std/primitive.str.html">str</a>,
     expire: <a class="struct" href="https://doc.rust-lang.org/1.72.0/core/time/struct.Duration.html" title="struct core::time::Duration">Duration</a>
-) -&gt; <a class="struct" href="operator_futures/struct.FuturePresignRead.html" title="struct opendal::operator_futures::FuturePresignRead">FuturePresignRead</a> <a href="#" class="tooltip" data-notable-ty="FuturePresignRead">ⓘ</a></h4></section></summary><div class="docblock"><p>Presign an operation for read option described in OpenDAL [rfc-1735][crate::docs::rfcs::1735_operation_extension.md].</p>
+) -&gt; <a class="struct" href="operator_futures/struct.FuturePresignRead.html" title="struct opendal::operator_futures::FuturePresignRead">FuturePresignRead</a> <a href="#" class="tooltip" data-notable-ty="FuturePresignRead">ⓘ</a></h4></section></summary><div class="docblock"><p>Presign an operation for read option described in OpenDAL <a href="docs/rfcs/rfc_1735_operation_extension/index.html" title="mod opendal::docs::rfcs::rfc_1735_operation_extension">RFC-1735</a>.</p>
 <p>You can pass <code>OpRead</code> to this method to specify the content disposition.</p>
 <h5 id="example-3"><a href="#example-3">Example</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>anyhow::Result;
@@ -473,7 +473,7 @@ For fetching more metadata, please use <a href="struct.Operator.html#method.list
     &amp;self,
     path: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.72.0/std/primitive.str.html">str</a>,
     expire: <a class="struct" href="https://doc.rust-lang.org/1.72.0/core/time/struct.Duration.html" title="struct core::time::Duration">Duration</a>
-) -&gt; <a class="struct" href="operator_futures/struct.FuturePresignWrite.html" title="struct opendal::operator_futures::FuturePresignWrite">FuturePresignWrite</a> <a href="#" class="tooltip" data-notable-ty="FuturePresignWrite">ⓘ</a></h4></section></summary><div class="docblock"><p>Presign an operation for write with option described in OpenDAL [rfc-0661][crate::docs::rfcs::0661-path-in-accessor.md]</p>
+) -&gt; <a class="struct" href="operator_futures/struct.FuturePresignWrite.html" title="struct opendal::operator_futures::FuturePresignWrite">FuturePresignWrite</a> <a href="#" class="tooltip" data-notable-ty="FuturePresignWrite">ⓘ</a></h4></section></summary><div class="docblock"><p>Presign an operation for write with option described in OpenDAL <a href="docs/rfcs/rfc_0661_path_in_accessor/index.html" title="mod opendal::docs::rfcs::rfc_0661_path_in_accessor">RFC-0661</a></p>
 <p>You can pass <code>OpWrite</code> to this method to specify the content length and content type.</p>
 <h5 id="example-5"><a href="#example-5">Example</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>anyhow::Result;

@@ -1311,7 +1311,7 @@
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = req
-            .header(constants::X_AMZ_COPY_SOURCE, percent_encode_path(<span class="kw-2">&amp;</span>source))
+            .header(constants::X_AMZ_COPY_SOURCE, <span class="kw-2">&amp;</span>source)
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
 
