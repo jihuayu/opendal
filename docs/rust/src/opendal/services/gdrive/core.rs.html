@@ -504,6 +504,32 @@
 <a href="#504" id="504">504</a>
 <a href="#505" id="505">505</a>
 <a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -579,10 +605,22 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>get_file_id_by_path(<span class="kw-2">&amp;</span><span class="self">self</span>, file_path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
         <span class="kw">let </span>path = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, file_path);
 
+        <span class="kw">let </span><span class="kw-2">mut </span>cache = <span class="self">self</span>.path_cache.lock().<span class="kw">await</span>;
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = cache.get(<span class="kw-2">&amp;</span>path) {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(id.to_owned());
+        }
+
         <span class="kw">let </span><span class="kw-2">mut </span>parent_id = <span class="string">&quot;root&quot;</span>.to_owned();
         <span class="kw">let </span>file_path_items: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = path.split(<span class="string">&#39;/&#39;</span>).filter(|<span class="kw-2">&amp;</span>x| !x.is_empty()).collect();
 
         <span class="kw">for </span>(i, item) <span class="kw">in </span>file_path_items.iter().enumerate() {
+            <span class="kw">let </span>path_part = file_path_items[<span class="number">0</span>..=i].join(<span class="string">&quot;/&quot;</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = cache.get(<span class="kw-2">&amp;</span>path_part) {
+                parent_id = id.to_owned();
+                <span class="kw">continue</span>;
+            }
+
             <span class="kw">let </span><span class="kw-2">mut </span>query = <span class="macro">format!</span>(
                 <span class="string">&quot;name = \&quot;{}\&quot; and \&quot;{}\&quot; in parents and trashed = false&quot;</span>,
                 item, parent_id
@@ -622,6 +660,8 @@
                     }
 
                     parent_id = gdrive_file_list.files[<span class="number">0</span>].id.clone();
+
+                    cache.insert(path_part, parent_id.clone());
                 }
                 <span class="kw">_ </span>=&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
@@ -646,7 +686,15 @@
         <span class="kw">let </span><span class="kw-2">mut </span>file_path_items: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = path.split(<span class="string">&#39;/&#39;</span>).filter(|<span class="kw-2">&amp;</span>x| !x.is_empty()).collect();
         file_path_items.pop();
 
+        <span class="kw">let </span><span class="kw-2">mut </span>cache = <span class="self">self</span>.path_cache.lock().<span class="kw">await</span>;
+
         <span class="kw">for </span>(i, item) <span class="kw">in </span>file_path_items.iter().enumerate() {
+            <span class="kw">let </span>path_part = file_path_items[<span class="number">0</span>..=i].join(<span class="string">&quot;/&quot;</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = cache.get(<span class="kw-2">&amp;</span>path_part) {
+                parent = id.to_owned();
+                <span class="kw">continue</span>;
+            }
+
             <span class="kw">let </span>query = <span class="macro">format!</span>(
                 <span class="string">&quot;name = \&quot;{}\&quot; and \&quot;{}\&quot; in parents and trashed = false and mimeType = &#39;application/vnd.google-apps.folder&#39;&quot;</span>,
                 item, parent
@@ -685,6 +733,8 @@
                     } <span class="kw">else </span>{
                         parent = gdrive_file_list.files[<span class="number">0</span>].id.clone();
                     }
+
+                    cache.insert(path_part, parent.clone());
                 }
                 StatusCode::NOT_FOUND =&gt; {
                     <span class="kw">let </span>parent_name = file_path_items[i];
@@ -698,6 +748,8 @@
                         StatusCode::OK =&gt; {
                             <span class="kw">let </span>parent_id = res.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
                             parent = String::from_utf8_lossy(<span class="kw-2">&amp;</span>parent_id).to_string();
+
+                            cache.insert(path_part, parent.clone());
                         }
                         <span class="kw">_ </span>=&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(res).<span class="kw">await</span><span class="question-mark">?</span>);
