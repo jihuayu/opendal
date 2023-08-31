@@ -612,6 +612,16 @@
 <a href="#612" id="612">612</a>
 <a href="#613" id="613">613</a>
 <a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -629,7 +639,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::fmt::Debug;
+</span><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
 <span class="kw">use </span>std::time::Duration;
@@ -845,7 +856,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;u64&gt;,
-        content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        op: <span class="kw-2">&amp;</span>OpWrite,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -870,7 +881,16 @@
 
         req = req.header(CONTENT_LENGTH, size.unwrap_or_default());
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(storage_class) = <span class="kw-2">&amp;</span><span class="self">self</span>.default_storage_class {
+        <span class="kw">let </span><span class="kw-2">mut </span>meta_data = HashMap::new();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = op.content_type() {
+            meta_data.insert(<span class="string">&quot;storageClass&quot;</span>.to_string(), content_type.to_string());
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cache_control) = op.cache_control() {
+            meta_data.insert(<span class="string">&quot;cacheControl&quot;</span>.to_string(), cache_control.to_string());
+        }
+
+        <span class="kw">if </span>!meta_data.is_empty() {
             <span class="kw">let </span><span class="kw-2">mut </span>multipart = Multipart::new();
 
             multipart = multipart.part(
@@ -879,12 +899,12 @@
                         CONTENT_TYPE,
                         <span class="string">&quot;application/json; charset=UTF-8&quot;</span>.parse().unwrap(),
                     )
-                    .content(<span class="macro">json!</span>({<span class="string">&quot;storageClass&quot;</span>: storage_class}).to_string()),
+                    .content(<span class="macro">json!</span>(meta_data).to_string()),
             );
 
             <span class="kw">let </span><span class="kw-2">mut </span>media_part = FormDataPart::new(<span class="string">&quot;media&quot;</span>).header(
                 CONTENT_TYPE,
-                content_type
+                op.content_type()
                     .unwrap_or(<span class="string">&quot;application/octet-stream&quot;</span>)
                     .parse()
                     .unwrap(),
@@ -905,7 +925,7 @@
             <span class="kw">let </span>req = multipart.apply(Request::post(url))<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(req)
         } <span class="kw">else </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = op.content_type() {
                 req = req.header(CONTENT_TYPE, content_type);
             }
 
