@@ -505,7 +505,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>am: AccessorInfo = <span class="self">self</span>.kv.metadata().into();
         am.set_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>cap = Capability::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>cap = am.native_capability();
         <span class="kw">if </span>cap.read {
             cap.read_can_seek = <span class="bool-val">true</span>;
             cap.read_can_next = <span class="bool-val">true</span>;
