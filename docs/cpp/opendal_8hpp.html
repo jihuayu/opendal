@@ -69,12 +69,14 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">opendal.hpp File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;lib.rs.h&quot;</code><br />
+<code>#include &lt;boost/date_time/posix_time/posix_time.hpp&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
 <code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
@@ -83,7 +85,7 @@ $(function() {
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for opendal.hpp:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="opendal_8hpp__incl.svg" width="596" height="142"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="opendal_8hpp__incl.svg" width="788" height="156"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 </div>
@@ -91,6 +93,12 @@ Include dependency graph for opendal.hpp:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopendal_1_1Metadata.html">opendal::Metadata</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The metadata of a file or directory.  <a href="structopendal_1_1Metadata.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structopendal_1_1Entry.html">opendal::Entry</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The entry of a file or directory.  <a href="structopendal_1_1Entry.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classopendal_1_1Operator.html">opendal::Operator</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classopendal_1_1Operator.html" title="Operator is the entry for all public APIs.">Operator</a> is the entry for all public APIs.  <a href="classopendal_1_1Operator.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -99,6 +107,15 @@ Classes</h2></td></tr>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespaceopendal"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceopendal.html">opendal</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a775d61a6897136a7bcb0cea1a8af4878"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878">opendal::EntryMode</a> { <a class="el" href="namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878a2afb4c058126f654340802330f779534">opendal::FILE</a> = 1
+, <a class="el" href="namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878ad6eda605749ea5500d74ebc5f0204f07">opendal::DIR</a> = 2
+, <a class="el" href="namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878a3524be472e62f8172244804c48b0c3a4">opendal::UNKNOWN</a> = 0
+ }</td></tr>
+<tr class="memdesc:a775d61a6897136a7bcb0cea1a8af4878"><td class="mdescLeft">&#160;</td><td class="mdescRight">The mode of the entry.  <a href="namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878">More...</a><br /></td></tr>
+<tr class="separator:a775d61a6897136a7bcb0cea1a8af4878"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

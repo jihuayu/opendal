@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['read_6',['read',['../classopendal_1_1Operator.html#accaa3b92894d80a3eed25b988778d1be',1,'opendal::Operator']]],
-  ['readme_2emd_7',['README.md',['../README_8md.html',1,'']]]
+  ['dir_8',['DIR',['../namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878ad6eda605749ea5500d74ebc5f0204f07',1,'opendal']]]
 ];

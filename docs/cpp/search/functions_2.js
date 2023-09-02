@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['read_17',['read',['../classopendal_1_1Operator.html#accaa3b92894d80a3eed25b988778d1be',1,'opendal::Operator']]]
+  ['entry_41',['Entry',['../structopendal_1_1Entry.html#a6d1eb12504c36cd820aa2f12a1a49bc1',1,'opendal::Entry']]]
 ];

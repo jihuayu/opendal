@@ -1,8 +1,10 @@
 var searchData=
 [
-  ['opendal_1',['opendal',['../namespaceopendal.html',1,'']]],
-  ['opendal_20cpp_20binding_20_28wip_29_2',['OpenDAL CPP Binding (WIP)',['../index.html',1,'']]],
-  ['opendal_2ehpp_3',['opendal.hpp',['../opendal_8hpp.html',1,'']]],
-  ['operator_4',['Operator',['../classopendal_1_1Operator.html',1,'opendal::Operator'],['../classopendal_1_1Operator.html#a6c91ce32cc67aadb5a4d2736d6e713ab',1,'opendal::Operator::Operator()=default'],['../classopendal_1_1Operator.html#aa31eda4e80c50287698cfec92a6c52ee',1,'opendal::Operator::Operator(std::string_view scheme, const std::unordered_map&lt; std::string, std::string &gt; &amp;config={})'],['../classopendal_1_1Operator.html#a82ff5d64072c83adc557385519669c20',1,'opendal::Operator::Operator(const Operator &amp;)=delete'],['../classopendal_1_1Operator.html#a24a017a46004f6e3b70ce9daa1da2387',1,'opendal::Operator::Operator(Operator &amp;&amp;)=default']]],
-  ['operator_3d_5',['operator=',['../classopendal_1_1Operator.html#abcd6aad18d31f28886def363cc630754',1,'opendal::Operator::operator=(const Operator &amp;)=delete'],['../classopendal_1_1Operator.html#a344530c78c84d04cf0de5532c2aeb1de',1,'opendal::Operator::operator=(Operator &amp;&amp;)=default']]]
+  ['cache_5fcontrol_1',['cache_control',['../structopendal_1_1Metadata.html#a54aa48a42c283dae626fae2f15197ecd',1,'opendal::Metadata']]],
+  ['content_5fdisposition_2',['content_disposition',['../structopendal_1_1Metadata.html#a03bb80ddc8a734bf3568397070b9c25c',1,'opendal::Metadata']]],
+  ['content_5flength_3',['content_length',['../structopendal_1_1Metadata.html#abac7ec36113aec8c3e7ad885ffbf3141',1,'opendal::Metadata']]],
+  ['content_5fmd5_4',['content_md5',['../structopendal_1_1Metadata.html#ac62a1144f48e70b73cb99a9172b52c7a',1,'opendal::Metadata']]],
+  ['content_5ftype_5',['content_type',['../structopendal_1_1Metadata.html#a63bec27aebb286fec3e280924e311949',1,'opendal::Metadata']]],
+  ['copy_6',['copy',['../classopendal_1_1Operator.html#ad1ec2bbb9f63a726c36a50702ca57dd5',1,'opendal::Operator']]],
+  ['create_5fdir_7',['create_dir',['../classopendal_1_1Operator.html#a2468eddb8de7adbf6f96219e3e0c9c44',1,'opendal::Operator']]]
 ];

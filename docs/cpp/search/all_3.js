@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['write_8',['write',['../classopendal_1_1Operator.html#a3bfa933634917127b3fdc8027b3ee45b',1,'opendal::Operator']]]
+  ['entry_9',['Entry',['../structopendal_1_1Entry.html#a6d1eb12504c36cd820aa2f12a1a49bc1',1,'opendal::Entry::Entry()'],['../structopendal_1_1Entry.html',1,'opendal::Entry']]],
+  ['entrymode_10',['EntryMode',['../namespaceopendal.html#a775d61a6897136a7bcb0cea1a8af4878',1,'opendal']]],
+  ['etag_11',['etag',['../structopendal_1_1Metadata.html#a53f7daea35cf3b0b374a956b7cfb568e',1,'opendal::Metadata']]]
 ];
