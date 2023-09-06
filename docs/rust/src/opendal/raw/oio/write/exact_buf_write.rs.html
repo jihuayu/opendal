@@ -270,6 +270,27 @@
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -322,12 +343,13 @@
         <span class="self">Self </span>{
             inner,
             buffer_size,
-            buffer: Buffer::Filling(BytesMut::new()),
+            buffer: Buffer::Empty,
         }
     }
 }
 
 <span class="kw">enum </span>Buffer {
+    Empty,
     Filling(BytesMut),
     Consuming(Bytes),
 }
@@ -337,6 +359,19 @@
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
+                Buffer::Empty =&gt; {
+                    <span class="kw">if </span>bs.len() &gt;= <span class="self">self</span>.buffer_size {
+                        bs.truncate(<span class="self">self</span>.buffer_size);
+                        <span class="self">self</span>.buffer = Buffer::Consuming(bs);
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.buffer_size <span class="kw">as </span>u64);
+                    }
+
+                    <span class="kw">let </span>size = bs.len() <span class="kw">as </span>u64;
+                    <span class="kw">let </span><span class="kw-2">mut </span>fill = BytesMut::with_capacity(bs.len());
+                    fill.extend_from_slice(<span class="kw-2">&amp;</span>bs);
+                    <span class="self">self</span>.buffer = Buffer::Filling(fill);
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(size);
+                }
                 Buffer::Filling(fill) =&gt; {
                     <span class="kw">if </span>fill.len() &gt;= <span class="self">self</span>.buffer_size {
                         <span class="self">self</span>.buffer = Buffer::Consuming(fill.split().freeze());
@@ -356,23 +391,28 @@
                         <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
                         consume.advance(n <span class="kw">as </span>usize);
                     }
-                    <span class="self">self</span>.buffer = Buffer::Filling(BytesMut::new());
+                    <span class="self">self</span>.buffer = Buffer::Empty;
                 }
             }
         }
     }
 
-    <span class="kw">async fn </span>copy_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: u64, <span class="kw-2">mut </span>s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>copy_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, <span class="kw-2">mut </span>s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
+                Buffer::Empty =&gt; {
+                    <span class="self">self</span>.buffer = Buffer::Filling(BytesMut::new());
+                }
                 Buffer::Filling(fill) =&gt; {
                     <span class="kw">if </span>fill.len() &gt;= <span class="self">self</span>.buffer_size {
                         <span class="self">self</span>.buffer = Buffer::Consuming(fill.split().freeze());
                         <span class="kw">continue</span>;
                     }
 
-                    <span class="comment">// Reserve to buffer size.
-                    </span>fill.reserve(<span class="self">self</span>.buffer_size - fill.len());
+                    <span class="comment">// Reserve to enough size.
+                    </span><span class="kw">if </span>size &gt; fill.remaining_mut() <span class="kw">as </span>u64 {
+                        fill.reserve(<span class="self">self</span>.buffer_size - fill.len());
+                    }
                     <span class="kw">let </span>dst = fill.spare_capacity_mut();
                     <span class="kw">let </span>dst_len = dst.len();
                     <span class="kw">let </span><span class="kw-2">mut </span>buf = ReadBuf::uninit(dst);
@@ -402,13 +442,14 @@
     }
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.buffer = Buffer::Filling(BytesMut::new());
+        <span class="self">self</span>.buffer = Buffer::Empty;
         <span class="self">self</span>.inner.abort().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
+                Buffer::Empty =&gt; <span class="kw">break</span>,
                 Buffer::Filling(fill) =&gt; {
                     <span class="self">self</span>.buffer = Buffer::Consuming(fill.split().freeze());
                     <span class="kw">continue</span>;
@@ -421,6 +462,7 @@
                         <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
                         consume.advance(n <span class="kw">as </span>usize);
                     }
+                    <span class="self">self</span>.buffer = Buffer::Empty;
                     <span class="kw">break</span>;
                 }
             }
