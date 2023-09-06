@@ -1,10 +1,11 @@
 var searchData=
 [
-  ['read_23',['read',['../classopendal_1_1Operator.html#accaa3b92894d80a3eed25b988778d1be',1,'opendal::Operator::read()'],['../classopendal_1_1Reader.html#ac930aa3695f924c92c06330256a9e04c',1,'opendal::Reader::read()']]],
-  ['reader_24',['Reader',['../classopendal_1_1Reader.html',1,'opendal::Reader'],['../classopendal_1_1Reader.html#ad82fa5e92679db05e182ca9a60afb421',1,'opendal::Reader::Reader()']]],
-  ['reader_25',['reader',['../classopendal_1_1Operator.html#acb1cc25bef3e5c56045629959ec790e7',1,'opendal::Operator']]],
-  ['readerstream_26',['ReaderStream',['../classopendal_1_1ReaderStream.html',1,'opendal::ReaderStream'],['../classopendal_1_1ReaderStream.html#af71bab51de8f4edfe8788313c93af433',1,'opendal::ReaderStream::ReaderStream()']]],
-  ['readme_2emd_27',['README.md',['../README_8md.html',1,'']]],
-  ['remove_28',['remove',['../classopendal_1_1Operator.html#a2ebd89e6bd4274414757b594e398b9e5',1,'opendal::Operator']]],
-  ['rename_29',['rename',['../classopendal_1_1Operator.html#a0effdc74c828055d6c31dce1d76cb9af',1,'opendal::Operator']]]
+  ['opendal_26',['opendal',['../namespaceopendal.html',1,'']]],
+  ['opendal_20cpp_20binding_20_28wip_29_27',['OpenDAL CPP Binding (WIP)',['../index.html',1,'']]],
+  ['opendal_2ehpp_28',['opendal.hpp',['../opendal_8hpp.html',1,'']]],
+  ['operator_29',['Operator',['../classopendal_1_1Operator.html',1,'opendal::Operator'],['../classopendal_1_1Operator.html#a6c91ce32cc67aadb5a4d2736d6e713ab',1,'opendal::Operator::Operator()=default'],['../classopendal_1_1Operator.html#aa31eda4e80c50287698cfec92a6c52ee',1,'opendal::Operator::Operator(std::string_view scheme, const std::unordered_map&lt; std::string, std::string &gt; &amp;config={})'],['../classopendal_1_1Operator.html#a82ff5d64072c83adc557385519669c20',1,'opendal::Operator::Operator(const Operator &amp;)=delete'],['../classopendal_1_1Operator.html#a24a017a46004f6e3b70ce9daa1da2387',1,'opendal::Operator::Operator(Operator &amp;&amp;)=default']]],
+  ['operator_21_3d_30',['operator!=',['../classopendal_1_1Lister_1_1ListerIterator.html#a165806bfd933758670188ddb82899e90',1,'opendal::Lister::ListerIterator']]],
+  ['operator_2a_31',['operator*',['../classopendal_1_1Lister_1_1ListerIterator.html#a384eb9fa5edb3bf4006f5dac5a6aba15',1,'opendal::Lister::ListerIterator']]],
+  ['operator_2b_2b_32',['operator++',['../classopendal_1_1Lister_1_1ListerIterator.html#a28acbed0253a87f8899634efca4784fa',1,'opendal::Lister::ListerIterator']]],
+  ['operator_3d_33',['operator=',['../classopendal_1_1Operator.html#abcd6aad18d31f28886def363cc630754',1,'opendal::Operator::operator=(const Operator &amp;)=delete'],['../classopendal_1_1Operator.html#a344530c78c84d04cf0de5532c2aeb1de',1,'opendal::Operator::operator=(Operator &amp;&amp;)=default']]]
 ];

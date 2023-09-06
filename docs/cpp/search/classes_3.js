@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['reader_39',['Reader',['../classopendal_1_1Reader.html',1,'opendal']]],
-  ['readerstream_40',['ReaderStream',['../classopendal_1_1ReaderStream.html',1,'opendal']]]
+  ['operator_56',['Operator',['../classopendal_1_1Operator.html',1,'opendal']]]
 ];
