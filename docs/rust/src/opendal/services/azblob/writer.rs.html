@@ -205,6 +205,8 @@
 <a href="#205" id="205">205</a>
 <a href="#206" id="206">206</a>
 <a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -387,9 +389,10 @@
         <span class="prelude-val">Ok</span>(size)
     }
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">if </span><span class="self">self</span>.op.append() {
-            <span class="self">self</span>.append_oneshot(size, AsyncBody::Stream(s)).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.append_oneshot(size, AsyncBody::Stream(Box::new(s)))
+                .<span class="kw">await</span><span class="question-mark">?</span>;
         } <span class="kw">else </span>{
             <span class="kw">if </span><span class="self">self</span>.op.content_length().is_none() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
@@ -398,7 +401,8 @@
                 ));
             }
 
-            <span class="self">self</span>.write_oneshot(size, AsyncBody::Stream(s)).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.write_oneshot(size, AsyncBody::Stream(Box::new(s)))
+                .<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(size)

@@ -568,8 +568,8 @@
         T: Into&lt;Bytes&gt;,
     {
         <span class="kw">if let </span>State::Idle(<span class="prelude-val">Some</span>(w)) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-            <span class="kw">let </span>s = Box::new(oio::into_stream(sink_from.map_ok(|v| v.into())));
-            w.sink(size, s).<span class="kw">await
+            <span class="kw">let </span>r = Box::new(oio::into_read_from_stream(sink_from.map_ok(|v| v.into())));
+            w.pipe(size, r).<span class="kw">await
         </span>} <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;writer state invalid while sink, expect Idle, actual {}&quot;</span>,
@@ -610,11 +610,14 @@
     /// ```
     </span><span class="kw">pub async fn </span>copy&lt;R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, read_from: R) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;
     <span class="kw">where
-        </span>R: futures::AsyncRead + Send + Sync + Unpin + <span class="lifetime">&#39;static</span>,
+        </span>R: futures::AsyncRead + futures::AsyncSeek + Send + Sync + Unpin + <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">if let </span>State::Idle(<span class="prelude-val">Some</span>(w)) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-            <span class="kw">let </span>s = Box::new(oio::into_stream_from_reader(read_from));
-            w.sink(size, s).<span class="kw">await
+            <span class="kw">let </span>r = Box::new(oio::into_streamable_read(
+                oio::into_read_from_file(read_from, <span class="number">0</span>, size),
+                <span class="number">64 </span>* <span class="number">1024</span>,
+            ));
+            w.pipe(size, r).<span class="kw">await
         </span>} <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;writer state invalid while copy, expect Idle, actual {}&quot;</span>,
@@ -687,10 +690,9 @@
                         .take()
                         .expect(<span class="string">&quot;invalid state of writer: Idle state with empty write&quot;</span>);
                     <span class="kw">let </span>bs = Bytes::from(buf.to_vec());
-                    <span class="kw">let </span>size = bs.len();
                     <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                        w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>((size, w))
+                        <span class="kw">let </span>n = w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>((n <span class="kw">as </span>usize, w))
                     };
                     <span class="self">self</span>.state = State::Write(Box::pin(fut));
                 }
@@ -754,10 +756,9 @@
                         .take()
                         .expect(<span class="string">&quot;invalid state of writer: Idle state with empty write&quot;</span>);
                     <span class="kw">let </span>bs = Bytes::from(buf.to_vec());
-                    <span class="kw">let </span>size = bs.len();
                     <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                        w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>((size, w))
+                        <span class="kw">let </span>n = w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>((n <span class="kw">as </span>usize, w))
                     };
                     <span class="self">self</span>.state = State::Write(Box::pin(fut));
                 }
@@ -847,10 +848,9 @@
 
 <span class="kw">impl </span>io::Write <span class="kw">for </span>BlockingWriter {
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; io::Result&lt;usize&gt; {
-        <span class="kw">let </span>size = buf.len();
         <span class="self">self</span>.inner
             .write(Bytes::from(buf.to_vec()))
-            .map(|<span class="kw">_</span>| size)
+            .map(|n| n <span class="kw">as </span>usize)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
     }
 

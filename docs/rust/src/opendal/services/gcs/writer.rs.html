@@ -216,11 +216,6 @@
 <a href="#216" id="216">216</a>
 <a href="#217" id="217">217</a>
 <a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -361,11 +356,6 @@
             }
         };
 
-        <span class="comment">// Ignore empty bytes
-        </span><span class="kw">if </span>bs.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0</span>);
-        }
-
         <span class="self">self</span>.buffer.push(bs);
         <span class="comment">// Return directly if the buffer is not full
         </span><span class="kw">if </span><span class="self">self</span>.buffer.len() &lt;= <span class="self">self</span>.write_fixed_size {
@@ -373,7 +363,6 @@
         }
 
         <span class="kw">let </span>bs = <span class="self">self</span>.buffer.peak_exact(<span class="self">self</span>.write_fixed_size);
-        <span class="kw">let </span>size = bs.len() <span class="kw">as </span>u64;
 
         <span class="kw">match </span><span class="self">self</span>.write_part(location, bs).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
@@ -390,8 +379,9 @@
         }
     }
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="self">self</span>.write_oneshot(size, AsyncBody::Stream(s)).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="self">self</span>.write_oneshot(size, AsyncBody::Stream(Box::new(s)))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(size)
     }
 

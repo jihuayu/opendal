@@ -228,8 +228,8 @@
 </span><span class="kw">pub enum </span>WriteOperation {
     <span class="doccomment">/// Operation for [`Write::write`]
     </span>Write,
-    <span class="doccomment">/// Operation for [`Write::sink`]
-    </span>Sink,
+    <span class="doccomment">/// Operation for [`Write::pipe`]
+    </span>Pipe,
     <span class="doccomment">/// Operation for [`Write::abort`]
     </span>Abort,
     <span class="doccomment">/// Operation for [`Write::close`]
@@ -259,7 +259,7 @@
 
         <span class="kw">match </span>v {
             Write =&gt; <span class="string">&quot;Writer::write&quot;</span>,
-            Sink =&gt; <span class="string">&quot;Writer::sink&quot;</span>,
+            Pipe =&gt; <span class="string">&quot;Writer::pipe&quot;</span>,
             Abort =&gt; <span class="string">&quot;Writer::abort&quot;</span>,
             Close =&gt; <span class="string">&quot;Writer::close&quot;</span>,
             BlockingWrite =&gt; <span class="string">&quot;BlockingWriter::write&quot;</span>,
@@ -294,7 +294,7 @@
     ///
     /// It&#39;s possible that `n &lt; size`, caller should pass the remaining bytes
     /// repeatedly until all bytes has been written.
-    </span><span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
+    </span><span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;;
 
     <span class="doccomment">/// Abort the pending writer.
     </span><span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
@@ -311,7 +311,7 @@
         <span class="macro">unimplemented!</span>(<span class="string">&quot;write is required to be implemented for oio::Write&quot;</span>)
     }
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: u64, <span class="kw">_</span>: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: u64, <span class="kw">_</span>: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="prelude-val">Err</span>(Error::new(
             ErrorKind::Unsupported,
             <span class="string">&quot;output writer doesn&#39;t support sink&quot;</span>,
@@ -342,8 +342,8 @@
         (<span class="kw-2">**</span><span class="self">self</span>).write(bs).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        (<span class="kw-2">**</span><span class="self">self</span>).sink(n, s).<span class="kw">await
+    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).pipe(n, s).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {

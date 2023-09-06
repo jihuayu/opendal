@@ -169,6 +169,11 @@
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -309,11 +314,16 @@
         <span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64)
     }
 
-    <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">let </span>upload_id = <span class="self">self</span>.upload_id().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="self">self</span>.inner
-            .write_part(<span class="kw-2">&amp;</span>upload_id, <span class="self">self</span>.parts.len(), size, AsyncBody::Stream(s))
+            .write_part(
+                <span class="kw-2">&amp;</span>upload_id,
+                <span class="self">self</span>.parts.len(),
+                size,
+                AsyncBody::Stream(Box::new(s)),
+            )
             .<span class="kw">await
             </span>.map(|v| <span class="self">self</span>.parts.push(v))<span class="question-mark">?</span>;
 

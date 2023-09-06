@@ -1438,7 +1438,6 @@
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>log::warn;
-<span class="kw">use </span>tokio::sync::Mutex;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::PageOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::ReadOperation;
@@ -2323,26 +2322,27 @@
     /// The overhead is constant, which means the overhead will not increase with the size of
     /// stream. For example, if every `next` call cost 1ms, then the overhead will only take 0.005%
     /// which is acceptable.
-    </span><span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="kw">let </span>s = Arc::new(Mutex::new(s));
+    </span><span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="kw">let </span>s = oio::into_cloneable_reader_within_tokio(s);
 
         <span class="kw">let </span><span class="kw-2">mut </span>backoff = <span class="self">self</span>.builder.build();
 
         <span class="kw">loop </span>{
-            <span class="kw">match </span><span class="self">self</span>.inner.sink(size, Box::new(s.clone())).<span class="kw">await </span>{
+            <span class="kw">match </span><span class="self">self</span>.inner.pipe(size, Box::new(s.clone())).<span class="kw">await </span>{
                 <span class="prelude-val">Ok</span>(n) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(n),
                 <span class="prelude-val">Err</span>(e) <span class="kw">if </span>!e.is_temporary() =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>backoff.next() {
                     <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
                     <span class="prelude-val">Some</span>(dur) =&gt; {
                         {
-                            <span class="kw">use </span>oio::StreamExt;
+                            <span class="kw">use </span>oio::ReadExt;
 
+                            <span class="kw">let </span>s = s.clone().into_inner();
                             <span class="kw">let </span><span class="kw-2">mut </span>stream = s.lock().<span class="kw">await</span>;
-                            <span class="comment">// Try to reset this stream.
+                            <span class="comment">// Try to reset this reader.
                             //
-                            // If error happened, we will return the sink error directly and stop retry.
-                            </span><span class="kw">if </span>stream.reset().<span class="kw">await</span>.is_err() {
+                            // If error happened, we will return the pipe error directly and stop retry.
+                            </span><span class="kw">if </span>stream.seek(io::SeekFrom::Start(<span class="number">0</span>)).<span class="kw">await</span>.is_err() {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(e);
                             }
                         }
@@ -2351,7 +2351,7 @@
                             <span class="kw-2">&amp;</span>e,
                             dur,
                             <span class="kw-2">&amp;</span>[
-                                (<span class="string">&quot;operation&quot;</span>, WriteOperation::Sink.into_static()),
+                                (<span class="string">&quot;operation&quot;</span>, WriteOperation::Pipe.into_static()),
                                 (<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.path),
                             ],
                         );

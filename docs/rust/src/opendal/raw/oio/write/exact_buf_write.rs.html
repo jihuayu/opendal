@@ -270,22 +270,6 @@
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -306,10 +290,10 @@
 </span><span class="kw">use </span>std::cmp::min;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>bytes::{Buf, BufMut, Bytes, BytesMut};
+<span class="kw">use </span>tokio::io::ReadBuf;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamExt;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::Streamer;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::ReadExt;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -329,9 +313,7 @@
 
     <span class="doccomment">/// The size for buffer, we will flush the underlying storage at the size of this buffer.
     </span>buffer_size: usize,
-    buffer: oio::ChunkedCursor,
-
-    buffer_stream: <span class="prelude-ty">Option</span>&lt;Streamer&gt;,
+    buffer: Buffer,
 }
 
 <span class="kw">impl</span>&lt;W: oio::Write&gt; ExactBufWriter&lt;W&gt; {
@@ -340,133 +322,108 @@
         <span class="self">Self </span>{
             inner,
             buffer_size,
-            buffer: oio::ChunkedCursor::new(),
-            buffer_stream: <span class="prelude-val">None</span>,
-        }
-    }
-
-    <span class="doccomment">/// Next bytes is used to fetch bytes from buffer or input streamer.
-    ///
-    /// We need this function because we need to make sure our write is reentrant.
-    /// We can&#39;t mutate state unless we are sure that the write is successful.
-    </span><span class="kw">async fn </span>next_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: <span class="kw-2">&amp;mut </span>Streamer) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Bytes&gt;&gt; {
-        <span class="kw">match </span><span class="self">self</span>.buffer_stream.as_mut() {
-            <span class="prelude-val">None </span>=&gt; s.next().<span class="kw">await</span>,
-            <span class="prelude-val">Some</span>(bs) =&gt; <span class="kw">match </span>bs.next().<span class="kw">await </span>{
-                <span class="prelude-val">None </span>=&gt; {
-                    <span class="self">self</span>.buffer_stream = <span class="prelude-val">None</span>;
-                    s.next().<span class="kw">await
-                </span>}
-                <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Some</span>(v),
-            },
-        }
-    }
-
-    <span class="kw">fn </span>chain_stream(<span class="kw-2">&amp;mut </span><span class="self">self</span>, s: Streamer) {
-        <span class="self">self</span>.buffer_stream = <span class="kw">match </span><span class="self">self</span>.buffer_stream.take() {
-            <span class="prelude-val">Some</span>(stream) =&gt; <span class="prelude-val">Some</span>(Box::new(stream.chain(s))),
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(s),
+            buffer: Buffer::Filling(BytesMut::new()),
         }
     }
 }
 
+<span class="kw">enum </span>Buffer {
+    Filling(BytesMut),
+    Consuming(Bytes),
+}
+
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;W: oio::Write&gt; oio::Write <span class="kw">for </span>ExactBufWriter&lt;W&gt; {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="self">self</span>.sink(bs.len() <span class="kw">as </span>u64, Box::new(oio::Cursor::from(bs)))
-            .<span class="kw">await
-    </span>}
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="kw">loop </span>{
+            <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
+                Buffer::Filling(fill) =&gt; {
+                    <span class="kw">if </span>fill.len() &gt;= <span class="self">self</span>.buffer_size {
+                        <span class="self">self</span>.buffer = Buffer::Consuming(fill.split().freeze());
+                        <span class="kw">continue</span>;
+                    }
 
-    <span class="doccomment">/// # TODO
-    ///
-    /// We know every stream size, we can collect them into a buffer without chain them every time.
-    </span><span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: u64, <span class="kw-2">mut </span>s: Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="kw">if </span><span class="self">self</span>.buffer.len() &gt;= <span class="self">self</span>.buffer_size {
-            <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buffer.clone();
-            <span class="kw">let </span>to_write = buf.split_to(<span class="self">self</span>.buffer_size);
-            <span class="kw">return </span><span class="self">self
-                </span>.inner
-                .sink(to_write.len() <span class="kw">as </span>u64, Box::new(to_write))
-                .<span class="kw">await
-                </span><span class="comment">// Replace buffer with remaining if the write is successful.
-                </span>.map(|v| {
-                    <span class="self">self</span>.buffer = buf;
-                    <span class="self">self</span>.chain_stream(s);
-                    v
-                });
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buffer.clone();
-        <span class="kw">while </span>buf.len() &lt; <span class="self">self</span>.buffer_size {
-            <span class="kw">let </span>bs = <span class="self">self</span>.next_bytes(<span class="kw-2">&amp;mut </span>s).<span class="kw">await</span>.transpose()<span class="question-mark">?</span>;
-            <span class="kw">match </span>bs {
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
-                <span class="prelude-val">Some</span>(bs) =&gt; buf.push(bs),
+                    <span class="kw">let </span>size = min(<span class="self">self</span>.buffer_size - fill.len(), bs.len());
+                    fill.extend_from_slice(<span class="kw-2">&amp;</span>bs[..size]);
+                    bs.advance(size);
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64);
+                }
+                Buffer::Consuming(consume) =&gt; {
+                    <span class="comment">// Make sure filled buffer has been flushed.
+                    //
+                    // TODO: maybe we can re-fill it after a successful write.
+                    </span><span class="kw">while </span>!consume.is_empty() {
+                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+                        consume.advance(n <span class="kw">as </span>usize);
+                    }
+                    <span class="self">self</span>.buffer = Buffer::Filling(BytesMut::new());
+                }
             }
         }
+    }
 
-        <span class="comment">// Return directly if the buffer is not full.
-        //
-        // We don&#39;t need to chain stream here because it must be consumed.
-        </span><span class="kw">if </span>buf.len() &lt; <span class="self">self</span>.buffer_size {
-            <span class="kw">let </span>size = buf.len() <span class="kw">as </span>u64;
-            <span class="self">self</span>.buffer = buf;
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(size);
+    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: u64, <span class="kw-2">mut </span>s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+        <span class="kw">loop </span>{
+            <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
+                Buffer::Filling(fill) =&gt; {
+                    <span class="kw">if </span>fill.len() &gt;= <span class="self">self</span>.buffer_size {
+                        <span class="self">self</span>.buffer = Buffer::Consuming(fill.split().freeze());
+                        <span class="kw">continue</span>;
+                    }
+
+                    <span class="comment">// Reserve to buffer size.
+                    </span>fill.reserve(<span class="self">self</span>.buffer_size - fill.len());
+                    <span class="kw">let </span>dst = fill.spare_capacity_mut();
+                    <span class="kw">let </span>dst_len = dst.len();
+                    <span class="kw">let </span><span class="kw-2">mut </span>buf = ReadBuf::uninit(dst);
+
+                    <span class="comment">// Safety: the input buffer is created with_capacity(length).
+                    </span><span class="kw">unsafe </span>{ buf.assume_init(dst_len) };
+
+                    <span class="kw">let </span>n = s.read(buf.initialize_unfilled()).<span class="kw">await</span><span class="question-mark">?</span>;
+
+                    <span class="comment">// Safety: read makes sure this buffer has been filled.
+                    </span><span class="kw">unsafe </span>{ fill.advance_mut(n) };
+
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(n <span class="kw">as </span>u64);
+                }
+                Buffer::Consuming(consume) =&gt; {
+                    <span class="comment">// Make sure filled buffer has been flushed.
+                    //
+                    // TODO: maybe we can re-fill it after a successful write.
+                    </span><span class="kw">while </span>!consume.is_empty() {
+                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+                        consume.advance(n <span class="kw">as </span>usize);
+                    }
+                    <span class="self">self</span>.buffer = Buffer::Filling(BytesMut::new());
+                }
+            }
         }
-
-        <span class="kw">let </span>to_write = buf.split_to(<span class="self">self</span>.buffer_size);
-        <span class="self">self</span>.inner
-            .sink(to_write.len() <span class="kw">as </span>u64, Box::new(to_write))
-            .<span class="kw">await
-            </span><span class="comment">// Replace buffer with remaining if the write is successful.
-            </span>.map(|v| {
-                <span class="self">self</span>.buffer = buf;
-                <span class="self">self</span>.chain_stream(s);
-                v
-            })
     }
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.buffer.clear();
-        <span class="self">self</span>.buffer_stream = <span class="prelude-val">None</span>;
-
+        <span class="self">self</span>.buffer = Buffer::Filling(BytesMut::new());
         <span class="self">self</span>.inner.abort().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(stream) = <span class="self">self</span>.buffer_stream.as_mut() {
-            <span class="kw">let </span>bs = stream.next().<span class="kw">await</span>.transpose()<span class="question-mark">?</span>;
-            <span class="kw">match </span>bs {
-                <span class="prelude-val">None </span>=&gt; {
-                    <span class="self">self</span>.buffer_stream = <span class="prelude-val">None</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
+                Buffer::Filling(fill) =&gt; {
+                    <span class="self">self</span>.buffer = Buffer::Consuming(fill.split().freeze());
+                    <span class="kw">continue</span>;
                 }
-                <span class="prelude-val">Some</span>(bs) =&gt; {
-                    <span class="self">self</span>.buffer.push(bs);
+                Buffer::Consuming(consume) =&gt; {
+                    <span class="comment">// Make sure filled buffer has been flushed.
+                    //
+                    // TODO: maybe we can re-fill it after a successful write.
+                    </span><span class="kw">while </span>!consume.is_empty() {
+                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+                        consume.advance(n <span class="kw">as </span>usize);
+                    }
+                    <span class="kw">break</span>;
                 }
             }
-
-            <span class="kw">if </span><span class="self">self</span>.buffer.len() &gt;= <span class="self">self</span>.buffer_size {
-                <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buffer.clone();
-                <span class="kw">let </span>to_write = buf.split_to(<span class="self">self</span>.buffer_size);
-                <span class="self">self</span>.inner
-                    .sink(to_write.len() <span class="kw">as </span>u64, Box::new(to_write))
-                    .<span class="kw">await
-                    </span><span class="comment">// Replace buffer with remaining if the write is successful.
-                    </span>.map(|<span class="kw">_</span>| {
-                        <span class="self">self</span>.buffer = buf;
-                    })<span class="question-mark">?</span>;
-            }
-        }
-
-        <span class="kw">while </span>!<span class="self">self</span>.buffer.is_empty() {
-            <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buffer.clone();
-            <span class="kw">let </span>to_write = buf.split_to(min(<span class="self">self</span>.buffer_size, buf.len()));
-
-            <span class="self">self</span>.inner
-                .sink(to_write.len() <span class="kw">as </span>u64, Box::new(to_write))
-                .<span class="kw">await
-                </span><span class="comment">// Replace buffer with remaining if the write is successful.
-                </span>.map(|<span class="kw">_</span>| <span class="self">self</span>.buffer = buf)<span class="question-mark">?</span>;
         }
 
         <span class="self">self</span>.inner.close().<span class="kw">await
@@ -475,6 +432,7 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>futures::AsyncReadExt;
     <span class="kw">use </span>log::debug;
     <span class="kw">use </span>pretty_assertions::assert_eq;
     <span class="kw">use </span>rand::thread_rng;
@@ -484,7 +442,6 @@
     <span class="kw">use </span>sha2::Sha256;
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamExt;
     <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Write;
 
     <span class="kw">struct </span>MockWriter {
@@ -500,10 +457,11 @@
             <span class="prelude-val">Ok</span>(bs.len() <span class="kw">as </span>u64)
         }
 
-        <span class="kw">async fn </span>sink(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: Streamer) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-            <span class="kw">let </span>bs = s.collect().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, <span class="kw-2">mut </span>s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>bs = <span class="macro">vec!</span>[];
+            s.read_to_end(<span class="kw-2">&amp;mut </span>bs).<span class="kw">await</span>.unwrap();
             <span class="macro">assert_eq!</span>(bs.len() <span class="kw">as </span>u64, size);
-            <span class="self">self</span>.write(bs).<span class="kw">await
+            <span class="self">self</span>.write(bs.into()).<span class="kw">await
         </span>}
 
         <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -529,7 +487,12 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>w = ExactBufWriter::new(MockWriter { buf: <span class="macro">vec!</span>[] }, <span class="number">10</span>);
 
-        w.write(Bytes::from(expected.clone())).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>bs = Bytes::from(expected.clone());
+        <span class="kw">while </span>!bs.is_empty() {
+            <span class="kw">let </span>n = w.write(bs.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+            bs.advance(n <span class="kw">as </span>usize);
+        }
+
         w.close().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="macro">assert_eq!</span>(w.inner.buf.len(), expected.len());
@@ -562,7 +525,12 @@
             rng.fill_bytes(<span class="kw-2">&amp;mut </span>content);
 
             expected.extend_from_slice(<span class="kw-2">&amp;</span>content);
-            writer.write(Bytes::from(content)).<span class="kw">await</span><span class="question-mark">?</span>;
+
+            <span class="kw">let </span><span class="kw-2">mut </span>bs = Bytes::from(content.clone());
+            <span class="kw">while </span>!bs.is_empty() {
+                <span class="kw">let </span>n = writer.write(bs.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+                bs.advance(n <span class="kw">as </span>usize);
+            }
         }
         writer.close().<span class="kw">await</span><span class="question-mark">?</span>;
 
