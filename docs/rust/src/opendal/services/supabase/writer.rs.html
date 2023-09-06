@@ -174,7 +174,7 @@
         <span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64)
     }
 
-    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: u64, _s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>copy_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: u64, _s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="prelude-val">Err</span>(Error::new(
             ErrorKind::Unsupported,
             <span class="string">&quot;Write::sink is not supported&quot;</span>,

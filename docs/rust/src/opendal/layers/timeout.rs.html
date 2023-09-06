@@ -721,14 +721,14 @@
             })<span class="question-mark">?
     </span>}
 
-    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>copy_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">let </span>timeout = <span class="self">self</span>.io_timeout(size);
 
-        tokio::time::timeout(timeout, <span class="self">self</span>.inner.pipe(size, s))
+        tokio::time::timeout(timeout, <span class="self">self</span>.inner.copy_from(size, s))
             .<span class="kw">await
             </span>.map_err(|<span class="kw">_</span>| {
                 Error::new(ErrorKind::Unexpected, <span class="string">&quot;operation timeout&quot;</span>)
-                    .with_operation(WriteOperation::Pipe)
+                    .with_operation(WriteOperation::CopyFrom)
                     .with_context(<span class="string">&quot;timeout&quot;</span>, timeout.as_secs_f64().to_string())
                     .set_temporary()
             })<span class="question-mark">?

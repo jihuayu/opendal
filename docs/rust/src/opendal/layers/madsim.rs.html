@@ -791,7 +791,7 @@
         }
     }
 
-    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="kw">crate</span>::Result&lt;u64&gt; {
+    <span class="kw">async fn </span>copy_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="kw">crate</span>::Result&lt;u64&gt; {
         <span class="prelude-val">Err</span>(Error::new(
             ErrorKind::Unsupported,
             <span class="string">&quot;will be supported in the future&quot;</span>,

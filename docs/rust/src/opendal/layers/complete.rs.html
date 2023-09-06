@@ -1728,7 +1728,7 @@
         <span class="prelude-val">Ok</span>(n)
     }
 
-    <span class="kw">async fn </span>pipe(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>copy_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: u64, s: oio::Reader) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(total_size) = <span class="self">self</span>.size {
             <span class="kw">if </span><span class="self">self</span>.written + size &gt; total_size {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
@@ -1744,7 +1744,7 @@
         <span class="kw">let </span>w = <span class="self">self</span>.inner.as_mut().ok_or_else(|| {
             Error::new(ErrorKind::Unexpected, <span class="string">&quot;writer has been closed or aborted&quot;</span>)
         })<span class="question-mark">?</span>;
-        <span class="kw">let </span>n = w.pipe(size, s).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>n = w.copy_from(size, s).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.written += n;
         <span class="prelude-val">Ok</span>(n)
     }

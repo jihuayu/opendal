@@ -569,7 +569,7 @@
     {
         <span class="kw">if let </span>State::Idle(<span class="prelude-val">Some</span>(w)) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
             <span class="kw">let </span>r = Box::new(oio::into_read_from_stream(sink_from.map_ok(|v| v.into())));
-            w.pipe(size, r).<span class="kw">await
+            w.copy_from(size, r).<span class="kw">await
         </span>} <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;writer state invalid while sink, expect Idle, actual {}&quot;</span>,
@@ -617,7 +617,7 @@
                 oio::into_read_from_file(read_from, <span class="number">0</span>, size),
                 <span class="number">64 </span>* <span class="number">1024</span>,
             ));
-            w.pipe(size, r).<span class="kw">await
+            w.copy_from(size, r).<span class="kw">await
         </span>} <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;writer state invalid while copy, expect Idle, actual {}&quot;</span>,
