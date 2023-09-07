@@ -2215,11 +2215,11 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;R: oio::Write, I: RetryInterceptor&gt; oio::Write <span class="kw">for </span>RetryWrapper&lt;R, I&gt; {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>backoff = <span class="self">self</span>.builder.build();
 
         <span class="kw">loop </span>{
-            <span class="kw">match </span><span class="self">self</span>.inner.write(bs.clone()).<span class="kw">await </span>{
+            <span class="kw">match </span><span class="self">self</span>.inner.write(bs).<span class="kw">await </span>{
                 <span class="prelude-val">Ok</span>(v) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(v),
                 <span class="prelude-val">Err</span>(e) <span class="kw">if </span>!e.is_temporary() =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">match </span>backoff.next() {
@@ -2295,8 +2295,8 @@
 }
 
 <span class="kw">impl</span>&lt;R: oio::BlockingWrite, I: RetryInterceptor&gt; oio::BlockingWrite <span class="kw">for </span>RetryWrapper&lt;R, I&gt; {
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        { || <span class="self">self</span>.inner.write(bs.clone()) }
+    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        { || <span class="self">self</span>.inner.write(bs) }
             .retry(<span class="kw-2">&amp;</span><span class="self">self</span>.builder)
             .when(|e| e.is_temporary())
             .notify(|err, dur| {

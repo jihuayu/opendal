@@ -1545,7 +1545,6 @@
 <a href="#1545" id="1545">1545</a>
 <a href="#1546" id="1546">1546</a>
 <a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2800,10 +2799,10 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;W: oio::Write&gt; oio::Write <span class="kw">for </span>LoggingWriter&lt;W&gt; {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.write(bs).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(n) =&gt; {
-                <span class="self">self</span>.written += n;
+                <span class="self">self</span>.written += n <span class="kw">as </span>u64;
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write {}B&quot;</span>,
@@ -2897,11 +2896,10 @@
 }
 
 <span class="kw">impl</span>&lt;W: oio::BlockingWrite&gt; oio::BlockingWrite <span class="kw">for </span>LoggingWriter&lt;W&gt; {
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="kw">let </span>size = bs.len();
+    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="kw">match </span><span class="self">self</span>.inner.write(bs) {
             <span class="prelude-val">Ok</span>(n) =&gt; {
-                <span class="self">self</span>.written += n;
+                <span class="self">self</span>.written += n <span class="kw">as </span>u64;
                 <span class="macro">trace!</span>(
                     target: LOGGING_TARGET,
                     <span class="string">&quot;service={} operation={} path={} written={} -&gt; data write {}B&quot;</span>,
@@ -2909,7 +2907,7 @@
                     WriteOperation::BlockingWrite,
                     <span class="self">self</span>.path,
                     <span class="self">self</span>.written,
-                    size
+                    n
                 );
                 <span class="prelude-val">Ok</span>(n)
             }

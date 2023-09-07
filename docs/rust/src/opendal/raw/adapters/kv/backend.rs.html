@@ -429,6 +429,12 @@
 <a href="#429" id="429">429</a>
 <a href="#430" id="430">430</a>
 <a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -449,7 +455,6 @@
 </span><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bytes::Bytes;
 
 <span class="kw">use </span><span class="kw">super</span>::Adapter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -821,11 +826,14 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;S: Adapter&gt; oio::Write <span class="kw">for </span>KvWriter&lt;S&gt; {
     <span class="comment">// TODO: we need to support append in the future.
-    </span><span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="kw">let </span>size = bs.len();
-        <span class="self">self</span>.buf = <span class="prelude-val">Some</span>(bs.into());
+    </span><span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>size = bs.chunk().len();
 
-        <span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64)
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buf.take().unwrap_or_else(|| Vec::with_capacity(size));
+        buf.extend_from_slice(bs.chunk());
+        <span class="self">self</span>.buf = <span class="prelude-val">Some</span>(buf);
+
+        <span class="prelude-val">Ok</span>(size)
     }
 
     <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -845,11 +853,15 @@
 }
 
 <span class="kw">impl</span>&lt;S: Adapter&gt; oio::BlockingWrite <span class="kw">for </span>KvWriter&lt;S&gt; {
-    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-        <span class="kw">let </span>size = bs.len();
-        <span class="self">self</span>.buf = <span class="prelude-val">Some</span>(bs.into());
+    <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>size = bs.chunk().len();
 
-        <span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64)
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="self">self</span>.buf.take().unwrap_or_else(|| Vec::with_capacity(size));
+        buf.extend_from_slice(bs.chunk());
+
+        <span class="self">self</span>.buf = <span class="prelude-val">Some</span>(buf);
+
+        <span class="prelude-val">Ok</span>(size)
     }
 
     <span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {

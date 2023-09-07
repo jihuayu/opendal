@@ -467,13 +467,14 @@
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
-<span class="kw">use </span>bytes::{Buf, Bytes};
+<span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>futures::AsyncWrite;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>futures::TryStreamExt;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Write;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteBuf;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -536,10 +537,9 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>bs = bs.into();
-
-        <span class="kw">while </span>!bs.is_empty() {
-            <span class="kw">let </span>n = w.write(bs.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-            bs.advance(n <span class="kw">as </span>usize);
+        <span class="kw">while </span>bs.remaining() &gt; <span class="number">0 </span>{
+            <span class="kw">let </span>n = w.write(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span><span class="question-mark">?</span>;
+            bs.advance(n);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -594,10 +594,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>written = <span class="number">0</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(bs) = sink_from.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>bs = bs.into();
-            <span class="kw">while </span>bs.has_remaining() {
-                <span class="kw">let </span>n = w.write(bs.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-                bs.advance(n <span class="kw">as </span>usize);
-                written += n;
+            <span class="kw">while </span>bs.remaining() &gt; <span class="number">0 </span>{
+                <span class="kw">let </span>n = w.write(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span><span class="question-mark">?</span>;
+                bs.advance(n);
+                written += n <span class="kw">as </span>u64;
             }
         }
         <span class="prelude-val">Ok</span>(written)
@@ -707,10 +707,11 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>w = w
                         .take()
                         .expect(<span class="string">&quot;invalid state of writer: Idle state with empty write&quot;</span>);
-                    <span class="kw">let </span>bs = Bytes::from(buf.to_vec());
+                    <span class="comment">// FIXME: This will the buf everytime, we should avoid this.
+                    </span><span class="kw">let </span>bs = Bytes::copy_from_slice(buf);
                     <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                        <span class="kw">let </span>n = w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>((n <span class="kw">as </span>usize, w))
+                        <span class="kw">let </span>n = w.write(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>((n, w))
                     };
                     <span class="self">self</span>.state = State::Write(Box::pin(fut));
                 }
@@ -779,10 +780,11 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>w = w
                         .take()
                         .expect(<span class="string">&quot;invalid state of writer: Idle state with empty write&quot;</span>);
-                    <span class="kw">let </span>bs = Bytes::from(buf.to_vec());
+                    <span class="comment">// FIXME: This will the buf everytime, we should avoid this.
+                    </span><span class="kw">let </span>bs = Bytes::copy_from_slice(buf);
                     <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                        <span class="kw">let </span>n = w.write(bs).<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>((n <span class="kw">as </span>usize, w))
+                        <span class="kw">let </span>n = w.write(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>((n, w))
                     };
                     <span class="self">self</span>.state = State::Write(Box::pin(fut));
                 }
@@ -861,10 +863,9 @@
     <span class="doccomment">/// Write into inner writer.
     </span><span class="kw">pub fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw">impl </span>Into&lt;Bytes&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>bs = bs.into();
-
-        <span class="kw">while </span>!bs.is_empty() {
-            <span class="kw">let </span>n = <span class="self">self</span>.inner.write(bs.clone())<span class="question-mark">?</span>;
-            bs.advance(n <span class="kw">as </span>usize);
+        <span class="kw">while </span>bs.remaining() &gt; <span class="number">0 </span>{
+            <span class="kw">let </span>n = <span class="self">self</span>.inner.write(<span class="kw-2">&amp;</span>bs)<span class="question-mark">?</span>;
+            bs.advance(n);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -879,8 +880,7 @@
 <span class="kw">impl </span>io::Write <span class="kw">for </span>BlockingWriter {
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; io::Result&lt;usize&gt; {
         <span class="self">self</span>.inner
-            .write(Bytes::from(buf.to_vec()))
-            .map(|n| n <span class="kw">as </span>usize)
+            .write(<span class="kw-2">&amp;</span>buf)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
     }
 

@@ -99,6 +99,9 @@
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -117,7 +120,6 @@
 // under the License.
 
 </span><span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bytes::Bytes;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -179,15 +181,19 @@
 <span class="kw">where
     </span>W: AppendObjectWrite,
 {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="kw">let </span>offset = <span class="self">self</span>.offset().<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let </span>size = bs.len() <span class="kw">as </span>u64;
+        <span class="kw">let </span>size = bs.remaining();
 
         <span class="self">self</span>.inner
-            .append(offset, size, AsyncBody::Bytes(bs))
+            .append(
+                offset,
+                size <span class="kw">as </span>u64,
+                AsyncBody::Bytes(bs.copy_to_bytes(size)),
+            )
             .<span class="kw">await
-            </span>.map(|<span class="kw">_</span>| <span class="self">self</span>.offset = <span class="prelude-val">Some</span>(offset + size))<span class="question-mark">?</span>;
+            </span>.map(|<span class="kw">_</span>| <span class="self">self</span>.offset = <span class="prelude-val">Some</span>(offset + size <span class="kw">as </span>u64))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(size)
     }

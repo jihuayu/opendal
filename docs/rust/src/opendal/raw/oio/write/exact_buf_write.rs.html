@@ -237,6 +237,8 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -257,8 +259,9 @@
 </span><span class="kw">use </span>std::cmp::min;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bytes::{Buf, Bytes, BytesMut};
+<span class="kw">use </span>bytes::{Bytes, BytesMut};
 
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteBuf;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -300,21 +303,20 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;W: oio::Write&gt; oio::Write <span class="kw">for </span>ExactBufWriter&lt;W&gt; {
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
                 Buffer::Empty =&gt; {
-                    <span class="kw">if </span>bs.len() &gt;= <span class="self">self</span>.buffer_size {
-                        bs.truncate(<span class="self">self</span>.buffer_size);
-                        <span class="self">self</span>.buffer = Buffer::Consuming(bs);
-                        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.buffer_size <span class="kw">as </span>u64);
+                    <span class="kw">if </span>bs.remaining() &gt;= <span class="self">self</span>.buffer_size {
+                        <span class="self">self</span>.buffer = Buffer::Consuming(bs.copy_to_bytes(<span class="self">self</span>.buffer_size));
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.buffer_size);
                     }
 
-                    <span class="kw">let </span>size = bs.len() <span class="kw">as </span>u64;
-                    <span class="kw">let </span><span class="kw-2">mut </span>fill = BytesMut::with_capacity(bs.len());
-                    fill.extend_from_slice(<span class="kw-2">&amp;</span>bs);
+                    <span class="kw">let </span>chunk = bs.chunk();
+                    <span class="kw">let </span><span class="kw-2">mut </span>fill = BytesMut::with_capacity(chunk.len());
+                    fill.extend_from_slice(chunk);
                     <span class="self">self</span>.buffer = Buffer::Filling(fill);
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(size);
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(chunk.len());
                 }
                 Buffer::Filling(fill) =&gt; {
                     <span class="kw">if </span>fill.len() &gt;= <span class="self">self</span>.buffer_size {
@@ -322,18 +324,17 @@
                         <span class="kw">continue</span>;
                     }
 
-                    <span class="kw">let </span>size = min(<span class="self">self</span>.buffer_size - fill.len(), bs.len());
-                    fill.extend_from_slice(<span class="kw-2">&amp;</span>bs[..size]);
-                    bs.advance(size);
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64);
+                    <span class="kw">let </span>size = min(<span class="self">self</span>.buffer_size - fill.len(), bs.chunk().len());
+                    fill.extend_from_slice(<span class="kw-2">&amp;</span>bs.chunk()[..size]);
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(size);
                 }
                 Buffer::Consuming(consume) =&gt; {
                     <span class="comment">// Make sure filled buffer has been flushed.
                     //
                     // TODO: maybe we can re-fill it after a successful write.
                     </span><span class="kw">while </span>!consume.is_empty() {
-                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-                        consume.advance(n <span class="kw">as </span>usize);
+                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume).<span class="kw">await</span><span class="question-mark">?</span>;
+                        consume.advance(n);
                     }
                     <span class="self">self</span>.buffer = Buffer::Empty;
                 }
@@ -359,8 +360,8 @@
                     //
                     // TODO: maybe we can re-fill it after a successful write.
                     </span><span class="kw">while </span>!consume.is_empty() {
-                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(consume.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-                        consume.advance(n <span class="kw">as </span>usize);
+                        <span class="kw">let </span>n = <span class="self">self</span>.inner.write(<span class="kw-2">&amp;</span>consume).<span class="kw">await</span><span class="question-mark">?</span>;
+                        consume.advance(n);
                     }
                     <span class="self">self</span>.buffer = Buffer::Empty;
                     <span class="kw">break</span>;
@@ -391,11 +392,14 @@
 
     <span class="attr">#[async_trait]
     </span><span class="kw">impl </span>Write <span class="kw">for </span>MockWriter {
-        <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-            <span class="macro">debug!</span>(<span class="string">&quot;test_fuzz_exact_buf_writer: flush size: {}&quot;</span>, bs.len());
+        <span class="kw">async fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+            <span class="macro">debug!</span>(
+                <span class="string">&quot;test_fuzz_exact_buf_writer: flush size: {}&quot;</span>,
+                bs.chunk().len()
+            );
 
-            <span class="self">self</span>.buf.extend_from_slice(<span class="kw-2">&amp;</span>bs);
-            <span class="prelude-val">Ok</span>(bs.len() <span class="kw">as </span>u64)
+            <span class="self">self</span>.buf.extend_from_slice(bs.chunk());
+            <span class="prelude-val">Ok</span>(bs.chunk().len())
         }
 
         <span class="kw">async fn </span>abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -423,8 +427,8 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>bs = Bytes::from(expected.clone());
         <span class="kw">while </span>!bs.is_empty() {
-            <span class="kw">let </span>n = w.write(bs.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-            bs.advance(n <span class="kw">as </span>usize);
+            <span class="kw">let </span>n = w.write(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span><span class="question-mark">?</span>;
+            bs.advance(n);
         }
 
         w.close().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -462,7 +466,7 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>bs = Bytes::from(content.clone());
             <span class="kw">while </span>!bs.is_empty() {
-                <span class="kw">let </span>n = writer.write(bs.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>n = writer.write(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span><span class="question-mark">?</span>;
                 bs.advance(n <span class="kw">as </span>usize);
             }
         }
