@@ -443,6 +443,7 @@
 <a href="#443" id="443">443</a>
 <a href="#444" id="444">444</a>
 <a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -577,9 +578,9 @@
     ///     Ok(())
     /// }
     /// ```
-    </span><span class="kw">pub async fn </span>sink&lt;S, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>sink_from: S) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;
+    </span><span class="kw">pub async fn </span>sink&lt;S, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sink_from: S) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;
     <span class="kw">where
-        </span>S: futures::Stream&lt;Item = <span class="prelude-ty">Result</span>&lt;T&gt;&gt; + Send + Sync + Unpin + <span class="lifetime">&#39;static</span>,
+        </span>S: futures::Stream&lt;Item = <span class="prelude-ty">Result</span>&lt;T&gt;&gt;,
         T: Into&lt;Bytes&gt;,
     {
         <span class="kw">let </span>w = <span class="kw">if let </span>State::Idle(<span class="prelude-val">Some</span>(w)) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
@@ -591,6 +592,7 @@
             );
         };
 
+        <span class="kw">let </span><span class="kw-2">mut </span>sink_from = Box::pin(sink_from);
         <span class="kw">let </span><span class="kw-2">mut </span>written = <span class="number">0</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(bs) = sink_from.try_next().<span class="kw">await</span><span class="question-mark">? </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>bs = bs.into();
@@ -635,7 +637,7 @@
     /// ```
     </span><span class="kw">pub async fn </span>copy&lt;R&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, read_from: R) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt;
     <span class="kw">where
-        </span>R: futures::AsyncRead + Send + Sync + Unpin + <span class="lifetime">&#39;static</span>,
+        </span>R: futures::AsyncRead,
     {
         futures::io::copy(read_from, <span class="self">self</span>).<span class="kw">await</span>.map_err(|err| {
             Error::new(ErrorKind::Unexpected, <span class="string">&quot;copy into writer failed&quot;</span>)
