@@ -281,6 +281,10 @@
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
 <a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -323,7 +327,7 @@
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>GdriveBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
-    <span class="kw">type </span>Writer = GdriveWriter;
+    <span class="kw">type </span>Writer = oio::OneShotWriter&lt;GdriveWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Pager = ();
     <span class="kw">type </span>BlockingPager = ();
@@ -477,7 +481,11 @@
 
         <span class="prelude-val">Ok</span>((
             RpWrite::default(),
-            GdriveWriter::new(<span class="self">self</span>.core.clone(), String::from(path), file_id),
+            oio::OneShotWriter::new(GdriveWriter::new(
+                <span class="self">self</span>.core.clone(),
+                String::from(path),
+                file_id,
+            )),
         ))
     }
 
