@@ -120,7 +120,7 @@
     <span class="kw">fn </span>poll_abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
         Poll::Ready(<span class="prelude-val">Err</span>(Error::new(
             ErrorKind::Unsupported,
-            <span class="string">&quot;HdfsWriter doesn&#39;t support abort&quot;</span>,
+            <span class="string">&quot;SftpWriter doesn&#39;t support abort&quot;</span>,
         )))
     }
 }
