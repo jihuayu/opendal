@@ -613,6 +613,9 @@
 <a href="#613" id="613">613</a>
 <a href="#614" id="614">614</a>
 <a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -913,6 +916,9 @@
                 AsyncBody::Empty =&gt; {}
                 AsyncBody::Bytes(bytes) =&gt; {
                     media_part = media_part.content(bytes);
+                }
+                AsyncBody::ChunkedBytes(bs) =&gt; {
+                    media_part = media_part.stream(bs.len() <span class="kw">as </span>u64, Box::new(bs));
                 }
                 AsyncBody::Stream(stream) =&gt; {
                     media_part = media_part.stream(size.unwrap(), stream);

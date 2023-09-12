@@ -664,6 +664,12 @@
 <a href="#664" id="664">664</a>
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -681,7 +687,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::cmp::max;
+<span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::sync::Arc;
@@ -1003,7 +1010,7 @@
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>GcsBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
-    <span class="kw">type </span>Writer = GcsWriters;
+    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;GcsWriters, oio::ExactBufWriter&lt;GcsWriters&gt;&gt;;
     <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Pager = GcsPager;
     <span class="kw">type </span>BlockingPager = ();
@@ -1086,10 +1093,15 @@
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="kw">let </span>w = GcsWriter::new(<span class="self">self</span>.core.clone(), path, args.clone());
-        <span class="kw">let </span>w = <span class="kw">if </span>args.content_length().is_some() {
-            GcsWriters::One(oio::OneShotWriter::new(w))
+        <span class="kw">let </span>w = oio::RangeWriter::new(w);
+
+        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
+            <span class="comment">// FIXME: we should align with 256KiB instead.
+            </span><span class="kw">let </span>buffer_size = max(DEFAULT_WRITE_FIXED_SIZE, buffer_size);
+
+            oio::TwoWaysWriter::Two(oio::ExactBufWriter::new(w, buffer_size))
         } <span class="kw">else </span>{
-            GcsWriters::Two(oio::RangeWriter::new(w))
+            oio::TwoWaysWriter::One(w)
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))
