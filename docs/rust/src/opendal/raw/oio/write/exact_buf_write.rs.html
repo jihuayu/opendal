@@ -317,7 +317,7 @@
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer {
                 Buffer::Empty =&gt; {
                     <span class="kw">if </span>bs.remaining() &gt;= <span class="self">self</span>.buffer_size {
-                        <span class="self">self</span>.buffer = Buffer::Consuming(bs.copy_to_bytes(<span class="self">self</span>.buffer_size));
+                        <span class="self">self</span>.buffer = Buffer::Consuming(bs.bytes(<span class="self">self</span>.buffer_size));
                         <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(<span class="self">self</span>.buffer_size));
                     }
 

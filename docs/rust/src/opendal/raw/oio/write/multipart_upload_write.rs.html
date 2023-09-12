@@ -492,7 +492,7 @@
                             <span class="comment">// Fill cache with the first write.
                             </span><span class="kw">if </span><span class="self">self</span>.cache.is_none() {
                                 <span class="kw">let </span>size = bs.remaining();
-                                <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(bs.copy_to_bytes(size));
+                                <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(bs.bytes(size));
                                 <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                             }
 
@@ -515,7 +515,7 @@
                     <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
                     <span class="comment">// Replace the cache when last write succeeded
                     </span><span class="kw">let </span>size = bs.remaining();
-                    <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(bs.copy_to_bytes(size));
+                    <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(bs.bytes(size));
                     <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                 }
                 State::Close(<span class="kw">_</span>) =&gt; {

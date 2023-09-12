@@ -160,7 +160,7 @@
             }
 
             <span class="kw">let </span>size = bs.remaining();
-            <span class="kw">let </span>bs = bs.copy_to_bytes(size);
+            <span class="kw">let </span>bs = bs.bytes(size);
 
             <span class="kw">let </span>path = <span class="self">self</span>.path.clone();
             <span class="kw">let </span>backend = <span class="self">self</span>.backend.clone();

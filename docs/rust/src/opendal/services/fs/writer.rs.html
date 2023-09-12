@@ -135,6 +135,7 @@
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -198,7 +199,7 @@
         <span class="kw">let </span>f = <span class="self">self</span>.f.as_mut().expect(<span class="string">&quot;FsWriter must be initialized&quot;</span>);
 
         Pin::new(f)
-            .poll_write(cx, bs.chunk())
+            .poll_write_vectored(cx, <span class="kw-2">&amp;</span>bs.vectored_chunk())
             .map_err(parse_io_error)
     }
 
@@ -257,7 +258,8 @@
     <span class="kw">fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="kw">let </span>f = <span class="self">self</span>.f.as_mut().expect(<span class="string">&quot;FsWriter must be initialized&quot;</span>);
 
-        f.write(bs.chunk()).map_err(parse_io_error)
+        f.write_vectored(<span class="kw-2">&amp;</span>bs.vectored_chunk())
+            .map_err(parse_io_error)
     }
 
     <span class="kw">fn </span>close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {

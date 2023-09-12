@@ -430,7 +430,7 @@
                             <span class="kw">let </span><span class="kw-2">mut </span>total_size = current_size + remaining;
 
                             <span class="kw">if </span>total_size &lt;= <span class="self">self</span>.align_size {
-                                <span class="kw">let </span>bs = bs.copy_to_bytes(remaining);
+                                <span class="kw">let </span>bs = bs.bytes(remaining);
                                 <span class="self">self</span>.align_buffer.push(bs);
                                 <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(remaining));
                             }
@@ -442,7 +442,7 @@
 
                             <span class="kw">let </span>consume = total_size - total_size % <span class="self">self</span>.align_size - current_size;
                             <span class="kw">let </span><span class="kw-2">mut </span>align_buffer = <span class="self">self</span>.align_buffer.clone();
-                            <span class="kw">let </span>bs = bs.copy_to_bytes(consume);
+                            <span class="kw">let </span>bs = bs.bytes(consume);
                             align_buffer.push(bs);
 
                             <span class="kw">let </span>written = <span class="self">self</span>.written;

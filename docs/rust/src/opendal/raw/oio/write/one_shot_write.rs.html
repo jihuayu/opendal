@@ -177,7 +177,7 @@
                     <span class="kw">let </span>w = w.take().expect(<span class="string">&quot;writer must be valid&quot;</span>);
 
                     <span class="kw">let </span>size = bs.remaining();
-                    <span class="kw">let </span>bs = bs.copy_to_bytes(size);
+                    <span class="kw">let </span>bs = bs.bytes(size);
                     <span class="kw">let </span>fut = <span class="kw">async move </span>{
                         <span class="kw">let </span>res = w.write_once(bs).<span class="kw">await</span>;
 
