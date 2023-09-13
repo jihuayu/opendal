@@ -1238,6 +1238,7 @@
 <a href="#1238" id="1238">1238</a>
 <a href="#1239" id="1239">1239</a>
 <a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2153,9 +2154,10 @@
                 read_with_override_content_type: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
+                write_can_multi: <span class="bool-val">true</span>,
                 write_with_cache_control: <span class="bool-val">true</span>,
                 write_with_content_type: <span class="bool-val">true</span>,
-                write_without_content_length: <span class="bool-val">true</span>,
+
                 create_dir: <span class="bool-val">true</span>,
                 delete: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
@@ -2219,7 +2221,7 @@
 
         <span class="kw">let </span>w = oio::MultipartUploadWriter::new(writer);
 
-        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
+        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer() {
             <span class="kw">let </span>buffer_size = max(MINIMUM_MULTIPART_SIZE, buffer_size);
 
             oio::TwoWaysWriter::Two(oio::ExactBufWriter::new(w, buffer_size))

@@ -1034,8 +1034,8 @@
                 read_with_if_none_match: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
+                write_can_multi: <span class="bool-val">true</span>,
                 write_with_content_type: <span class="bool-val">true</span>,
-                write_without_content_length: <span class="bool-val">true</span>,
                 delete: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
 
@@ -1095,7 +1095,7 @@
         <span class="kw">let </span>w = GcsWriter::new(<span class="self">self</span>.core.clone(), path, args.clone());
         <span class="kw">let </span>w = oio::RangeWriter::new(w);
 
-        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
+        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer() {
             <span class="comment">// FIXME: we should align with 256KiB instead.
             </span><span class="kw">let </span>buffer_size = max(DEFAULT_WRITE_FIXED_SIZE, buffer_size);
 

@@ -719,10 +719,10 @@
 
                 write: <span class="bool-val">true</span>,
                 write_can_append: <span class="bool-val">true</span>,
+                write_can_multi: <span class="bool-val">true</span>,
                 write_with_content_type: <span class="bool-val">true</span>,
                 write_with_cache_control: <span class="bool-val">true</span>,
                 write_with_content_disposition: <span class="bool-val">true</span>,
-                write_without_content_length: <span class="bool-val">true</span>,
 
                 delete: <span class="bool-val">true</span>,
                 create_dir: <span class="bool-val">true</span>,
@@ -789,7 +789,7 @@
             CosWriters::One(oio::MultipartUploadWriter::new(writer))
         };
 
-        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer_size() {
+        <span class="kw">let </span>w = <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_size) = args.buffer() {
             <span class="kw">let </span>buffer_size = max(MINIMUM_MULTIPART_SIZE, buffer_size);
 
             <span class="kw">let </span>w = oio::ExactBufWriter::new(w, buffer_size);
