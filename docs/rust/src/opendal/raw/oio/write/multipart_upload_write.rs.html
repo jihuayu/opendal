@@ -319,6 +319,10 @@
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -516,6 +520,7 @@
                     <span class="kw">let </span>(w, part) = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
                     <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
                     <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
+
                     <span class="comment">// Replace the cache when last write succeeded
                     </span><span class="kw">let </span>size = bs.remaining();
                     <span class="kw">let </span>cb = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
@@ -585,8 +590,11 @@
                 State::Close(fut) =&gt; {
                     <span class="kw">let </span>(w, res) = <span class="macro">futures::ready!</span>(fut.as_mut().poll(cx));
                     <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="comment">// We should check res first before clean up cache.
+                    </span>res<span class="question-mark">?</span>;
+
                     <span class="self">self</span>.cache = <span class="prelude-val">None</span>;
-                    <span class="kw">return </span>Poll::Ready(res);
+                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(()));
                 }
                 State::Init(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(
                     <span class="string">&quot;MultipartUploadWriter must not go into State::Init during poll_close&quot;
