@@ -1120,6 +1120,37 @@
 <a href="#1120" id="1120">1120</a>
 <a href="#1121" id="1121">1121</a>
 <a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1152,6 +1183,8 @@
 ///
 /// # Examples
 ///
+/// ## Init backends
+///
 /// Read more backend init examples in [`services`]
 ///
 /// ```
@@ -1159,8 +1192,8 @@
 /// use opendal::services::Fs;
 /// use opendal::BlockingOperator;
 /// use opendal::Operator;
-/// #[tokio::main]
-/// async fn main() -&gt; Result&lt;()&gt; {
+///
+/// fn main() -&gt; Result&lt;()&gt; {
 ///     // Create fs backend builder.
 ///     let mut builder = Fs::default();
 ///     // Set the root for fs, all operations will happen under this root.
@@ -1170,6 +1203,35 @@
 ///
 ///     // Build an `BlockingOperator` to start operating the storage.
 ///     let _: BlockingOperator = Operator::new(builder)?.finish().blocking();
+///
+///     Ok(())
+/// }
+/// ```
+///
+/// ## Init backends with blocking layer
+///
+/// Some services like s3, gcs doesn&#39;t have native blocking supports, we can use [`layers::BlockingLayer`]
+/// to wrap the async operator to make it blocking.
+///
+/// ```rust
+/// # use anyhow::Result;
+/// use opendal::layers::BlockingLayer;
+/// use opendal::services::S3;
+/// use opendal::BlockingOperator;
+/// use opendal::Operator;
+///
+/// #[tokio::main]
+/// async fn main() -&gt; Result&lt;()&gt; {
+///     // Create fs backend builder.
+///     let mut builder = S3::default();
+///     builder.bucket(&quot;test&quot;);
+///     builder.region(&quot;us-east-1&quot;);
+///
+///     // Build an `BlockingOperator` with blocking layer to start operating the storage.
+///     let _: BlockingOperator = Operator::new(builder)?
+///         .layer(BlockingLayer::create()?)
+///         .finish()
+///         .blocking();
 ///
 ///     Ok(())
 /// }
