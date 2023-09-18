@@ -1120,9 +1120,6 @@
 <a href="#1120" id="1120">1120</a>
 <a href="#1121" id="1121">1121</a>
 <a href="#1122" id="1122">1122</a>
-<a href="#1123" id="1123">1123</a>
-<a href="#1124" id="1124">1124</a>
-<a href="#1125" id="1125">1125</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2066,8 +2063,7 @@
                     .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
                 }
 
-                <span class="kw">let </span>(<span class="kw">_</span>, pager) = inner.blocking_list(<span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
-                <span class="kw">let </span>lister = BlockingLister::new(pager);
+                <span class="kw">let </span>lister = BlockingLister::create(inner, <span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
 
                 lister.collect()
             },
@@ -2241,9 +2237,7 @@
                     .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path));
                 }
 
-                <span class="kw">let </span>(<span class="kw">_</span>, pager) = inner.blocking_list(<span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
-
-                <span class="prelude-val">Ok</span>(BlockingLister::new(pager))
+                BlockingLister::create(inner, <span class="kw-2">&amp;</span>path, args)
             },
         ))
     }

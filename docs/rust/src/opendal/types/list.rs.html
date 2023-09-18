@@ -222,6 +222,34 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -366,7 +394,11 @@
 ///
 /// Users can construct Lister by `blocking_lister`.
 </span><span class="kw">pub struct </span>BlockingLister {
-    pager: oio::BlockingPager,
+    acc: FusedAccessor,
+    <span class="doccomment">/// required_metakey is the metakey required by users.
+    </span>required_metakey: FlagSet&lt;Metakey&gt;,
+
+    pager: <span class="prelude-ty">Option</span>&lt;oio::BlockingPager&gt;,
     buf: VecDeque&lt;oio::Entry&gt;,
 }
 
@@ -377,11 +409,17 @@
 
 <span class="kw">impl </span>BlockingLister {
     <span class="doccomment">/// Create a new lister.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(pager: oio::BlockingPager) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            pager,
-            buf: VecDeque::default(),
-        }
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>create(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>required_metakey = args.metakey();
+        <span class="kw">let </span>(<span class="kw">_</span>, pager) = acc.blocking_list(path, args)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            acc,
+            required_metakey,
+
+            buf: VecDeque::new(),
+            pager: <span class="prelude-val">Some</span>(pager),
+        })
     }
 }
 
@@ -391,15 +429,33 @@
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(oe) = <span class="self">self</span>.buf.pop_front() {
-            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(oe.into_entry()));
+            <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
+            <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
+            </span><span class="kw">if </span>metadata.contains_bit(<span class="self">self</span>.required_metakey) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata)));
+            }
+
+            <span class="kw">let </span>metadata = <span class="kw">match </span><span class="self">self</span>.acc.blocking_stat(<span class="kw-2">&amp;</span>path, OpStat::default()) {
+                <span class="prelude-val">Ok</span>(rp) =&gt; rp.into_metadata(),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)),
+            };
+            <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata)));
         }
 
-        <span class="self">self</span>.buf = <span class="kw">match </span><span class="self">self</span>.pager.next() {
+        <span class="kw">let </span>pager = <span class="kw">match </span><span class="self">self</span>.pager.as_mut() {
+            <span class="prelude-val">Some</span>(pager) =&gt; pager,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        };
+
+        <span class="self">self</span>.buf = <span class="kw">match </span>pager.next() {
             <span class="comment">// Ideally, the convert from `Vec` to `VecDeque` will not do reallocation.
             //
             // However, this could be changed as described in [impl&lt;T, A&gt; From&lt;Vec&lt;T, A&gt;&gt; for VecDeque&lt;T, A&gt;](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#impl-From%3CVec%3CT%2C%20A%3E%3E-for-VecDeque%3CT%2C%20A%3E)
             </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries)) =&gt; entries.into(),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
+                <span class="self">self</span>.pager = <span class="prelude-val">None</span>;
+                <span class="kw">return </span><span class="prelude-val">None</span>;
+            }
             <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)),
         };
 
