@@ -779,7 +779,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-        content_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        args: <span class="kw-2">&amp;</span>OpWrite,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
@@ -808,7 +808,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
             req = req.header(CONTENT_LENGTH, size.to_string());
         }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = args.content_type() {
             req = req.header(CONTENT_TYPE, content_type);
         }
 
@@ -874,12 +874,12 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>webhdfs_list_status_batch_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
-        start_after: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;String&gt;,
+        args: <span class="kw-2">&amp;</span>OpList,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="comment">// if it&#39;s not the first time to call LISTSTATUS_BATCH, we will add &amp;startAfter=&lt;CHILD&gt;
-        </span><span class="kw">let </span>start_after_param = <span class="kw">match </span>start_after {
+        </span><span class="kw">let </span>start_after_param = <span class="kw">match </span>args.start_after() {
             <span class="prelude-val">Some</span>(sa) <span class="kw">if </span>sa.is_empty() =&gt; String::new(),
             <span class="prelude-val">Some</span>(sa) =&gt; <span class="macro">format!</span>(<span class="string">&quot;&amp;startAfter={}&quot;</span>, sa),
             <span class="prelude-val">None </span>=&gt; String::new(),
@@ -1008,7 +1008,7 @@
     <span class="doccomment">/// Create a file or directory
     </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="kw">let </span>req = <span class="self">self
-            </span>.webhdfs_create_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="prelude-val">None</span>, AsyncBody::Empty)
+            </span>.webhdfs_create_object_request(path, <span class="prelude-val">Some</span>(<span class="number">0</span>), <span class="kw-2">&amp;</span>OpWrite::default(), AsyncBody::Empty)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1113,7 +1113,7 @@
         <span class="kw">let </span>path = path.trim_end_matches(<span class="string">&#39;/&#39;</span>);
 
         <span class="kw">if </span>!<span class="self">self</span>.disable_list_batch {
-            <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_list_status_batch_request(path, <span class="kw-2">&amp;</span><span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_list_status_batch_request(path, <span class="kw-2">&amp;</span>OpList::default())<span class="question-mark">?</span>;
             <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">match </span>resp.status() {
                 StatusCode::OK =&gt; {

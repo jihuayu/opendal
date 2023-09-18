@@ -127,6 +127,10 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -192,9 +196,13 @@
         <span class="kw">return match </span><span class="self">self</span>.backend.disable_list_batch {
             <span class="bool-val">true </span>=&gt; <span class="self">self</span>.webhdfs_get_next_list_statuses(),
             <span class="bool-val">false </span>=&gt; {
+                <span class="kw">let </span>args = OpList::with_start_after(
+                    OpList::default(),
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.batch_start_after.clone().unwrap(),
+                );
                 <span class="kw">let </span>req = <span class="self">self
                     </span>.backend
-                    .webhdfs_list_status_batch_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.batch_start_after)<span class="question-mark">?</span>;
+                    .webhdfs_list_status_batch_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span>args)<span class="question-mark">?</span>;
                 <span class="kw">let </span>resp = <span class="self">self</span>.backend.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
                 <span class="kw">match </span>resp.status() {
