@@ -691,6 +691,36 @@
 <a href="#691" id="691">691</a>
 <a href="#692" id="692">692</a>
 <a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -748,6 +778,11 @@
     </span>}
 
     <span class="doccomment">/// Set temp dir for atomic write.
+    ///
+    /// # Notes
+    ///
+    /// - When append is enabled, we will not use atomic write
+    /// to avoid data loss and performance issue.
     </span><span class="kw">pub fn </span>atomic_write_dir(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dir: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="self">self</span>.atomic_write_dir = <span class="kw">if </span>dir.is_empty() {
             <span class="prelude-val">None
@@ -1060,7 +1095,17 @@
             <span class="kw">let </span>target_path = <span class="self">Self</span>::ensure_write_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let </span>tmp_path =
                 <span class="self">Self</span>::ensure_write_abs_path(atomic_write_dir, <span class="kw-2">&amp;</span>tmp_file_of(path)).<span class="kw">await</span><span class="question-mark">?</span>;
-            (target_path, <span class="prelude-val">Some</span>(tmp_path))
+
+            <span class="comment">// If the target file exists, we should append to the end of it directly.
+            </span><span class="kw">if </span>op.append()
+                &amp;&amp; tokio::fs::try_exists(<span class="kw-2">&amp;</span>target_path)
+                    .<span class="kw">await
+                    </span>.map_err(parse_io_error)<span class="question-mark">?
+            </span>{
+                (target_path, <span class="prelude-val">None</span>)
+            } <span class="kw">else </span>{
+                (target_path, <span class="prelude-val">Some</span>(tmp_path))
+            }
         } <span class="kw">else </span>{
             <span class="kw">let </span>p = <span class="self">Self</span>::ensure_write_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1068,7 +1113,6 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>open_options = tokio::fs::OpenOptions::new();
-
         open_options.create(<span class="bool-val">true</span>).write(<span class="bool-val">true</span>);
         <span class="kw">if </span>op.append() {
             open_options.append(<span class="bool-val">true</span>);
@@ -1247,22 +1291,38 @@
         <span class="prelude-val">Ok</span>((RpRead::new(end - start), r))
     }
 
-    <span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
+    <span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
         <span class="kw">let </span>(target_path, tmp_path) = <span class="kw">if let </span><span class="prelude-val">Some</span>(atomic_write_dir) = <span class="kw-2">&amp;</span><span class="self">self</span>.atomic_write_dir {
             <span class="kw">let </span>target_path = <span class="self">Self</span>::blocking_ensure_write_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path)<span class="question-mark">?</span>;
             <span class="kw">let </span>tmp_path =
                 <span class="self">Self</span>::blocking_ensure_write_abs_path(atomic_write_dir, <span class="kw-2">&amp;</span>tmp_file_of(path))<span class="question-mark">?</span>;
-            (target_path, <span class="prelude-val">Some</span>(tmp_path))
+
+            <span class="comment">// If the target file exists, we should append to the end of it directly.
+            </span><span class="kw">if </span>op.append()
+                &amp;&amp; Path::new(<span class="kw-2">&amp;</span>target_path)
+                    .try_exists()
+                    .map_err(parse_io_error)<span class="question-mark">?
+            </span>{
+                (target_path, <span class="prelude-val">None</span>)
+            } <span class="kw">else </span>{
+                (target_path, <span class="prelude-val">Some</span>(tmp_path))
+            }
         } <span class="kw">else </span>{
             <span class="kw">let </span>p = <span class="self">Self</span>::blocking_ensure_write_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path)<span class="question-mark">?</span>;
 
             (p, <span class="prelude-val">None</span>)
         };
 
-        <span class="kw">let </span>f = std::fs::OpenOptions::new()
-            .create(<span class="bool-val">true</span>)
-            .truncate(<span class="bool-val">true</span>)
-            .write(<span class="bool-val">true</span>)
+        <span class="kw">let </span><span class="kw-2">mut </span>f = std::fs::OpenOptions::new();
+        f.create(<span class="bool-val">true</span>).write(<span class="bool-val">true</span>);
+
+        <span class="kw">if </span>op.append() {
+            f.append(<span class="bool-val">true</span>);
+        } <span class="kw">else </span>{
+            f.truncate(<span class="bool-val">true</span>);
+        }
+
+        <span class="kw">let </span>f = f
             .open(tmp_path.as_ref().unwrap_or(<span class="kw-2">&amp;</span>target_path))
             .map_err(parse_io_error)<span class="question-mark">?</span>;
 
