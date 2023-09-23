@@ -153,6 +153,7 @@
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -219,13 +220,14 @@
                     <span class="kw">let </span>backend = backend.take().expect(<span class="string">&quot;GhacWriter must be initialized&quot;</span>);
 
                     <span class="kw">let </span>cache_id = <span class="self">self</span>.cache_id;
+                    <span class="kw">let </span>offset = <span class="self">self</span>.size;
                     <span class="kw">let </span>size = bs.remaining();
                     <span class="kw">let </span>bs = bs.bytes(size);
 
                     <span class="kw">let </span>fut = <span class="kw">async move </span>{
                         <span class="kw">let </span>res = <span class="kw">async </span>{
                             <span class="kw">let </span>req = backend
-                                .ghac_upload(cache_id, size <span class="kw">as </span>u64, AsyncBody::Bytes(bs))
+                                .ghac_upload(cache_id, offset, size <span class="kw">as </span>u64, AsyncBody::Bytes(bs))
                                 .<span class="kw">await</span><span class="question-mark">?</span>;
 
                             <span class="kw">let </span>resp = backend.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;

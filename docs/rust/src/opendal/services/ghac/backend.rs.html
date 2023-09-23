@@ -651,6 +651,7 @@
 <a href="#651" id="651">651</a>
 <a href="#652" id="652">652</a>
 <a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1004,7 +1005,7 @@
 
         <span class="comment">// Write only 1 byte to allow create.
         </span><span class="kw">let </span>req = <span class="self">self
-            </span>.ghac_upload(cache_id, <span class="number">1</span>, AsyncBody::Bytes(Bytes::from_static(<span class="kw-2">&amp;</span>[<span class="number">0</span>])))
+            </span>.ghac_upload(cache_id, <span class="number">0</span>, <span class="number">1</span>, AsyncBody::Bytes(Bytes::from_static(<span class="kw-2">&amp;</span>[<span class="number">0</span>])))
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1215,6 +1216,7 @@
     <span class="kw">pub async fn </span>ghac_upload(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         cache_id: i64,
+        offset: u64,
         size: u64,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
@@ -1228,7 +1230,7 @@
         req = req.header(
             CONTENT_RANGE,
             BytesContentRange::default()
-                .with_range(<span class="number">0</span>, size - <span class="number">1</span>)
+                .with_range(offset, offset + size - <span class="number">1</span>)
                 .to_header(),
         );
 
