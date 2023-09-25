@@ -243,6 +243,10 @@
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -333,6 +337,8 @@
     </span>Redis,
     <span class="doccomment">/// [postgresql][crate::services::Postgresql]: Postgresql services
     </span>Postgresql,
+    <span class="doccomment">/// [mysql][crate::services::Mysql]: Mysql services
+    </span>Mysql,
     <span class="doccomment">/// [rocksdb][crate::services::Rocksdb]: RocksDB services
     </span>Rocksdb,
     <span class="doccomment">/// [s3][crate::services::S3]: AWS S3 alike services.
@@ -412,6 +418,7 @@
             <span class="string">&quot;ipmfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipmfs),
             <span class="string">&quot;memcached&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memcached),
             <span class="string">&quot;memory&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memory),
+            <span class="string">&quot;mysql&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Mysql),
             <span class="string">&quot;mini_moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::MiniMoka),
             <span class="string">&quot;moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Moka),
             <span class="string">&quot;obs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Obs),
@@ -463,6 +470,7 @@
             Scheme::Onedrive =&gt; <span class="string">&quot;onedrive&quot;</span>,
             Scheme::Persy =&gt; <span class="string">&quot;persy&quot;</span>,
             Scheme::Postgresql =&gt; <span class="string">&quot;postgresql&quot;</span>,
+            Scheme::Mysql =&gt; <span class="string">&quot;mysql&quot;</span>,
             Scheme::Gdrive =&gt; <span class="string">&quot;gdrive&quot;</span>,
             Scheme::Dropbox =&gt; <span class="string">&quot;dropbox&quot;</span>,
             Scheme::Redis =&gt; <span class="string">&quot;redis&quot;</span>,
