@@ -1239,6 +1239,11 @@
 <a href="#1239" id="1239">1239</a>
 <a href="#1240" id="1240">1240</a>
 <a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1804,7 +1809,11 @@
     ///
     /// - [Amazon S3 HeadBucket API](https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/API/API_HeadBucket.html)
     </span><span class="kw">pub async fn </span>detect_region(endpoint: <span class="kw-2">&amp;</span>str, bucket: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>endpoint = <span class="kw">if </span>endpoint.starts_with(<span class="string">&quot;http&quot;</span>) {
+        <span class="comment">// Remove the possible trailing `/` in endpoint.
+        </span><span class="kw">let </span>endpoint = endpoint.trim_end_matches(<span class="string">&#39;/&#39;</span>);
+
+        <span class="comment">// Make sure the endpoint contains the scheme.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>endpoint = <span class="kw">if </span>endpoint.starts_with(<span class="string">&quot;http&quot;</span>) {
             endpoint.to_string()
         } <span class="kw">else </span>{
             <span class="comment">// Prefix https if endpoint doesn&#39;t start with scheme.
@@ -1864,9 +1873,10 @@
         );
 
         <span class="comment">// Get region from response header no matter status code.
-        </span><span class="kw">let </span>region = res.headers().get(<span class="string">&quot;x-amz-bucket-region&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">if let </span><span class="prelude-val">Ok</span>(regin) = region.to_str() {
-            <span class="kw">return </span><span class="prelude-val">Some</span>(regin.to_string());
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = res.headers().get(<span class="string">&quot;x-amz-bucket-region&quot;</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(regin) = header.to_str() {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(regin.to_string());
+            }
         }
 
         <span class="comment">// Status code is 403 or 200 means we already visit the correct
