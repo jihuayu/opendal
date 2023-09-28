@@ -284,6 +284,12 @@
 <a href="#284" id="284">284</a>
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -509,7 +515,13 @@
                                     (w, res)
                                 }));
                             }
-                            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(())),
+                            <span class="prelude-val">None </span>=&gt; {
+                                <span class="comment">// Call write_once if there is no data in buffer and no location.
+                                </span><span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
+                                    <span class="kw">let </span>res = w.write_once(<span class="number">0</span>, AsyncBody::Empty).<span class="kw">await</span>;
+                                    (w, res)
+                                }));
+                            }
                         },
                     }
                 }

@@ -476,6 +476,7 @@
 <a href="#476" id="476">476</a>
 <a href="#477" id="477">477</a>
 <a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -562,6 +563,7 @@
         }
 
         <span class="kw">if </span>cap.write {
+            cap.write_can_empty = <span class="bool-val">true</span>;
             cap.create_dir = <span class="bool-val">true</span>;
             cap.delete = <span class="bool-val">true</span>;
         }

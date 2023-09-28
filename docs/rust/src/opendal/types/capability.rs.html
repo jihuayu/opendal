@@ -181,6 +181,8 @@
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -259,6 +261,8 @@
     </span><span class="kw">pub </span>write: bool,
     <span class="doccomment">/// If operator supports write can be called in multi times.
     </span><span class="kw">pub </span>write_can_multi: bool,
+    <span class="doccomment">/// If operator supports write with empty content.
+    </span><span class="kw">pub </span>write_can_empty: bool,
     <span class="doccomment">/// If operator supports write by append.
     </span><span class="kw">pub </span>write_can_append: bool,
     <span class="doccomment">/// If operator supports write with content type.
