@@ -247,6 +247,10 @@
 <a href="#247" id="247">247</a>
 <a href="#248" id="248">248</a>
 <a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -339,6 +343,8 @@
     </span>Postgresql,
     <span class="doccomment">/// [mysql][crate::services::Mysql]: Mysql services
     </span>Mysql,
+    <span class="doccomment">/// [sqlite][crate::services::Sqlite]: Sqlite services
+    </span>Sqlite,
     <span class="doccomment">/// [rocksdb][crate::services::Rocksdb]: RocksDB services
     </span>Rocksdb,
     <span class="doccomment">/// [s3][crate::services::S3]: AWS S3 alike services.
@@ -419,6 +425,7 @@
             <span class="string">&quot;memcached&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memcached),
             <span class="string">&quot;memory&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memory),
             <span class="string">&quot;mysql&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Mysql),
+            <span class="string">&quot;sqlite&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Sqlite),
             <span class="string">&quot;mini_moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::MiniMoka),
             <span class="string">&quot;moka&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Moka),
             <span class="string">&quot;obs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Obs),
@@ -486,6 +493,7 @@
             Scheme::Webhdfs =&gt; <span class="string">&quot;webhdfs&quot;</span>,
             Scheme::Redb =&gt; <span class="string">&quot;redb&quot;</span>,
             Scheme::Tikv =&gt; <span class="string">&quot;tikv&quot;</span>,
+            Scheme::Sqlite =&gt; <span class="string">&quot;sqlite&quot;</span>,
             Scheme::Custom(v) =&gt; v,
         }
     }
