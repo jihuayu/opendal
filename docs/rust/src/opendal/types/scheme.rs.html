@@ -251,6 +251,10 @@
 <a href="#251" id="251">251</a>
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -341,6 +345,8 @@
     </span>Redis,
     <span class="doccomment">/// [postgresql][crate::services::Postgresql]: Postgresql services
     </span>Postgresql,
+    <span class="doccomment">/// [libsql][crate::services::Libsql]: Libsql services
+    </span>Libsql,
     <span class="doccomment">/// [mysql][crate::services::Mysql]: Mysql services
     </span>Mysql,
     <span class="doccomment">/// [sqlite][crate::services::Sqlite]: Sqlite services
@@ -422,6 +428,7 @@
             <span class="string">&quot;ftp&quot; </span>| <span class="string">&quot;ftps&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ftp),
             <span class="string">&quot;ipfs&quot; </span>| <span class="string">&quot;ipns&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipfs),
             <span class="string">&quot;ipmfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipmfs),
+            <span class="string">&quot;libsql&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Libsql),
             <span class="string">&quot;memcached&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memcached),
             <span class="string">&quot;memory&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memory),
             <span class="string">&quot;mysql&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Mysql),
@@ -469,6 +476,7 @@
             Scheme::Ftp =&gt; <span class="string">&quot;ftp&quot;</span>,
             Scheme::Ipfs =&gt; <span class="string">&quot;ipfs&quot;</span>,
             Scheme::Ipmfs =&gt; <span class="string">&quot;ipmfs&quot;</span>,
+            Scheme::Libsql =&gt; <span class="string">&quot;libsql&quot;</span>,
             Scheme::Memcached =&gt; <span class="string">&quot;memcached&quot;</span>,
             Scheme::Memory =&gt; <span class="string">&quot;memory&quot;</span>,
             Scheme::MiniMoka =&gt; <span class="string">&quot;mini_moka&quot;</span>,
