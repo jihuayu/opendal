@@ -255,6 +255,10 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -298,6 +302,8 @@
     </span>Cacache,
     <span class="doccomment">/// [cos][crate::services::Cos]: Tencent Cloud Object Storage services.
     </span>Cos,
+    <span class="doccomment">/// [d1][crate::services::D1]: D1 services
+    </span>D1,
     <span class="doccomment">/// [dashmap][crate::services::Dashmap]: dashmap backend support.
     </span>Dashmap,
     <span class="doccomment">/// [etcd][crate::services::Etcd]: Etcd Services
@@ -416,6 +422,7 @@
             </span><span class="string">&quot;azdls&quot; </span>| <span class="string">&quot;azdfs&quot; </span>| <span class="string">&quot;abfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Azdls),
             <span class="string">&quot;cacache&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Cacache),
             <span class="string">&quot;cos&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Cos),
+            <span class="string">&quot;d1&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::D1),
             <span class="string">&quot;dashmap&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Dashmap),
             <span class="string">&quot;dropbox&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Dropbox),
             <span class="string">&quot;etcd&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Etcd),
@@ -465,6 +472,7 @@
             Scheme::Azdls =&gt; <span class="string">&quot;Azdls&quot;</span>,
             Scheme::Cacache =&gt; <span class="string">&quot;cacache&quot;</span>,
             Scheme::Cos =&gt; <span class="string">&quot;cos&quot;</span>,
+            Scheme::D1 =&gt; <span class="string">&quot;d1&quot;</span>,
             Scheme::Dashmap =&gt; <span class="string">&quot;dashmap&quot;</span>,
             Scheme::Etcd =&gt; <span class="string">&quot;etcd&quot;</span>,
             Scheme::Fs =&gt; <span class="string">&quot;fs&quot;</span>,
