@@ -28,12 +28,11 @@ blocking</li>
 <ul>
 <li><code>root</code>: Set the working directory of <code>OpenDAL</code></li>
 <li><code>token</code>: Set the token of cloudflare api</li>
-<li><code>account_identifier</code>: Set the account identifier of d1</li>
-<li><code>database_identifier</code>: Set the database identifier of d1</li>
-<li><code>endpoint</code>: Set the endpoint of d1 service</li>
-<li><code>table</code>: Set the table name of the d1 service to read/write</li>
-<li><code>key_field</code>: Set the key field of d1</li>
-<li><code>value_field</code>: Set the value field of d1</li>
+<li><code>account_id</code>: Set the account id of cloudflare api</li>
+<li><code>database_id</code>: Set the database id of cloudflare api</li>
+<li><code>table</code>: Set the table of D1 Database</li>
+<li><code>key_field</code>: Set the key field of D1 Database</li>
+<li><code>value_field</code>: Set the value field of D1 Database</li>
 </ul>
 <h3 id="example"><a href="#example">Example</a></h3><h4 id="via-builder"><a href="#via-builder">Via Builder</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>anyhow::Result;
@@ -52,16 +51,6 @@ blocking</li>
         .value_field(<span class="string">&quot;value_field&quot;</span>);
 
     <span class="kw">let </span>op = Operator::new(builder)<span class="question-mark">?</span>.finish();
-    <span class="kw">let </span>source_path = <span class="string">&quot;ALFKI&quot;</span>;
-    <span class="comment">// set value to d1 &quot;opendal test value&quot; as Vec&lt;u8&gt;
-    </span><span class="kw">let </span>value = <span class="string">&quot;opendal test value&quot;</span>.as_bytes();
-    <span class="comment">// write value to d1, the key is source_path
-    </span>op.write(source_path, value).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="comment">// read value from d1, the key is source_path
-    </span><span class="kw">let </span>v = op.read(source_path).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="macro">assert_eq!</span>(v, value);
-    <span class="comment">// delete value from d1, the key is source_path
-    </span>op.delete(source_path).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div>
 </div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-D1Builder" class="impl"><a class="src rightside" href="../../src/opendal/services/d1/backend.rs.html#62-134">source</a><a href="#impl-D1Builder" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.D1.html" title="struct opendal::services::D1">D1Builder</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.token" class="method"><a class="src rightside" href="../../src/opendal/services/d1/backend.rs.html#66-71">source</a><h4 class="code-header">pub fn <a href="#method.token" class="fn">token</a>(&amp;mut self, token: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.str.html">str</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.reference.html">&amp;mut Self</a></h4></section></summary><div class="docblock"><p>Set api token for the cloudflare d1 service.</p>
