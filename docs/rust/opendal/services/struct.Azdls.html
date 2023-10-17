@@ -47,9 +47,9 @@ blocking</li>
 
 <span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="comment">// Create azblob backend builder.
+    <span class="comment">// Create azdls backend builder.
     </span><span class="kw">let </span><span class="kw-2">mut </span>builder = Azdls::default();
-    <span class="comment">// Set the root for azblob, all operations will happen under this root.
+    <span class="comment">// Set the root for azdls, all operations will happen under this root.
     //
     // NOTE: the root must be absolute path.
     </span>builder.root(<span class="string">&quot;/path/to/dir&quot;</span>);

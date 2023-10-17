@@ -259,6 +259,10 @@
 <a href="#259" id="259">259</a>
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -379,6 +383,8 @@
     </span>Redb,
     <span class="doccomment">/// [tikv][crate::services::tikv]: Tikv Services
     </span>Tikv,
+    <span class="doccomment">/// [azfile][crate::services::azfile]: Azfile Services
+    </span>Azfile,
     <span class="doccomment">/// Custom that allow users to implement services outside of OpenDAL.
     ///
     /// # NOTE
@@ -459,6 +465,7 @@
             <span class="string">&quot;webdav&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webdav),
             <span class="string">&quot;webhdfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webhdfs),
             <span class="string">&quot;tikv&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Tikv),
+            <span class="string">&quot;azfile&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Azfile),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Custom(Box::leak(s.into_boxed_str()))),
         }
     }
@@ -509,6 +516,7 @@
             Scheme::Webhdfs =&gt; <span class="string">&quot;webhdfs&quot;</span>,
             Scheme::Redb =&gt; <span class="string">&quot;redb&quot;</span>,
             Scheme::Tikv =&gt; <span class="string">&quot;tikv&quot;</span>,
+            Scheme::Azfile =&gt; <span class="string">&quot;azfile&quot;</span>,
             Scheme::Sqlite =&gt; <span class="string">&quot;sqlite&quot;</span>,
             Scheme::Custom(v) =&gt; v,
         }
