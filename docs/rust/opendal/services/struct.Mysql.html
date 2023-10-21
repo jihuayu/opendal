@@ -34,12 +34,12 @@ blocking</li>
 </ul>
 <h3 id="example"><a href="#example">Example</a></h3><h4 id="via-builder"><a href="#via-builder">Via Builder</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>opendal::services::MySql;
+<span class="kw">use </span>opendal::services::Mysql;
 <span class="kw">use </span>opendal::Operator;
 
 <span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>builder = MySql::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>builder = Mysql::default();
     builder.root(<span class="string">&quot;/&quot;</span>);
     builder.connection_string(<span class="string">&quot;mysql://you_username:your_password@127.0.0.1:5432/your_database&quot;</span>);
     builder.table(<span class="string">&quot;your_table&quot;</span>);
