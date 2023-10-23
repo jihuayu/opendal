@@ -374,6 +374,10 @@
 <a href="#374" id="374">374</a>
 <a href="#375" id="375">375</a>
 <a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -416,6 +420,8 @@
     </span>Azdls,
     <span class="doccomment">/// [cacache][crate::services::Cacache]: cacache backend support.
     </span>Cacache,
+    <span class="doccomment">/// [cloudflare-kv][crate::services::CloudflareKv]: Cloudflare KV services.
+    </span>CloudflareKv,
     <span class="doccomment">/// [cos][crate::services::Cos]: Tencent Cloud Object Storage services.
     </span>Cos,
     <span class="doccomment">/// [d1][crate::services::D1]: D1 services
@@ -647,6 +653,7 @@
             // And abfs is widely used in hadoop ecosystem, keep it for easy to use.
             </span><span class="string">&quot;azdls&quot; </span>| <span class="string">&quot;azdfs&quot; </span>| <span class="string">&quot;abfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Azdls),
             <span class="string">&quot;cacache&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Cacache),
+            <span class="string">&quot;cloudflare_kv&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::CloudflareKv),
             <span class="string">&quot;cos&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Cos),
             <span class="string">&quot;d1&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::D1),
             <span class="string">&quot;dashmap&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Dashmap),
@@ -699,6 +706,7 @@
             Scheme::Azblob =&gt; <span class="string">&quot;azblob&quot;</span>,
             Scheme::Azdls =&gt; <span class="string">&quot;azdls&quot;</span>,
             Scheme::Cacache =&gt; <span class="string">&quot;cacache&quot;</span>,
+            Scheme::CloudflareKv =&gt; <span class="string">&quot;cloudflare_kv&quot;</span>,
             Scheme::Cos =&gt; <span class="string">&quot;cos&quot;</span>,
             Scheme::D1 =&gt; <span class="string">&quot;d1&quot;</span>,
             Scheme::Dashmap =&gt; <span class="string">&quot;dashmap&quot;</span>,
