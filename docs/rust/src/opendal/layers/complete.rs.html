@@ -1467,8 +1467,8 @@
 
         <span class="self">self</span>.inner.stat(path, args).<span class="kw">await</span>.map(|v| {
             v.map_metadata(|m| {
-                <span class="kw">let </span>bit = m.bit();
-                m.with_bit(bit | Metakey::Complete)
+                <span class="kw">let </span>bit = m.metakey();
+                m.with_metakey(bit | Metakey::Complete)
             })
         })
     }
@@ -1569,8 +1569,8 @@
 
         <span class="self">self</span>.inner.blocking_stat(path, args).map(|v| {
             v.map_metadata(|m| {
-                <span class="kw">let </span>bit = m.bit();
-                m.with_bit(bit | Metakey::Complete)
+                <span class="kw">let </span>bit = m.metakey();
+                m.with_metakey(bit | Metakey::Complete)
             })
         })
     }
