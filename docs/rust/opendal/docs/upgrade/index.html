@@ -61,7 +61,13 @@
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span><span class="kw-2">mut </span>w = op.writer_with(<span class="string">&quot;path/to/file&quot;</span>).buffer(<span class="number">8 </span>* <span class="number">1024 </span>* <span class="number">1024</span>).<span class="kw">await</span><span class="question-mark">?</span>;</code></pre></div>
 <p>If buffer is not specified, we will call underlying storage everytime we call <code>write</code>. Otherwise, we will make sure to call underlying storage when buffer is full or <code>close</code> is called.</p>
-<h3 id="raw-api"><a href="#raw-api">Raw API</a></h3><h4 id="rfc-3017-remove-write-copy-from"><a href="#rfc-3017-remove-write-copy-from">RFC-3017 Remove Write Copy From</a></h4>
+<h4 id="rangeread-and-rangereader"><a href="#rangeread-and-rangereader">RangeRead and RangeReader</a></h4>
+<p>OpenDAL v0.40 removed the origin <code>range_read</code> and <code>range_reader</code> interfaces, please use <code>read_with().range()</code> or <code>reader_with().range()</code>.</p>
+<div class="example-wrap"><pre class="language-diff"><code>- op.range_read(path, range_start..range_end).await?;
++ op.read_with(path).range(range_start..range_end).await?;
+</code></pre></div><div class="example-wrap"><pre class="language-diff"><code>- let reader = op.range_reader(path, range_start..range_end).await?;
++ let reader = op.reader_with(path).range(range_start..range_end).await?;
+</code></pre></div><h3 id="raw-api"><a href="#raw-api">Raw API</a></h3><h4 id="rfc-3017-remove-write-copy-from"><a href="#rfc-3017-remove-write-copy-from">RFC-3017 Remove Write Copy From</a></h4>
 <p><a href="opendal::docs::rfcs::rfc_3017_remove_write_copy_from">RFC-3017</a> removes <code>copy_from</code> API from the <code>oio::Write</code> trait. Users who implements services and layers by hand should remove this API.</p>
 <h2 id="upgrade-to-v039"><a href="#upgrade-to-v039">Upgrade to v0.39</a></h2><h3 id="public-api-2"><a href="#public-api-2">Public API</a></h3><h4 id="service-s3-role-arn-behavior"><a href="#service-s3-role-arn-behavior">Service S3 Role Arn Behavior</a></h4>
 <p>In PR #2687, OpenDAL changed the behavior when <code>role_arn</code> has been specified.</p>
