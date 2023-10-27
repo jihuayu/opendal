@@ -135,7 +135,7 @@ loadScripts(document, 'script');</script>
 <div class="col-last odd-row-color">
 <div class="block">Etag of the entry.</div>
 </div>
-<div class="col-first even-row-color"><code>final <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Date.html" title="class or interface in java.util" class="external-link">Date</a></code></div>
+<div class="col-first even-row-color"><code>final <a href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html" title="class or interface in java.time" class="external-link">Instant</a></code></div>
 <div class="col-second even-row-color"><code><a href="#lastModified" class="member-name-link">lastModified</a></code></div>
 <div class="col-last even-row-color">
 <div class="block">Last Modified of the entry.</div>
@@ -161,14 +161,14 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(int,long,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.Date,java.lang.String)" class="member-name-link">Metadata</a><wbr>(int&nbsp;mode,
+<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(int,long,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.time.Instant,java.lang.String)" class="member-name-link">Metadata</a><wbr>(int&nbsp;mode,
  long&nbsp;contentLength,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;contentDisposition,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;contentMd5,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;contentType,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cacheControl,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;etag,
- <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Date.html" title="class or interface in java.util" class="external-link">Date</a>&nbsp;lastModified,
+ <a href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html" title="class or interface in java.time" class="external-link">Instant</a>&nbsp;lastModified,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;version)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
@@ -220,7 +220,7 @@ loadScripts(document, 'script');</script>
 <h3>contentLength</h3>
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type">long</span>&nbsp;<span class="element-name">contentLength</span></div>
 <div class="block">Content Length of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be -1.</div>
 </section>
 </li>
@@ -229,7 +229,7 @@ loadScripts(document, 'script');</script>
 <h3>contentDisposition</h3>
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">contentDisposition</span></div>
 <div class="block">Content-Disposition of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
@@ -238,7 +238,7 @@ loadScripts(document, 'script');</script>
 <h3>contentMd5</h3>
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">contentMd5</span></div>
 <div class="block">Content MD5 of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
@@ -247,7 +247,7 @@ loadScripts(document, 'script');</script>
 <h3>contentType</h3>
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">contentType</span></div>
 <div class="block">Content Type of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
@@ -256,7 +256,7 @@ loadScripts(document, 'script');</script>
 <h3>cacheControl</h3>
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">cacheControl</span></div>
 <div class="block">Cache Control of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
@@ -265,16 +265,16 @@ loadScripts(document, 'script');</script>
 <h3>etag</h3>
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">etag</span></div>
 <div class="block">Etag of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
 <li>
 <section class="detail" id="lastModified">
 <h3>lastModified</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Date.html" title="class or interface in java.util" class="external-link">Date</a></span>&nbsp;<span class="element-name">lastModified</span></div>
+<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html" title="class or interface in java.time" class="external-link">Instant</a></span>&nbsp;<span class="element-name">lastModified</span></div>
 <div class="block">Last Modified of the entry.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
@@ -286,7 +286,7 @@ loadScripts(document, 'script');</script>
  Version is a string that can be used to identify the version of this entry.
  This field may come out from the version control system, like object
  versioning in AWS S3.
-
+ <p>
  Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.</div>
 </section>
 </li>
@@ -299,7 +299,7 @@ loadScripts(document, 'script');</script>
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(int,long,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.Date,java.lang.String)">
+<section class="detail" id="&lt;init&gt;(int,long,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.time.Instant,java.lang.String)">
 <h3>Metadata</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Metadata</span><wbr><span class="parameters">(int&nbsp;mode,
  long&nbsp;contentLength,
@@ -308,7 +308,7 @@ loadScripts(document, 'script');</script>
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;contentType,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;cacheControl,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;etag,
- <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Date.html" title="class or interface in java.util" class="external-link">Date</a>&nbsp;lastModified,
+ <a href="https://docs.oracle.com/javase/8/docs/api/java/time/Instant.html" title="class or interface in java.time" class="external-link">Instant</a>&nbsp;lastModified,
  <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;version)</span></div>
 </section>
 </li>
