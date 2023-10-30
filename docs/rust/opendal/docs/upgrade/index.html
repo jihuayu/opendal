@@ -10,6 +10,10 @@
 <li>The <code>write_min_size</code> option has been deprecated and replaced by <code>BufferedWriter</code>, also introduced in version 0.40.</li>
 <li>A new setting, <code>allow_anonymous</code>, has been added. Since v0.41, OSS will now return an error if credential loading fails. Enabling <code>allow_anonymous</code> to fallback to request without credentials.</li>
 </ul>
+<h4 id="ghac-service-configuration"><a href="#ghac-service-configuration">Ghac Service Configuration</a></h4>
+<ul>
+<li>The <code>enable_create_simulation</code> option has been removed. We add this option to allow ghac simulate create empty file, but it’s could result in unexpected behavior when users create a file with content length <code>1</code>. So we remove it.</li>
+</ul>
 <h2 id="upgrade-to-v041"><a href="#upgrade-to-v041">Upgrade to v0.41</a></h2>
 <p>There is no public API and raw API changes.</p>
 <h2 id="upgrade-to-v040"><a href="#upgrade-to-v040">Upgrade to v0.40</a></h2><h3 id="public-api-1"><a href="#public-api-1">Public API</a></h3><h4 id="rfc-2578-merge-append-into-write"><a href="#rfc-2578-merge-append-into-write">RFC-2578 Merge Append Into Write</a></h4>

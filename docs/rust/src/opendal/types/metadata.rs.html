@@ -553,11 +553,6 @@
 <a href="#553" id="553">553</a>
 <a href="#554" id="554">554</a>
 <a href="#555" id="555">555</a>
-<a href="#556" id="556">556</a>
-<a href="#557" id="557">557</a>
-<a href="#558" id="558">558</a>
-<a href="#559" id="559">559</a>
-<a href="#560" id="560">560</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -743,11 +738,6 @@
         </span>);
 
         <span class="self">self</span>.content_length.unwrap_or_default()
-    }
-
-    <span class="doccomment">/// Fetch the raw content length.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>content_length_raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
-        <span class="self">self</span>.content_length
     }
 
     <span class="doccomment">/// Set content length of this entry.
