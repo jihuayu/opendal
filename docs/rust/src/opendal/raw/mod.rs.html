@@ -62,6 +62,8 @@
 <a href="#62" id="62">62</a>
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -126,4 +128,6 @@
 <span class="comment">// Expose as a pub mod to avoid confusing.
 </span><span class="kw">pub mod </span>adapters;
 <span class="kw">pub mod </span>oio;
+<span class="attr">#[cfg(feature = <span class="string">&quot;tests&quot;</span>)]
+</span><span class="kw">pub mod </span>tests;
 </code></pre></div></section></main></body></html>
