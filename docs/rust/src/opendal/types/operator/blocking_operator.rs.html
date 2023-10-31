@@ -1140,17 +1140,6 @@
 <a href="#1140" id="1140">1140</a>
 <a href="#1141" id="1141">1141</a>
 <a href="#1142" id="1142">1142</a>
-<a href="#1143" id="1143">1143</a>
-<a href="#1144" id="1144">1144</a>
-<a href="#1145" id="1145">1145</a>
-<a href="#1146" id="1146">1146</a>
-<a href="#1147" id="1147">1147</a>
-<a href="#1148" id="1148">1148</a>
-<a href="#1149" id="1149">1149</a>
-<a href="#1150" id="1150">1150</a>
-<a href="#1151" id="1151">1151</a>
-<a href="#1152" id="1152">1152</a>
-<a href="#1153" id="1153">1153</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1168,11 +1157,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::io::Read;
-
-<span class="kw">use </span>bytes::Bytes;
+</span><span class="kw">use </span>bytes::Bytes;
 
 <span class="kw">use </span><span class="kw">super</span>::operator_functions::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::BlockingRead;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteBuf;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -1492,22 +1480,12 @@
                     );
                 }
 
-                <span class="kw">let </span>(rp, <span class="kw-2">mut </span>s) = inner.blocking_read(<span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>buffer = Vec::with_capacity(rp.into_metadata().content_length() <span class="kw">as </span>usize);
+                <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>s) = inner.blocking_read(<span class="kw-2">&amp;</span>path, args)<span class="question-mark">?</span>;
 
-                <span class="kw">match </span>s.read_to_end(<span class="kw-2">&amp;mut </span>buffer) {
-                    <span class="prelude-val">Ok</span>(n) =&gt; {
-                        buffer.truncate(n);
-                        <span class="prelude-val">Ok</span>(buffer)
-                    }
-                    <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(
-                        Error::new(ErrorKind::Unexpected, <span class="string">&quot;blocking read_with failed&quot;</span>)
-                            .with_operation(<span class="string">&quot;BlockingOperator::read_with&quot;</span>)
-                            .with_context(<span class="string">&quot;service&quot;</span>, inner.info().scheme().into_static())
-                            .with_context(<span class="string">&quot;path&quot;</span>, <span class="kw-2">&amp;</span>path)
-                            .set_source(err),
-                    ),
-                }
+                <span class="kw">let </span><span class="kw-2">mut </span>buf = Vec::new();
+                s.read_to_end(<span class="kw-2">&amp;mut </span>buf)<span class="question-mark">?</span>;
+
+                <span class="prelude-val">Ok</span>(buf)
             },
         ))
     }
