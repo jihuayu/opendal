@@ -293,7 +293,6 @@
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -403,7 +402,6 @@
     /// Default to `key` if not specified.
     </span><span class="kw">pub fn </span>key_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key_field: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!key_field.is_empty() {
-            <span class="self">self</span>.key_field = <span class="prelude-val">Some</span>(key_field.to_string());
             <span class="self">self</span>.key_field = <span class="prelude-val">Some</span>(key_field.to_string());
         }
         <span class="self">self
