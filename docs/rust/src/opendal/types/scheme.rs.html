@@ -378,12 +378,6 @@
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -499,8 +493,6 @@
     </span>Supabase,
     <span class="doccomment">/// [Vercel Artifacts][crate::services::VercelArtifacts]: Vercel Artifacts service, as known as Vercel Remote Caching.
     </span>VercelArtifacts,
-    <span class="doccomment">/// [wasabi][crate::services::Wasabi]: Wasabi service
-    </span>Wasabi,
     <span class="doccomment">/// [webdav][crate::services::Webdav]: WebDAV support.
     </span>Webdav,
     <span class="doccomment">/// [webhdfs][crate::services::Webhdfs]: WebHDFS RESTful API Services
@@ -623,8 +615,6 @@
             </span>Scheme::Tikv,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-vercel-artifacts&quot;</span>)]
             </span>Scheme::VercelArtifacts,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;services-wasabi&quot;</span>)]
-            </span>Scheme::Wasabi,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-webdav&quot;</span>)]
             </span>Scheme::Webdav,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-webhdfs&quot;</span>)]
@@ -699,7 +689,6 @@
             <span class="string">&quot;supabase&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Supabase),
             <span class="string">&quot;oss&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Oss),
             <span class="string">&quot;vercel_artifacts&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::VercelArtifacts),
-            <span class="string">&quot;wasabi&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Wasabi),
             <span class="string">&quot;webdav&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webdav),
             <span class="string">&quot;webhdfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webhdfs),
             <span class="string">&quot;tikv&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Tikv),
@@ -752,7 +741,6 @@
             Scheme::Supabase =&gt; <span class="string">&quot;supabase&quot;</span>,
             Scheme::VercelArtifacts =&gt; <span class="string">&quot;vercel_artifacts&quot;</span>,
             Scheme::Oss =&gt; <span class="string">&quot;oss&quot;</span>,
-            Scheme::Wasabi =&gt; <span class="string">&quot;wasabi&quot;</span>,
             Scheme::Webdav =&gt; <span class="string">&quot;webdav&quot;</span>,
             Scheme::Webhdfs =&gt; <span class="string">&quot;webhdfs&quot;</span>,
             Scheme::Redb =&gt; <span class="string">&quot;redb&quot;</span>,
