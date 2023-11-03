@@ -248,6 +248,11 @@
 <a href="#248" id="248">248</a>
 <a href="#249" id="249">249</a>
 <a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -498,4 +503,9 @@
 </span><span class="kw">mod </span>dbfs;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-dbfs&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::dbfs::Dbfs;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-swift&quot;</span>)]
+</span><span class="kw">mod </span>swift;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-swift&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::swift::Swift;
 </code></pre></div></section></main></body></html>

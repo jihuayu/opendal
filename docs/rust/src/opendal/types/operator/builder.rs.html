@@ -391,6 +391,8 @@
 <a href="#391" id="391">391</a>
 <a href="#392" id="392">392</a>
 <a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -622,6 +624,8 @@
             </span>Scheme::Sqlite =&gt; <span class="self">Self</span>::from_map::&lt;services::Sqlite&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-supabase&quot;</span>)]
             </span>Scheme::Supabase =&gt; <span class="self">Self</span>::from_map::&lt;services::Supabase&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-swift&quot;</span>)]
+            </span>Scheme::Swift =&gt; <span class="self">Self</span>::from_map::&lt;services::Swift&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-tikv&quot;</span>)]
             </span>Scheme::Tikv =&gt; <span class="self">Self</span>::from_map::&lt;services::Tikv&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-vercel-artifacts&quot;</span>)]

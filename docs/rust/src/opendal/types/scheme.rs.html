@@ -378,6 +378,12 @@
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -491,6 +497,8 @@
     </span>Sled,
     <span class="doccomment">/// [Supabase][crate::services::Supabase]: Supabase storage service
     </span>Supabase,
+    <span class="doccomment">/// [swift][crate::services::Swift]: Swift backend support.
+    </span>Swift,
     <span class="doccomment">/// [Vercel Artifacts][crate::services::VercelArtifacts]: Vercel Artifacts service, as known as Vercel Remote Caching.
     </span>VercelArtifacts,
     <span class="doccomment">/// [webdav][crate::services::Webdav]: WebDAV support.
@@ -611,6 +619,8 @@
             </span>Scheme::Sqlite,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-supabase&quot;</span>)]
             </span>Scheme::Supabase,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-swift&quot;</span>)]
+            </span>Scheme::Swift,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-tikv&quot;</span>)]
             </span>Scheme::Tikv,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-vercel-artifacts&quot;</span>)]
@@ -687,6 +697,7 @@
             <span class="string">&quot;sftp&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Sftp),
             <span class="string">&quot;sled&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Sled),
             <span class="string">&quot;supabase&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Supabase),
+            <span class="string">&quot;swift&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Swift),
             <span class="string">&quot;oss&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Oss),
             <span class="string">&quot;vercel_artifacts&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::VercelArtifacts),
             <span class="string">&quot;webdav&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webdav),
@@ -739,6 +750,7 @@
             Scheme::Sftp =&gt; <span class="string">&quot;sftp&quot;</span>,
             Scheme::Sled =&gt; <span class="string">&quot;sled&quot;</span>,
             Scheme::Supabase =&gt; <span class="string">&quot;supabase&quot;</span>,
+            Scheme::Swift =&gt; <span class="string">&quot;swift&quot;</span>,
             Scheme::VercelArtifacts =&gt; <span class="string">&quot;vercel_artifacts&quot;</span>,
             Scheme::Oss =&gt; <span class="string">&quot;oss&quot;</span>,
             Scheme::Webdav =&gt; <span class="string">&quot;webdav&quot;</span>,
