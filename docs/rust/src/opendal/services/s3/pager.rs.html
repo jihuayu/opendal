@@ -245,6 +245,19 @@
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
 <a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -373,8 +386,10 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>meta = Metadata::new(EntryMode::FILE);
 
-            meta.set_etag(<span class="kw-2">&amp;</span>object.etag);
-            meta.set_content_md5(object.etag.trim_matches(<span class="string">&#39;&quot;&#39;</span>));
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(etag) = <span class="kw-2">&amp;</span>object.etag {
+                meta.set_etag(etag);
+                meta.set_content_md5(etag.trim_matches(<span class="string">&#39;&quot;&#39;</span>));
+            }
             meta.set_content_length(object.size);
 
             <span class="comment">// object.last_modified provides more precious time that contains
@@ -415,7 +430,7 @@
     size: u64,
     last_modified: String,
     <span class="attr">#[serde(rename = <span class="string">&quot;ETag&quot;</span>)]
-    </span>etag: String,
+    </span>etag: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="attr">#[derive(Default, Debug, Eq, PartialEq, Deserialize)]
@@ -452,6 +467,11 @@
     &lt;Size&gt;100&lt;/Size&gt;
     &lt;StorageClass&gt;STANDARD&lt;/StorageClass&gt;
   &lt;/Contents&gt;
+  &lt;Contents&gt;
+    &lt;Key&gt;photos/2008&lt;/Key&gt;
+    &lt;LastModified&gt;2016-05-30T23:51:29.000Z&lt;/LastModified&gt;
+    &lt;Size&gt;42&lt;/Size&gt;
+  &lt;/Contents&gt;
 
   &lt;CommonPrefixes&gt;
     &lt;Prefix&gt;photos/2006/February/&lt;/Prefix&gt;
@@ -479,15 +499,21 @@
                 OutputContent {
                     key: <span class="string">&quot;photos/2006&quot;</span>.to_string(),
                     size: <span class="number">56</span>,
-                    etag: <span class="string">&quot;\&quot;d41d8cd98f00b204e9800998ecf8427e\&quot;&quot;</span>.to_string(),
+                    etag: <span class="prelude-val">Some</span>(<span class="string">&quot;\&quot;d41d8cd98f00b204e9800998ecf8427e\&quot;&quot;</span>.to_string()),
                     last_modified: <span class="string">&quot;2016-04-30T23:51:29.000Z&quot;</span>.to_string(),
                 },
                 OutputContent {
                     key: <span class="string">&quot;photos/2007&quot;</span>.to_string(),
                     size: <span class="number">100</span>,
                     last_modified: <span class="string">&quot;2016-04-30T23:51:29.000Z&quot;</span>.to_string(),
-                    etag: <span class="string">&quot;\&quot;d41d8cd98f00b204e9800998ecf8427e\&quot;&quot;</span>.to_string(),
-                }
+                    etag: <span class="prelude-val">Some</span>(<span class="string">&quot;\&quot;d41d8cd98f00b204e9800998ecf8427e\&quot;&quot;</span>.to_string()),
+                },
+                OutputContent {
+                    key: <span class="string">&quot;photos/2008&quot;</span>.to_string(),
+                    size: <span class="number">42</span>,
+                    last_modified: <span class="string">&quot;2016-05-30T23:51:29.000Z&quot;</span>.to_string(),
+                    etag: <span class="prelude-val">None</span>,
+                },
             ]
         )
     }
