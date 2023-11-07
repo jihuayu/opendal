@@ -390,22 +390,22 @@
     /// - `file://data.db`
     ///
     /// For more information, please refer to [Opening A New Database Connection](http://www.sqlite.org/c3ref/open.html)
-    </span>connection_string: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    </span><span class="kw">pub </span>connection_string: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     <span class="doccomment">/// Set the table name of the sqlite service to read/write.
-    </span>table: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    </span><span class="kw">pub </span>table: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="doccomment">/// Set the key field name of the sqlite service to read/write.
     ///
     /// Default to `key` if not specified.
-    </span>key_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    </span><span class="kw">pub </span>key_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="doccomment">/// Set the value field name of the sqlite service to read/write.
     ///
     /// Default to `value` if not specified.
-    </span>value_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    </span><span class="kw">pub </span>value_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="doccomment">/// set the working directory, all operations will be performed under it.
     ///
     /// default: &quot;/&quot;
-    </span>root: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    </span><span class="kw">pub </span>root: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>SqliteConfig {
