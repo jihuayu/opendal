@@ -393,6 +393,8 @@
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -578,6 +580,8 @@
             </span>Scheme::Gcs =&gt; <span class="self">Self</span>::from_map::&lt;services::Gcs&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-ghac&quot;</span>)]
             </span>Scheme::Ghac =&gt; <span class="self">Self</span>::from_map::&lt;services::Ghac&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-gridfs&quot;</span>)]
+            </span>Scheme::Gridfs =&gt; <span class="self">Self</span>::from_map::&lt;services::Gridfs&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-hdfs&quot;</span>)]
             </span>Scheme::Hdfs =&gt; <span class="self">Self</span>::from_map::&lt;services::Hdfs&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-http&quot;</span>)]

@@ -384,6 +384,10 @@
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
 <a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -513,6 +517,8 @@
     </span>Azfile,
     <span class="doccomment">/// [mongodb](crate::services::mongodb): MongoDB Services
     </span>Mongodb,
+    <span class="doccomment">/// [gridfs](crate::services::gridfs): MongoDB Gridfs Services
+    </span>Gridfs,
     <span class="doccomment">/// Custom that allow users to implement services outside of OpenDAL.
     ///
     /// # NOTE
@@ -674,6 +680,7 @@
             <span class="string">&quot;gcs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Gcs),
             <span class="string">&quot;gdrive&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Gdrive),
             <span class="string">&quot;ghac&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ghac),
+            <span class="string">&quot;gridfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Gridfs),
             <span class="string">&quot;hdfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Hdfs),
             <span class="string">&quot;http&quot; </span>| <span class="string">&quot;https&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Http),
             <span class="string">&quot;ftp&quot; </span>| <span class="string">&quot;ftps&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ftp),
@@ -726,6 +733,7 @@
             Scheme::Fs =&gt; <span class="string">&quot;fs&quot;</span>,
             Scheme::Gcs =&gt; <span class="string">&quot;gcs&quot;</span>,
             Scheme::Ghac =&gt; <span class="string">&quot;ghac&quot;</span>,
+            Scheme::Gridfs =&gt; <span class="string">&quot;gridfs&quot;</span>,
             Scheme::Hdfs =&gt; <span class="string">&quot;hdfs&quot;</span>,
             Scheme::Http =&gt; <span class="string">&quot;http&quot;</span>,
             Scheme::Foundationdb =&gt; <span class="string">&quot;foundationdb&quot;</span>,
