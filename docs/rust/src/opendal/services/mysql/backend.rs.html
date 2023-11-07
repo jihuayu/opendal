@@ -296,6 +296,24 @@
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -320,14 +338,17 @@
 <span class="kw">use </span>mysql_async::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>mysql_async::Opts;
 <span class="kw">use </span>mysql_async::Pool;
+<span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
-#[derive(Default)]
-</span><span class="kw">pub struct </span>MysqlBuilder {
+<span class="doccomment">/// Config for Mysql services support.
+</span><span class="attr">#[derive(Default, Deserialize)]
+#[serde(default)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>MysqlConfig {
     connection_string: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
     table: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -336,15 +357,33 @@
     root: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
-<span class="kw">impl </span>Debug <span class="kw">for </span>MysqlBuilder {
+<span class="kw">impl </span>Debug <span class="kw">for </span>MysqlConfig {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        f.debug_struct(<span class="string">&quot;MysqlBuilder&quot;</span>)
-            .field(<span class="string">&quot;connection_string&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.connection_string)
+        <span class="kw">let </span><span class="kw-2">mut </span>d = f.debug_struct(<span class="string">&quot;MysqlConfig&quot;</span>);
+
+        <span class="kw">if </span><span class="self">self</span>.connection_string.is_some() {
+            d.field(<span class="string">&quot;connection_string&quot;</span>, <span class="kw-2">&amp;</span><span class="string">&quot;&lt;redacted&gt;&quot;</span>);
+        }
+
+        d.field(<span class="string">&quot;root&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .field(<span class="string">&quot;table&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.table)
             .field(<span class="string">&quot;key_field&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.key_field)
             .field(<span class="string">&quot;value_field&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.value_field)
-            .field(<span class="string">&quot;root&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .finish()
+    }
+}
+
+<span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
+#[derive(Default)]
+</span><span class="kw">pub struct </span>MysqlBuilder {
+    config: MysqlConfig,
+}
+
+<span class="kw">impl </span>Debug <span class="kw">for </span>MysqlBuilder {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">let </span><span class="kw-2">mut </span>d = f.debug_struct(<span class="string">&quot;MysqlBuilder&quot;</span>);
+
+        d.field(<span class="string">&quot;config&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config).finish()
     }
 }
 
@@ -366,7 +405,7 @@
     ///
     </span><span class="kw">pub fn </span>connection_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!v.is_empty() {
-            <span class="self">self</span>.connection_string = <span class="prelude-val">Some</span>(v.to_string());
+            <span class="self">self</span>.config.connection_string = <span class="prelude-val">Some</span>(v.to_string());
         }
         <span class="self">self
     </span>}
@@ -376,7 +415,7 @@
     /// default: &quot;/&quot;
     </span><span class="kw">pub fn </span>root(<span class="kw-2">&amp;mut </span><span class="self">self</span>, root: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!root.is_empty() {
-            <span class="self">self</span>.root = <span class="prelude-val">Some</span>(root.to_string());
+            <span class="self">self</span>.config.root = <span class="prelude-val">Some</span>(root.to_string());
         }
         <span class="self">self
     </span>}
@@ -384,7 +423,7 @@
     <span class="doccomment">/// Set the table name of the mysql service to read/write.
     </span><span class="kw">pub fn </span>table(<span class="kw-2">&amp;mut </span><span class="self">self</span>, table: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!table.is_empty() {
-            <span class="self">self</span>.table = <span class="prelude-val">Some</span>(table.to_string());
+            <span class="self">self</span>.config.table = <span class="prelude-val">Some</span>(table.to_string());
         }
         <span class="self">self
     </span>}
@@ -394,7 +433,7 @@
     /// Default to `key` if not specified.
     </span><span class="kw">pub fn </span>key_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key_field: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!key_field.is_empty() {
-            <span class="self">self</span>.key_field = <span class="prelude-val">Some</span>(key_field.to_string());
+            <span class="self">self</span>.config.key_field = <span class="prelude-val">Some</span>(key_field.to_string());
         }
         <span class="self">self
     </span>}
@@ -404,7 +443,7 @@
     /// Default to `value` if not specified.
     </span><span class="kw">pub fn </span>value_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value_field: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!value_field.is_empty() {
-            <span class="self">self</span>.value_field = <span class="prelude-val">Some</span>(value_field.to_string());
+            <span class="self">self</span>.config.value_field = <span class="prelude-val">Some</span>(value_field.to_string());
         }
         <span class="self">self
     </span>}
@@ -415,18 +454,14 @@
     <span class="kw">type </span>Accessor = MySqlBackend;
 
     <span class="kw">fn </span>from_map(map: HashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>builder = MysqlBuilder::default();
-        map.get(<span class="string">&quot;connection_string&quot;</span>)
-            .map(|v| builder.connection_string(v));
-        map.get(<span class="string">&quot;table&quot;</span>).map(|v| builder.table(v));
-        map.get(<span class="string">&quot;key_field&quot;</span>).map(|v| builder.key_field(v));
-        map.get(<span class="string">&quot;value_field&quot;</span>).map(|v| builder.value_field(v));
-        map.get(<span class="string">&quot;root&quot;</span>).map(|v| builder.root(v));
-        builder
+        <span class="kw">let </span>config = MysqlConfig::deserialize(ConfigDeserializer::new(map))
+            .expect(<span class="string">&quot;config deserialize must succeed&quot;</span>);
+
+        MysqlBuilder { config }
     }
 
     <span class="kw">fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Accessor&gt; {
-        <span class="kw">let </span>conn = <span class="kw">match </span><span class="self">self</span>.connection_string.clone() {
+        <span class="kw">let </span>conn = <span class="kw">match </span><span class="self">self</span>.config.connection_string.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v,
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -442,23 +477,24 @@
                 .set_source(err)
         })<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>table = <span class="kw">match </span><span class="self">self</span>.table.clone() {
+        <span class="kw">let </span>table = <span class="kw">match </span><span class="self">self</span>.config.table.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v,
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(ErrorKind::ConfigInvalid, <span class="string">&quot;table is empty&quot;</span>)
                     .with_context(<span class="string">&quot;service&quot;</span>, Scheme::Mysql))
             }
         };
-        <span class="kw">let </span>key_field = <span class="kw">match </span><span class="self">self</span>.key_field.clone() {
+        <span class="kw">let </span>key_field = <span class="kw">match </span><span class="self">self</span>.config.key_field.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v,
             <span class="prelude-val">None </span>=&gt; <span class="string">&quot;key&quot;</span>.to_string(),
         };
-        <span class="kw">let </span>value_field = <span class="kw">match </span><span class="self">self</span>.value_field.clone() {
+        <span class="kw">let </span>value_field = <span class="kw">match </span><span class="self">self</span>.config.value_field.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v,
             <span class="prelude-val">None </span>=&gt; <span class="string">&quot;value&quot;</span>.to_string(),
         };
         <span class="kw">let </span>root = normalize_root(
-            <span class="self">self</span>.root
+            <span class="self">self</span>.config
+                .root
                 .clone()
                 .unwrap_or_else(|| <span class="string">&quot;/&quot;</span>.to_string())
                 .as_str(),
@@ -543,8 +579,8 @@
 
     <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;INSERT INTO `{}` (`{}`, `{}`) 
-            VALUES (:path, :value) 
+            <span class="string">&quot;INSERT INTO `{}` (`{}`, `{}`)
+            VALUES (:path, :value)
             ON DUPLICATE KEY UPDATE `{}` = VALUES({})&quot;</span>,
             <span class="self">self</span>.table, <span class="self">self</span>.key_field, <span class="self">self</span>.value_field, <span class="self">self</span>.value_field, <span class="self">self</span>.value_field
         );

@@ -266,6 +266,8 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -502,6 +504,8 @@
 </span><span class="kw">mod </span>mysql;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-mysql&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::mysql::Mysql;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-mysql&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::mysql::MysqlConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-sqlite&quot;</span>)]
 </span><span class="kw">mod </span>sqlite;
