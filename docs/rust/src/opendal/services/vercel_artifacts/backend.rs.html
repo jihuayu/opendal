@@ -180,6 +180,7 @@
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -210,7 +211,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="attr">#[derive(Clone)]
+<span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
+#[derive(Clone)]
 </span><span class="kw">pub struct </span>VercelArtifactsBackend {
     <span class="kw">pub</span>(<span class="kw">crate</span>) access_token: String,
     <span class="kw">pub</span>(<span class="kw">crate</span>) client: HttpClient,
