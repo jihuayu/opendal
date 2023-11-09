@@ -389,7 +389,7 @@
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>TikvBuilder {
     <span class="kw">const </span>SCHEME: Scheme = Scheme::Tikv;
-    <span class="kw">type </span>Accessor = Backend;
+    <span class="kw">type </span>Accessor = TikvBackend;
 
     <span class="kw">fn </span>from_map(map: HashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>config = TikvConfig::deserialize(ConfigDeserializer::new(map))
@@ -419,7 +419,7 @@
             )<span class="question-mark">?</span>;
         }
 
-        <span class="prelude-val">Ok</span>(Backend::new(Adapter {
+        <span class="prelude-val">Ok</span>(TikvBackend::new(Adapter {
             client: OnceCell::new(),
             endpoints,
             insecure: <span class="self">self</span>.config.insecure,
@@ -431,7 +431,7 @@
 }
 
 <span class="doccomment">/// Backend for TiKV service
-</span><span class="kw">pub type </span>Backend = kv::Backend&lt;Adapter&gt;;
+</span><span class="kw">pub type </span>TikvBackend = kv::Backend&lt;Adapter&gt;;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Adapter {
