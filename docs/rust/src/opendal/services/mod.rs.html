@@ -278,6 +278,8 @@
 <a href="#278" id="278">278</a>
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -328,6 +330,8 @@
 </span><span class="kw">mod </span>etcd;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-etcd&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::etcd::Etcd;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-etcd&quot;</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::etcd::EtcdConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-fs&quot;</span>)]
 </span><span class="kw">mod </span>fs;
