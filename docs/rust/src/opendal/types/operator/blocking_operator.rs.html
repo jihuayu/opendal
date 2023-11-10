@@ -1945,7 +1945,7 @@
             <span class="kw">return </span><span class="self">self</span>.delete(path);
         }
 
-        <span class="kw">let </span>obs = <span class="self">self</span>.lister_with(path).delimiter(<span class="string">&quot;&quot;</span>).call()<span class="question-mark">?</span>;
+        <span class="kw">let </span>obs = <span class="self">self</span>.lister_with(path).recursive(<span class="bool-val">true</span>).call()<span class="question-mark">?</span>;
 
         <span class="kw">for </span>v <span class="kw">in </span>obs {
             <span class="kw">match </span>v {
@@ -1970,7 +1970,7 @@
     /// ## Listing recursively
     ///
     /// This function only read the children of the given directory. To read
-    /// all entries recursively, use `BlockingOperator::list_with(&quot;path&quot;).delimiter(&quot;&quot;)`
+    /// all entries recursively, use `BlockingOperator::list_with(&quot;path&quot;).recursive(true)`
     /// instead.
     ///
     /// ## Streaming
@@ -2044,7 +2044,7 @@
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
-    /// let mut entries = op.list_with(&quot;prefix/&quot;).delimiter(&quot;&quot;).call()?;
+    /// let mut entries = op.list_with(&quot;prefix/&quot;).recursive(true).call()?;
     /// for entry in entries {
     ///     match entry.metadata().mode() {
     ///         EntryMode::FILE =&gt; {
@@ -2214,7 +2214,7 @@
     /// use opendal::EntryMode;
     /// use opendal::Metakey;
     /// # fn test(op: BlockingOperator) -&gt; Result&lt;()&gt; {
-    /// let mut ds = op.lister_with(&quot;path/to/dir/&quot;).delimiter(&quot;&quot;).call()?;
+    /// let mut ds = op.lister_with(&quot;path/to/dir/&quot;).recursive(true).call()?;
     /// for entry in ds {
     ///     let entry = entry?;
     ///     match entry.metadata().mode() {

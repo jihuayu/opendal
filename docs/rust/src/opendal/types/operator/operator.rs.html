@@ -2355,7 +2355,7 @@
             <span class="kw">return </span><span class="self">self</span>.delete(path).<span class="kw">await</span>;
         }
 
-        <span class="kw">let </span>obs = <span class="self">self</span>.lister_with(path).delimiter(<span class="string">&quot;&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>obs = <span class="self">self</span>.lister_with(path).recursive(<span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span><span class="self">self</span>.info().full_capability().batch {
             <span class="kw">let </span><span class="kw-2">mut </span>obs = obs.try_chunks(<span class="self">self</span>.limit());
@@ -2396,7 +2396,7 @@
     /// ## Listing recursively
     ///
     /// This function only read the children of the given directory. To read
-    /// all entries recursively, use `Operator::list_with(&quot;path&quot;).delimiter(&quot;&quot;)`
+    /// all entries recursively, use `Operator::list_with(&quot;path&quot;).recursive(true)`
     /// instead.
     ///
     /// ## Streaming
@@ -2472,7 +2472,7 @@
     /// use opendal::Operator;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let mut entries = op.list_with(&quot;prefix/&quot;).delimiter(&quot;&quot;).await?;
+    /// let mut entries = op.list_with(&quot;prefix/&quot;).recursive(true).await?;
     /// for entry in entries {
     ///     match entry.metadata().mode() {
     ///         EntryMode::FILE =&gt; {
@@ -2560,7 +2560,7 @@
     /// ## Listing recursively
     ///
     /// This function only read the children of the given directory. To read
-    /// all entries recursively, use [`Operator::lister_with`] and `delimiter(&quot;&quot;)`
+    /// all entries recursively, use [`Operator::lister_with`] and `recursive(true)`
     /// instead.
     ///
     /// ## Metadata
@@ -2648,7 +2648,7 @@
     /// use opendal::Operator;
     /// # #[tokio::main]
     /// # async fn test(op: Operator) -&gt; Result&lt;()&gt; {
-    /// let mut ds = op.lister_with(&quot;path/to/dir/&quot;).delimiter(&quot;&quot;).await?;
+    /// let mut ds = op.lister_with(&quot;path/to/dir/&quot;).recursive(true).await?;
     /// while let Some(mut entry) = ds.try_next().await? {
     ///     match entry.metadata().mode() {
     ///         EntryMode::FILE =&gt; {

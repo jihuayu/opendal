@@ -224,7 +224,7 @@ op.remove_via(stream)<span class="question-mark">?</span>;</code></pre></div>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.list" class="method"><a class="src rightside" href="../src/opendal/types/operator/blocking_operator.rs.html#865-867">source</a><h4 class="code-header">pub fn <a href="#method.list" class="fn">list</a>(&amp;self, path: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.str.html">str</a>) -&gt; <a class="type" href="type.Result.html" title="type opendal::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.73.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="struct.Entry.html" title="struct opendal::Entry">Entry</a>&gt;&gt;</h4></section></summary><div class="docblock"><p>List entries within a given directory.</p>
 <h5 id="notes-13"><a href="#notes-13">Notes</a></h5><h6 id="listing-recursively"><a href="#listing-recursively">Listing recursively</a></h6>
 <p>This function only read the children of the given directory. To read
-all entries recursively, use <code>BlockingOperator::list_with(&quot;path&quot;).delimiter(&quot;&quot;)</code>
+all entries recursively, use <code>BlockingOperator::list_with(&quot;path&quot;).recursive(true)</code>
 instead.</p>
 <h6 id="streaming"><a href="#streaming">Streaming</a></h6>
 <p>This function will read all entries in the given directory. It could
@@ -267,7 +267,7 @@ For fetching more metadata, please specify the <code>metakey</code>.</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">let </span><span class="kw-2">mut </span>entries = op.list_with(<span class="string">&quot;prefix/&quot;</span>).delimiter(<span class="string">&quot;&quot;</span>).call()<span class="question-mark">?</span>;
+<span class="kw">let </span><span class="kw-2">mut </span>entries = op.list_with(<span class="string">&quot;prefix/&quot;</span>).recursive(<span class="bool-val">true</span>).call()<span class="question-mark">?</span>;
 <span class="kw">for </span>entry <span class="kw">in </span>entries {
     <span class="kw">match </span>entry.metadata().mode() {
         EntryMode::FILE =&gt; {
@@ -361,7 +361,7 @@ For fetching more metadata, please use <a href="struct.BlockingOperator.html#met
 <span class="kw">use </span>opendal::BlockingOperator;
 <span class="kw">use </span>opendal::EntryMode;
 <span class="kw">use </span>opendal::Metakey;
-<span class="kw">let </span><span class="kw-2">mut </span>ds = op.lister_with(<span class="string">&quot;path/to/dir/&quot;</span>).delimiter(<span class="string">&quot;&quot;</span>).call()<span class="question-mark">?</span>;
+<span class="kw">let </span><span class="kw-2">mut </span>ds = op.lister_with(<span class="string">&quot;path/to/dir/&quot;</span>).recursive(<span class="bool-val">true</span>).call()<span class="question-mark">?</span>;
 <span class="kw">for </span>entry <span class="kw">in </span>ds {
     <span class="kw">let </span>entry = entry<span class="question-mark">?</span>;
     <span class="kw">match </span>entry.metadata().mode() {

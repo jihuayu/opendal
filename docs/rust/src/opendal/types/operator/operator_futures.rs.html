@@ -593,6 +593,38 @@
 <a href="#593" id="593">593</a>
 <a href="#594" id="594">594</a>
 <a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1117,25 +1149,41 @@
 </span><span class="kw">pub struct </span>FutureList(<span class="kw">pub</span>(<span class="kw">crate</span>) OperatorFuture&lt;OpList, Vec&lt;Entry&gt;&gt;);
 
 <span class="kw">impl </span>FutureList {
-    <span class="doccomment">/// Change the limit of this list operation.
+    <span class="doccomment">/// The limit passed to underlying service to specify the max results
+    /// that could return per-request.
+    ///
+    /// Users could use this to control the memory usage of list operation.
     </span><span class="kw">pub fn </span>limit(<span class="kw-2">mut </span><span class="self">self</span>, v: usize) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_limit(v));
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Change the start_after of this list operation.
+    <span class="doccomment">/// The start_after passes to underlying service to specify the specified key
+    /// to start listing from.
     </span><span class="kw">pub fn </span>start_after(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_start_after(v));
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Change the delimiter. The default delimiter is &quot;/&quot;
-    </span><span class="kw">pub fn </span>delimiter(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_delimiter(v));
+    <span class="doccomment">/// The recursive is used to control whether the list operation is recursive.
+    ///
+    /// - If `false`, list operation will only list the entries under the given path.
+    /// - If `true`, list operation will list all entries that starts with given path.
+    ///
+    /// Default to `false`.
+    </span><span class="kw">pub fn </span>recursive(<span class="kw-2">mut </span><span class="self">self</span>, v: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_recursive(v));
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Change the metakey. The default metakey is `Metakey::Mode`.
+    <span class="doccomment">/// Metakey is used to control which meta should be returned.
+    ///
+    /// Lister will make sure the result for specified meta is **known**:
+    ///
+    /// - `Some(v)` means exist.
+    /// - `None` means services doesn&#39;t have this meta.
+    ///
+    /// The default metakey is `Metakey::Mode`.
     </span><span class="kw">pub fn </span>metakey(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw">impl </span>Into&lt;FlagSet&lt;Metakey&gt;&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_metakey(v));
         <span class="self">self
@@ -1156,25 +1204,41 @@
 </span><span class="kw">pub struct </span>FutureLister(<span class="kw">pub</span>(<span class="kw">crate</span>) OperatorFuture&lt;OpList, Lister&gt;);
 
 <span class="kw">impl </span>FutureLister {
-    <span class="doccomment">/// Change the limit of this list operation.
+    <span class="doccomment">/// The limit passed to underlying service to specify the max results
+    /// that could return per-request.
+    ///
+    /// Users could use this to control the memory usage of list operation.
     </span><span class="kw">pub fn </span>limit(<span class="kw-2">mut </span><span class="self">self</span>, v: usize) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_limit(v));
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Change the start_after of this list operation.
+    <span class="doccomment">/// The start_after passes to underlying service to specify the specified key
+    /// to start listing from.
     </span><span class="kw">pub fn </span>start_after(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_start_after(v));
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Change the delimiter. The default delimiter is &quot;/&quot;
-    </span><span class="kw">pub fn </span>delimiter(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_delimiter(v));
+    <span class="doccomment">/// The recursive is used to control whether the list operation is recursive.
+    ///
+    /// - If `false`, list operation will only list the entries under the given path.
+    /// - If `true`, list operation will list all entries that starts with given path.
+    ///
+    /// Default to `false`.
+    </span><span class="kw">pub fn </span>recursive(<span class="kw-2">mut </span><span class="self">self</span>, v: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_recursive(v));
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Change the metakey. The default metakey is `Metakey::Mode`.
+    <span class="doccomment">/// Metakey is used to control which meta should be returned.
+    ///
+    /// Lister will make sure the result for specified meta is **known**:
+    ///
+    /// - `Some(v)` means exist.
+    /// - `None` means services doesn&#39;t have this meta.
+    ///
+    /// The default metakey is `Metakey::Mode`.
     </span><span class="kw">pub fn </span>metakey(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw">impl </span>Into&lt;FlagSet&lt;Metakey&gt;&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_metakey(v));
         <span class="self">self

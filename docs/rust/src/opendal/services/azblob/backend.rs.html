@@ -1463,8 +1463,8 @@
                 copy: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
-                list_with_delimiter_slash: <span class="bool-val">true</span>,
-                list_without_delimiter: <span class="bool-val">true</span>,
+                list_without_recursive: <span class="bool-val">true</span>,
+                list_with_recursive: <span class="bool-val">true</span>,
 
                 presign: <span class="self">self</span>.has_sas_token,
                 presign_stat: <span class="self">self</span>.has_sas_token,
@@ -1578,7 +1578,7 @@
         <span class="kw">let </span>op = AzblobPager::new(
             <span class="self">self</span>.core.clone(),
             path.to_string(),
-            args.delimiter().to_string(),
+            args.recursive(),
             args.limit(),
         );
 

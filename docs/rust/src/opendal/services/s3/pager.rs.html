@@ -258,6 +258,7 @@
 <a href="#258" id="258">258</a>
 <a href="#259" id="259">259</a>
 <a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -293,7 +294,7 @@
     core: Arc&lt;S3Core&gt;,
 
     path: String,
-    delimiter: String,
+    delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 
     <span class="doccomment">/// Amazon S3 starts listing **after** this specified key
@@ -307,15 +308,16 @@
     <span class="kw">pub fn </span>new(
         core: Arc&lt;S3Core&gt;,
         path: <span class="kw-2">&amp;</span>str,
-        delimiter: <span class="kw-2">&amp;</span>str,
+        recursive: bool,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         start_after: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>delimiter = <span class="kw">if </span>recursive { <span class="string">&quot;&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;/&quot; </span>};
         <span class="self">Self </span>{
             core,
 
             path: path.to_string(),
-            delimiter: delimiter.to_string(),
+            delimiter,
             limit,
             start_after: start_after.map(String::from),
 
@@ -337,7 +339,7 @@
             .s3_list_objects(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.token,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.delimiter,
+                <span class="self">self</span>.delimiter,
                 <span class="self">self</span>.limit,
                 <span class="self">self</span>.start_after.clone(),
             )

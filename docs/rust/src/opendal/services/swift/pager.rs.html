@@ -179,6 +179,7 @@
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -209,12 +210,13 @@
 <span class="kw">pub struct </span>SwiftPager {
     core: Arc&lt;SwiftCore&gt;,
     path: String,
-    delimiter: String,
+    delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     done: bool,
 }
 
 <span class="kw">impl </span>SwiftPager {
-    <span class="kw">pub fn </span>new(core: Arc&lt;SwiftCore&gt;, path: String, delimiter: String) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(core: Arc&lt;SwiftCore&gt;, path: String, recursive: bool) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>delimiter = <span class="kw">if </span>recursive { <span class="string">&quot;&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;/&quot; </span>};
         <span class="self">Self </span>{
             core,
             path,
@@ -231,7 +233,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         }
 
-        <span class="kw">let </span>response = <span class="self">self</span>.core.swift_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.delimiter).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>response = <span class="self">self</span>.core.swift_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="self">self</span>.delimiter).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status_code = response.status();
 

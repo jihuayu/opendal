@@ -318,6 +318,7 @@
 <a href="#318" id="318">318</a>
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -352,7 +353,7 @@
     core: Arc&lt;GcsCore&gt;,
 
     path: String,
-    delimiter: String,
+    delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 
     <span class="doccomment">/// Filter results to objects whose names are lexicographically
@@ -368,15 +369,16 @@
     </span><span class="kw">pub fn </span>new(
         core: Arc&lt;GcsCore&gt;,
         path: <span class="kw-2">&amp;</span>str,
-        delimiter: <span class="kw-2">&amp;</span>str,
+        recursive: bool,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         start_after: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
     ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>delimiter = <span class="kw">if </span>recursive { <span class="string">&quot;&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;/&quot; </span>};
         <span class="self">Self </span>{
             core,
 
             path: path.to_string(),
-            delimiter: delimiter.to_string(),
+            delimiter,
             limit,
             start_after: start_after.map(String::from),
 
@@ -398,7 +400,7 @@
             .gcs_list_objects(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.page_token,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.delimiter,
+                <span class="self">self</span>.delimiter,
                 <span class="self">self</span>.limit,
                 <span class="self">self</span>.start_after.clone(),
             )

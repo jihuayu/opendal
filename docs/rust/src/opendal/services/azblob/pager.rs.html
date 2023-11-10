@@ -350,9 +350,6 @@
 <a href="#350" id="350">350</a>
 <a href="#351" id="351">351</a>
 <a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -386,7 +383,7 @@
     core: Arc&lt;AzblobCore&gt;,
 
     path: String,
-    delimiter: String,
+    delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 
     next_marker: String,
@@ -394,12 +391,9 @@
 }
 
 <span class="kw">impl </span>AzblobPager {
-    <span class="kw">pub fn </span>new(
-        core: Arc&lt;AzblobCore&gt;,
-        path: String,
-        delimiter: String,
-        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(core: Arc&lt;AzblobCore&gt;, path: String, recursive: bool, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>delimiter = <span class="kw">if </span>recursive { <span class="string">&quot;&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;/&quot; </span>};
+
         <span class="self">Self </span>{
             core,
             path,
@@ -421,7 +415,7 @@
 
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .azblob_list_blobs(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.next_marker, <span class="kw-2">&amp;</span><span class="self">self</span>.delimiter, <span class="self">self</span>.limit)
+            .azblob_list_blobs(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.next_marker, <span class="self">self</span>.delimiter, <span class="self">self</span>.limit)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span>resp.status() != http::StatusCode::OK {

@@ -731,8 +731,8 @@
                 copy: <span class="bool-val">true</span>,
 
                 list: <span class="bool-val">true</span>,
-                list_with_delimiter_slash: <span class="bool-val">true</span>,
-                list_without_delimiter: <span class="bool-val">true</span>,
+                list_without_recursive: <span class="bool-val">true</span>,
+                list_with_recursive: <span class="bool-val">true</span>,
 
                 presign: <span class="bool-val">true</span>,
                 presign_stat: <span class="bool-val">true</span>,
@@ -866,7 +866,7 @@
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
         <span class="prelude-val">Ok</span>((
             RpList::default(),
-            ObsPager::new(<span class="self">self</span>.core.clone(), path, args.delimiter(), args.limit()),
+            ObsPager::new(<span class="self">self</span>.core.clone(), path, args.recursive(), args.limit()),
         ))
     }
 }

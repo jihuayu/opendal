@@ -208,6 +208,7 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -244,7 +245,7 @@
 <span class="kw">pub struct </span>CosPager {
     core: Arc&lt;CosCore&gt;,
     path: String,
-    delimiter: String,
+    delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 
     next_marker: String,
@@ -252,11 +253,12 @@
 }
 
 <span class="kw">impl </span>CosPager {
-    <span class="kw">pub fn </span>new(core: Arc&lt;CosCore&gt;, path: <span class="kw-2">&amp;</span>str, delimiter: <span class="kw-2">&amp;</span>str, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(core: Arc&lt;CosCore&gt;, path: <span class="kw-2">&amp;</span>str, recursive: bool, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>delimiter = <span class="kw">if </span>recursive { <span class="string">&quot;&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;/&quot; </span>};
         <span class="self">Self </span>{
             core,
             path: path.to_string(),
-            delimiter: delimiter.to_string(),
+            delimiter,
             limit,
 
             next_marker: <span class="string">&quot;&quot;</span>.to_string(),
@@ -274,7 +276,7 @@
 
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .cos_list_objects(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.next_marker, <span class="kw-2">&amp;</span><span class="self">self</span>.delimiter, <span class="self">self</span>.limit)
+            .cos_list_objects(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.next_marker, <span class="self">self</span>.delimiter, <span class="self">self</span>.limit)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span>resp.status() != http::StatusCode::OK {

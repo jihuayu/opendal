@@ -981,8 +981,8 @@
                 list: <span class="bool-val">true</span>,
                 list_with_limit: <span class="bool-val">true</span>,
                 list_with_start_after: <span class="bool-val">true</span>,
-                list_with_delimiter_slash: <span class="bool-val">true</span>,
-                list_without_delimiter: <span class="bool-val">true</span>,
+                list_without_recursive: <span class="bool-val">true</span>,
+                list_with_recursive: <span class="bool-val">true</span>,
 
                 batch: <span class="bool-val">true</span>,
                 batch_max_operations: <span class="prelude-val">Some</span>(<span class="number">100</span>),
@@ -1108,7 +1108,7 @@
             GcsPager::new(
                 <span class="self">self</span>.core.clone(),
                 path,
-                args.delimiter(),
+                args.recursive(),
                 args.limit(),
                 args.start_after(),
             ),

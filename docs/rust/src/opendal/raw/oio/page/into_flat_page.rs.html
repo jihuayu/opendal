@@ -345,7 +345,7 @@
     </span>{
         <span class="kw">let </span>meta = acc.info();
         <span class="macro">debug_assert!</span>(
-            meta.full_capability().list_with_delimiter_slash,
+            meta.full_capability().list_without_recursive,
             <span class="string">&quot;service doesn&#39;t support list hierarchy, it must be a bug&quot;
         </span>);
     }
@@ -570,7 +570,7 @@
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
             am.full_capability_mut().list = <span class="bool-val">true</span>;
-            am.full_capability_mut().list_with_delimiter_slash = <span class="bool-val">true</span>;
+            am.full_capability_mut().list_without_recursive = <span class="bool-val">true</span>;
 
             am
         }
