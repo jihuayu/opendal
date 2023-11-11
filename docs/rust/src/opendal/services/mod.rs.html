@@ -280,6 +280,8 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -305,6 +307,8 @@
 </span><span class="kw">mod </span>azblob;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-azblob&quot;</span>)]
 </span><span class="kw">pub use </span>azblob::Azblob;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-azblob&quot;</span>)]
+</span><span class="kw">pub use </span>azblob::AzblobConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-azdls&quot;</span>)]
 </span><span class="kw">mod </span>azdls;
