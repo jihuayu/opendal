@@ -990,7 +990,7 @@ opendal_list_entry_name() </dd></dl>
 <h1><a class="anchor" id="autotoc_md5"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="comment">// ... previously you wrote &quot;Hello, World!&quot; to path &quot;/testpath&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
 <div class="line">assert(s.<a class="code" href="structopendal__result__stat.html#a657eee3bfdf805036f169d94ee70dce9">error</a> == NULL);</div>
 <div class="line"> </div>
 <div class="line"><a class="code" href="structopendal__metadata.html">opendal_metadata</a> *meta = s.<a class="code" href="structopendal__result__stat.html#a1d4d484d7bf50bc8e5d65dea5f6f2425">meta</a>;</div>
@@ -1044,7 +1044,7 @@ Example</h1>
 <h1><a class="anchor" id="autotoc_md7"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="comment">// ... previously you wrote &quot;Hello, World!&quot; to path &quot;/testpath&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
 <div class="line">assert(s.<a class="code" href="structopendal__result__stat.html#a657eee3bfdf805036f169d94ee70dce9">error</a> == NULL);</div>
 <div class="line"> </div>
 <div class="line"><a class="code" href="structopendal__metadata.html">opendal_metadata</a> *meta = s.<a class="code" href="structopendal__result__stat.html#a1d4d484d7bf50bc8e5d65dea5f6f2425">meta</a>;</div>
@@ -1076,7 +1076,7 @@ Example</h1>
 <h1><a class="anchor" id="autotoc_md6"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="comment">// ... previously you wrote &quot;Hello, World!&quot; to path &quot;/testpath&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
 <div class="line">assert(s.<a class="code" href="structopendal__result__stat.html#a657eee3bfdf805036f169d94ee70dce9">error</a> == NULL);</div>
 <div class="line"> </div>
 <div class="line"><a class="code" href="structopendal__metadata.html">opendal_metadata</a> *meta = s.<a class="code" href="structopendal__result__stat.html#a1d4d484d7bf50bc8e5d65dea5f6f2425">meta</a>;</div>
@@ -1105,7 +1105,7 @@ Example</h1>
 <h1><a class="anchor" id="autotoc_md8"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="comment">// ... previously you wrote &quot;Hello, World!&quot; to path &quot;/testpath&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
 <div class="line">assert(s.<a class="code" href="structopendal__result__stat.html#a657eee3bfdf805036f169d94ee70dce9">error</a> == NULL);</div>
 <div class="line"> </div>
 <div class="line"><a class="code" href="structopendal__metadata.html">opendal_metadata</a> *meta = s.<a class="code" href="structopendal__result__stat.html#a1d4d484d7bf50bc8e5d65dea5f6f2425">meta</a>;</div>
@@ -1150,7 +1150,7 @@ Example</h1>
 <p>Copy the object in <code>src</code> to <code>dest</code> blockingly by <code>op</code>. Error is NULL if successful, otherwise it contains the error code and error message.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">src</td><td>The designated source path you want to copy </td></tr>
     <tr><td class="paramname">dest</td><td>The designated destination path you want to copy </td></tr>
   </table>
@@ -1162,17 +1162,17 @@ Example</h1>
 <dl class="section return"><dt>Returns</dt><dd>NULL if succeeds, otherwise it contains the error code and error message.</dd></dl>
 <h1><a class="anchor" id="autotoc_md39"></a>
 Example</h1>
-<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named ptr for example</span></div>
+<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named op for example</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// prepare your data</span></div>
 <div class="line"><span class="keywordtype">char</span>* data = <span class="stringliteral">&quot;Hello, World!&quot;</span>;</div>
 <div class="line"><a class="code" href="structopendal__bytes.html">opendal_bytes</a> bytes = <a class="code" href="structopendal__bytes.html">opendal_bytes</a> { .<a class="code" href="structopendal__bytes.html#af7a7f99a262f8a3912f4d1cddb798c86">data</a> = (uint8_t*)data, .len = 13 };</div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
 <div class="line"> </div>
 <div class="line">assert(error == NULL);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// now you can renmae!</span></div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#a5d9b1d855b30fa8bd56d1399293b85da">opendal_operator_copy</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>, <span class="stringliteral">&quot;/testpath2&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#a5d9b1d855b30fa8bd56d1399293b85da">opendal_operator_copy</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>, <span class="stringliteral">&quot;/testpath2&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Assert that this succeeds</span></div>
 <div class="line">assert(error == NULL);</div>
@@ -1224,7 +1224,7 @@ Panic</h1>
 <p>Create the directory in <code>path</code> blockingly by <code>op_ptr</code>. Error is NULL if successful, otherwise it contains the error code and error message.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The designated directory you want to create </td></tr>
   </table>
   </dd>
@@ -1235,10 +1235,10 @@ Panic</h1>
 <dl class="section return"><dt>Returns</dt><dd>NULL if succeeds, otherwise it contains the error code and error message.</dd></dl>
 <h1><a class="anchor" id="autotoc_md33"></a>
 Example</h1>
-<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named ptr for example</span></div>
+<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named op for example</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// create your directory</span></div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#aa13f840e6fd4fa75d0cd0482db7e4b26">opendal_operator_create_dir</a>(ptr, <span class="stringliteral">&quot;/testdir/&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#aa13f840e6fd4fa75d0cd0482db7e4b26">opendal_operator_create_dir</a>(op, <span class="stringliteral">&quot;/testdir/&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Assert that this succeeds</span></div>
 <div class="line">assert(error == NULL);</div>
@@ -1286,7 +1286,7 @@ Panic</h1>
 <p>Delete the object in <code>path</code> blockingly by <code>op_ptr</code>. Error is NULL if successful, otherwise it contains the error code and error message.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The designated path you want to delete </td></tr>
   </table>
   </dd>
@@ -1297,17 +1297,17 @@ Panic</h1>
 <dl class="section return"><dt>Returns</dt><dd>NULL if succeeds, otherwise it contains the error code and error message.</dd></dl>
 <h1><a class="anchor" id="autotoc_md21"></a>
 Example</h1>
-<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named ptr for example</span></div>
+<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named op for example</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// prepare your data</span></div>
 <div class="line"><span class="keywordtype">char</span>* data = <span class="stringliteral">&quot;Hello, World!&quot;</span>;</div>
 <div class="line"><a class="code" href="structopendal__bytes.html">opendal_bytes</a> bytes = <a class="code" href="structopendal__bytes.html">opendal_bytes</a> { .<a class="code" href="structopendal__bytes.html#af7a7f99a262f8a3912f4d1cddb798c86">data</a> = (uint8_t*)data, .len = 13 };</div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
 <div class="line"> </div>
 <div class="line">assert(error == NULL);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// now you can delete!</span></div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#ad21a0a160ee32cfa90e2e0ca1e1da0dc">opendal_operator_delete</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#ad21a0a160ee32cfa90e2e0ca1e1da0dc">opendal_operator_delete</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Assert that this succeeds</span></div>
 <div class="line">assert(error == NULL);</div>
@@ -1345,11 +1345,11 @@ Panic</h1>
 <p>Please only use this for a pointer pointing at a valid <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a>. Calling this function on NULL does nothing, but calling this function on pointers of other type will lead to segfault.</p>
 <h1><a class="anchor" id="autotoc_md9"></a>
 Example</h1>
-<div class="fragment"><div class="line"><a class="code" href="structopendal__operator.html">opendal_operator</a> *ptr = <a class="code" href="opendal_8h.html#a3b32f655689a122d2b6feff169fac442">opendal_operator_new</a>(<span class="stringliteral">&quot;fs&quot;</span>, NULL);</div>
-<div class="line"><span class="comment">// ... use this ptr, maybe some reads and writes</span></div>
+<div class="fragment"><div class="line"><a class="code" href="structopendal__operator.html">opendal_operator</a> *op = <a class="code" href="opendal_8h.html#a3b32f655689a122d2b6feff169fac442">opendal_operator_new</a>(<span class="stringliteral">&quot;fs&quot;</span>, NULL);</div>
+<div class="line"><span class="comment">// ... use this op, maybe some reads and writes</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// free this operator</span></div>
-<div class="line"><a class="code" href="opendal_8h.html#a04d551eea4b6248d96c9ce9278d27855">opendal_operator_free</a>(ptr);</div>
+<div class="line"><a class="code" href="opendal_8h.html#a04d551eea4b6248d96c9ce9278d27855">opendal_operator_free</a>(op);</div>
 <div class="ttc" id="aopendal_8h_html_a04d551eea4b6248d96c9ce9278d27855"><div class="ttname"><a href="opendal_8h.html#a04d551eea4b6248d96c9ce9278d27855">opendal_operator_free</a></div><div class="ttdeci">void opendal_operator_free(const struct opendal_operator *op)</div><div class="ttdoc">Free the heap-allocated operator pointed by opendal_operator.</div></div>
 <div class="ttc" id="aopendal_8h_html_a3b32f655689a122d2b6feff169fac442"><div class="ttname"><a href="opendal_8h.html#a3b32f655689a122d2b6feff169fac442">opendal_operator_new</a></div><div class="ttdeci">struct opendal_result_operator_new opendal_operator_new(const char *scheme, const struct opendal_operator_options *options)</div><div class="ttdoc">Construct an operator based on scheme and options</div></div>
 <div class="ttc" id="astructopendal__operator_html"><div class="ttname"><a href="structopendal__operator.html">opendal_operator</a></div><div class="ttdoc">Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...</div><div class="ttdef"><b>Definition:</b> opendal.h:334</div></div>
@@ -1543,7 +1543,7 @@ Example</h1>
 <p>If the operation succeeds, no matter the path exists or not, the error should be a nullptr. Otherwise, the field <code>is_exist</code> is filled with false, and the error is set</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The path you want to check existence </td></tr>
   </table>
   </dd>
@@ -1557,12 +1557,12 @@ Example</h1>
 <h1><a class="anchor" id="autotoc_md24"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="comment">// .. you previously wrote some data to path &quot;/mytest/obj&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__is__exist.html">opendal_result_is_exist</a> e = <a class="code" href="opendal_8h.html#acc6c32aa41963ac67e612dc47f7edb46">opendal_operator_is_exist</a>(ptr, <span class="stringliteral">&quot;/mytest/obj&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__is__exist.html">opendal_result_is_exist</a> e = <a class="code" href="opendal_8h.html#acc6c32aa41963ac67e612dc47f7edb46">opendal_operator_is_exist</a>(op, <span class="stringliteral">&quot;/mytest/obj&quot;</span>);</div>
 <div class="line">assert(e.<a class="code" href="structopendal__result__is__exist.html#a6dc61502ab68ba25bcd56b09a215de6c">error</a> == NULL);</div>
 <div class="line">assert(e.<a class="code" href="structopendal__result__is__exist.html#abe145d68333ea78b438ef92a12d9d295">is_exist</a>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// but you previously did **not** write any data to path &quot;/yourtest/obj&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__is__exist.html">opendal_result_is_exist</a> e = <a class="code" href="opendal_8h.html#acc6c32aa41963ac67e612dc47f7edb46">opendal_operator_is_exist</a>(ptr, <span class="stringliteral">&quot;/yourtest/obj&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__is__exist.html">opendal_result_is_exist</a> e = <a class="code" href="opendal_8h.html#acc6c32aa41963ac67e612dc47f7edb46">opendal_operator_is_exist</a>(op, <span class="stringliteral">&quot;/yourtest/obj&quot;</span>);</div>
 <div class="line">assert(e.<a class="code" href="structopendal__result__is__exist.html#a6dc61502ab68ba25bcd56b09a215de6c">error</a> == NULL);</div>
 <div class="line">assert(!e.<a class="code" href="structopendal__result__is__exist.html#abe145d68333ea78b438ef92a12d9d295">is_exist</a>);</div>
 <div class="ttc" id="aopendal_8h_html_acc6c32aa41963ac67e612dc47f7edb46"><div class="ttname"><a href="opendal_8h.html#acc6c32aa41963ac67e612dc47f7edb46">opendal_operator_is_exist</a></div><div class="ttdeci">struct opendal_result_is_exist opendal_operator_is_exist(const struct opendal_operator *op, const char *path)</div><div class="ttdoc">Check whether the path exists.</div></div>
@@ -1612,7 +1612,7 @@ Panic</h1>
 <p>List the object in <code>path</code> blockingly by <code>op_ptr</code>, return a result with a <a class="el" href="structopendal__lister.html" title="BlockingLister is designed to list entries at given path in a blocking manner.">opendal_lister</a>. Users should call <a class="el" href="opendal_8h.html#a8429a4433316d9bf70cfffbbcb844a3d" title="Return the next object to be listed.">opendal_lister_next()</a> on the lister.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The designated path you want to list </td></tr>
   </table>
   </dd>
@@ -1622,8 +1622,8 @@ Panic</h1>
 <h1><a class="anchor" id="autotoc_md30"></a>
 Example</h1>
 <p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">// You have written some data into some files path &quot;root/dir1&quot;</span></div>
-<div class="line"><span class="comment">// Your opendal_operator was called ptr</span></div>
-<div class="line"><a class="code" href="structopendal__result__list.html">opendal_result_list</a> l = <a class="code" href="opendal_8h.html#af8f2888ef406d9fc81af0015a904af9c">opendal_operator_list</a>(ptr, <span class="stringliteral">&quot;root/dir1&quot;</span>);</div>
+<div class="line"><span class="comment">// Your opendal_operator was called op</span></div>
+<div class="line"><a class="code" href="structopendal__result__list.html">opendal_result_list</a> l = <a class="code" href="opendal_8h.html#af8f2888ef406d9fc81af0015a904af9c">opendal_operator_list</a>(op, <span class="stringliteral">&quot;root/dir1&quot;</span>);</div>
 <div class="line">assert(l.<a class="code" href="structopendal__result__list.html#a874bfb5c9d016445698fb59d65b76ed2">error</a> == ERROR);</div>
 <div class="line"> </div>
 <div class="line"><a class="code" href="structopendal__lister.html">opendal_lister</a> *lister = l.<a class="code" href="structopendal__result__list.html#a54b9b09c29f8d867da187c32e362398a">lister</a>;</div>
@@ -1843,7 +1843,7 @@ Example</h1>
 <p>Read the data out from <code>path</code> blockingly by operator.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The path you want to read the data out </td></tr>
   </table>
   </dd>
@@ -1859,7 +1859,7 @@ Example</h1>
 Example</h1>
 <p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">// ... you have write &quot;Hello, World!&quot; to path &quot;/testpath&quot;</span></div>
 <div class="line"> </div>
-<div class="line"><a class="code" href="structopendal__result__read.html">opendal_result_read</a> r = <a class="code" href="opendal_8h.html#ab1419180b377316e27416b742bcc059f">opendal_operator_read</a>(ptr, <span class="stringliteral">&quot;testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__read.html">opendal_result_read</a> r = <a class="code" href="opendal_8h.html#ab1419180b377316e27416b742bcc059f">opendal_operator_read</a>(op, <span class="stringliteral">&quot;testpath&quot;</span>);</div>
 <div class="line">assert(r.<a class="code" href="structopendal__result__read.html#a6cd0e4e83ed4509856de0d1e6b83e2f2">error</a> == NULL);</div>
 <div class="line"> </div>
 <div class="line"><a class="code" href="structopendal__bytes.html">opendal_bytes</a> *bytes = r.<a class="code" href="structopendal__result__read.html#ad8ca467bcbe6d1768e15fcf64fe78e9f">data</a>;</div>
@@ -1912,10 +1912,8 @@ Panic</h1>
 <p>Read the data out from <code>path</code> blockingly by operator, returns an <a class="el" href="structopendal__result__read.html" title="The result type returned by opendal&#39;s read operation.">opendal_result_read</a> with error code.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The path you want to read the data out </td></tr>
-    <tr><td class="paramname">buffer</td><td>The buffer you want to read the data into </td></tr>
-    <tr><td class="paramname">buffer_len</td><td>The length of the buffer </td></tr>
   </table>
   </dd>
 </dl>
@@ -1988,7 +1986,7 @@ Panic</h1>
 <p>Rename the object in <code>src</code> to <code>dest</code> blockingly by <code>op</code>. Error is NULL if successful, otherwise it contains the error code and error message.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">src</td><td>The designated source path you want to rename </td></tr>
     <tr><td class="paramname">dest</td><td>The designated destination path you want to rename </td></tr>
   </table>
@@ -2000,17 +1998,17 @@ Panic</h1>
 <dl class="section return"><dt>Returns</dt><dd>NULL if succeeds, otherwise it contains the error code and error message.</dd></dl>
 <h1><a class="anchor" id="autotoc_md36"></a>
 Example</h1>
-<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named ptr for example</span></div>
+<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named op for example</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// prepare your data</span></div>
 <div class="line"><span class="keywordtype">char</span>* data = <span class="stringliteral">&quot;Hello, World!&quot;</span>;</div>
 <div class="line"><a class="code" href="structopendal__bytes.html">opendal_bytes</a> bytes = <a class="code" href="structopendal__bytes.html">opendal_bytes</a> { .<a class="code" href="structopendal__bytes.html#af7a7f99a262f8a3912f4d1cddb798c86">data</a> = (uint8_t*)data, .len = 13 };</div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
 <div class="line"> </div>
 <div class="line">assert(error == NULL);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// now you can renmae!</span></div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#acf513847d08141631c9c57aa59150014">opendal_operator_rename</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>, <span class="stringliteral">&quot;/testpath2&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *error = <a class="code" href="opendal_8h.html#acf513847d08141631c9c57aa59150014">opendal_operator_rename</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>, <span class="stringliteral">&quot;/testpath2&quot;</span>);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Assert that this succeeds</span></div>
 <div class="line">assert(error == NULL);</div>
@@ -2058,7 +2056,7 @@ Panic</h1>
 <p>Error is NULL if successful, otherwise it contains the error code and error message.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The path you want to stat </td></tr>
   </table>
   </dd>
@@ -2072,7 +2070,7 @@ Panic</h1>
 <h1><a class="anchor" id="autotoc_md27"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="comment">// ... previously you wrote &quot;Hello, World!&quot; to path &quot;/testpath&quot;</span></div>
-<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
+<div class="line"><a class="code" href="structopendal__result__stat.html">opendal_result_stat</a> s = <a class="code" href="opendal_8h.html#a8d6a3d830761b215c3d03960b6153582">opendal_operator_stat</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>);</div>
 <div class="line">assert(s.<a class="code" href="structopendal__result__stat.html#a657eee3bfdf805036f169d94ee70dce9">error</a> == NULL);</div>
 <div class="line"> </div>
 <div class="line"><span class="keyword">const</span> <a class="code" href="structopendal__metadata.html">opendal_metadata</a> *meta = s.<a class="code" href="structopendal__result__stat.html#a1d4d484d7bf50bc8e5d65dea5f6f2425">meta</a>;</div>
@@ -2129,7 +2127,7 @@ Panic</h1>
 <dl class="section note"><dt>Note</dt><dd>It is important to notice that the <code>bytes</code> that is passes in will be consumed by this function. Therefore, you should not use the <code>bytes</code> after this function returns.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
+    <tr><td class="paramname">op</td><td>The <a class="el" href="structopendal__operator.html" title="Used to access almost all OpenDAL APIs. It represents a operator that provides the unified interfaces...">opendal_operator</a> created previously </td></tr>
     <tr><td class="paramname">path</td><td>The designated path you want to write your bytes in </td></tr>
     <tr><td class="paramname">bytes</td><td>The opendal_byte typed bytes to be written </td></tr>
   </table>
@@ -2143,14 +2141,14 @@ Panic</h1>
 <dl class="section return"><dt>Returns</dt><dd>NULL if succeeds, otherwise it contains the error code and error message.</dd></dl>
 <h1><a class="anchor" id="autotoc_md12"></a>
 Example</h1>
-<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named ptr for example</span></div>
+<p>Following is an example </p><div class="fragment"><div class="line"><span class="comment">//...prepare your opendal_operator, named op for example</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// prepare your data</span></div>
 <div class="line"><span class="keywordtype">char</span>* data = <span class="stringliteral">&quot;Hello, World!&quot;</span>;</div>
 <div class="line"><a class="code" href="structopendal__bytes.html">opendal_bytes</a> bytes = <a class="code" href="structopendal__bytes.html">opendal_bytes</a> { .<a class="code" href="structopendal__bytes.html#af7a7f99a262f8a3912f4d1cddb798c86">data</a> = (uint8_t*)data, .len = 13 };</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// now you can write!</span></div>
-<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *err = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(ptr, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
+<div class="line"><a class="code" href="structopendal__error.html">opendal_error</a> *err = <a class="code" href="opendal_8h.html#af8b6596a53263101e93b4d73e9eb928c">opendal_operator_write</a>(op, <span class="stringliteral">&quot;/testpath&quot;</span>, bytes);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Assert that this succeeds</span></div>
 <div class="line">assert(err == NULL);</div>
