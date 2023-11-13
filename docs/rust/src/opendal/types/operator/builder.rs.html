@@ -395,6 +395,8 @@
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
 <a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -552,6 +554,8 @@
         <span class="kw">let </span>op = <span class="kw">match </span>scheme {
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-atomicserver&quot;</span>)]
             </span>Scheme::Atomicserver =&gt; <span class="self">Self</span>::from_map::&lt;services::Atomicserver&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-alluxio&quot;</span>)]
+            </span>Scheme::Alluxio =&gt; <span class="self">Self</span>::from_map::&lt;services::Alluxio&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-azblob&quot;</span>)]
             </span>Scheme::Azblob =&gt; <span class="self">Self</span>::from_map::&lt;services::Azblob&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-azdls&quot;</span>)]

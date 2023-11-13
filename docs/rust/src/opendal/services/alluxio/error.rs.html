@@ -83,6 +83,29 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -131,9 +154,9 @@
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(alluxio_err) = alluxio_err {
         kind = <span class="kw">match </span>alluxio_err.status_code.as_str() {
-            <span class="string">&quot;AlreadyExists&quot; </span>=&gt; ErrorKind::AlreadyExists,
-            <span class="string">&quot;NotFound&quot; </span>=&gt; ErrorKind::NotFound,
-            <span class="string">&quot;InvalidArgument&quot; </span>=&gt; ErrorKind::InvalidInput,
+            <span class="string">&quot;ALREADY_EXISTS&quot; </span>=&gt; ErrorKind::AlreadyExists,
+            <span class="string">&quot;NOT_FOUND&quot; </span>=&gt; ErrorKind::NotFound,
+            <span class="string">&quot;INVALID_ARGUMENT&quot; </span>=&gt; ErrorKind::InvalidInput,
             <span class="kw">_ </span>=&gt; ErrorKind::Unexpected,
         }
     }
@@ -148,24 +171,47 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>futures::stream;
+    <span class="kw">use </span>http::StatusCode;
 
     <span class="doccomment">/// Error response example is from https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-    </span><span class="attr">#[test]
-    </span><span class="kw">fn </span>test_parse_error() {
-        <span class="kw">let </span>bs = bytes::Bytes::from(
-            <span class="string">r#&quot;
-            {
-                &quot;statusCode&quot;: &quot;AlreadyExists&quot;,
-                &quot;message&quot;: &quot;The resource you requested already exist&quot;
-            }
-&quot;#</span>,
-        );
+    </span><span class="attr">#[tokio::test]
+    </span><span class="kw">async fn </span>test_parse_error() {
+        <span class="kw">let </span>err_res = <span class="macro">vec!</span>[
+            (
+                <span class="string">r#&quot;{&quot;statusCode&quot;:&quot;ALREADY_EXISTS&quot;,&quot;message&quot;:&quot;The resource you requested already exist&quot;}&quot;#</span>,
+                ErrorKind::AlreadyExists,
+            ),
+            (
+                <span class="string">r#&quot;{&quot;statusCode&quot;:&quot;NOT_FOUND&quot;,&quot;message&quot;:&quot;The resource you requested does not exist&quot;}&quot;#</span>,
+                ErrorKind::NotFound,
+            ),
+            (
+                <span class="string">r#&quot;{&quot;statusCode&quot;:&quot;INVALID_ARGUMENT&quot;,&quot;message&quot;:&quot;The argument you provided is invalid&quot;}&quot;#</span>,
+                ErrorKind::InvalidInput,
+            ),
+            (
+                <span class="string">r#&quot;{&quot;statusCode&quot;:&quot;INTERNAL_SERVER_ERROR&quot;,&quot;message&quot;:&quot;Internal server error&quot;}&quot;#</span>,
+                ErrorKind::Unexpected,
+            ),
+        ];
 
-        <span class="kw">let </span>out: AlluxioError = serde_json::from_reader(bs.reader()).expect(<span class="string">&quot;must success&quot;</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;{out:?}&quot;</span>);
+        <span class="kw">for </span>res <span class="kw">in </span>err_res {
+            <span class="kw">let </span>bs = bytes::Bytes::from(res.<span class="number">0</span>);
+            <span class="kw">let </span>body = IncomingAsyncBody::new(
+                Box::new(oio::into_stream(stream::iter(<span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(bs.clone())]))),
+                <span class="prelude-val">None</span>,
+            );
+            <span class="kw">let </span>resp = Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(body)
+                .unwrap();
 
-        <span class="macro">assert_eq!</span>(out.status_code, <span class="string">&quot;AlreadyExists&quot;</span>);
-        <span class="macro">assert_eq!</span>(out.message, <span class="string">&quot;The resource you requested already exist&quot;</span>);
+            <span class="kw">let </span>err = parse_error(resp).<span class="kw">await</span>;
+
+            <span class="macro">assert!</span>(err.is_ok());
+            <span class="macro">assert_eq!</span>(err.unwrap().kind(), res.<span class="number">1</span>);
+        }
     }
 }
 </code></pre></div></section></main></body></html>

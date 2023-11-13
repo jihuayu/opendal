@@ -66,6 +66,26 @@
 <a href="#66" id="66">66</a>
 <a href="#67" id="67">67</a>
 <a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -90,6 +110,7 @@
 <span class="kw">use </span><span class="kw">super</span>::core::AlluxioCore;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Entry;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
 
 <span class="kw">pub struct </span>AlluxioPager {
@@ -117,21 +138,40 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         }
 
-        <span class="kw">let </span>file_infos = <span class="self">self</span>.core.list_status(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>result = <span class="self">self</span>.core.list_status(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = <span class="macro">vec!</span>[];
-        <span class="kw">for </span>file_info <span class="kw">in </span>file_infos {
-            <span class="kw">let </span>path: String = file_info.path.clone();
-            entries.push(Entry::new(<span class="kw-2">&amp;</span>path, file_info.try_into()<span class="question-mark">?</span>));
+        <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(file_infos) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>entries = <span class="macro">vec!</span>[];
+                <span class="kw">for </span>file_info <span class="kw">in </span>file_infos {
+                    <span class="kw">let </span>path: String = file_info.path.clone();
+                    <span class="kw">let </span>path = <span class="kw">if </span>file_info.folder {
+                        <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, path)
+                    } <span class="kw">else </span>{
+                        path
+                    };
+                    entries.push(Entry::new(
+                        <span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>path),
+                        file_info.try_into()<span class="question-mark">?</span>,
+                    ));
+                }
+
+                <span class="kw">if </span>entries.is_empty() {
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                }
+
+                <span class="self">self</span>.done = <span class="bool-val">true</span>;
+
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+            }
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">if </span>e.kind() == ErrorKind::NotFound {
+                    <span class="self">self</span>.done = <span class="bool-val">true</span>;
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                }
+                <span class="prelude-val">Err</span>(e)
+            }
         }
-
-        <span class="kw">if </span>entries.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
-        <span class="self">self</span>.done = <span class="bool-val">true</span>;
-
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
     }
 }
 </code></pre></div></section></main></body></html>
