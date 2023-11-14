@@ -537,8 +537,8 @@
     <span class="kw">type </span>BlockingReader = BlockingWrapper&lt;A::Reader&gt;;
     <span class="kw">type </span>Writer = A::Writer;
     <span class="kw">type </span>BlockingWriter = BlockingWrapper&lt;A::Writer&gt;;
-    <span class="kw">type </span>Pager = A::Pager;
-    <span class="kw">type </span>BlockingPager = BlockingWrapper&lt;A::Pager&gt;;
+    <span class="kw">type </span>Lister = A::Lister;
+    <span class="kw">type </span>BlockingLister = BlockingWrapper&lt;A::Lister&gt;;
 
     <span class="kw">fn </span>inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Inner {
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
@@ -578,7 +578,7 @@
         <span class="self">self</span>.inner.delete(path, args).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="self">self</span>.inner.list(path, args).<span class="kw">await
     </span>}
 
@@ -627,11 +627,11 @@
         <span class="self">self</span>.handle.block_on(<span class="self">self</span>.inner.delete(path, args))
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="self">self</span>.handle.block_on(<span class="kw">async </span>{
-            <span class="kw">let </span>(rp, pager) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">let </span>blocking_pager = <span class="self">Self</span>::BlockingPager::new(<span class="self">self</span>.handle.clone(), pager);
-            <span class="prelude-val">Ok</span>((rp, blocking_pager))
+            <span class="kw">let </span>(rp, lister) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>blocking_lister = <span class="self">Self</span>::BlockingLister::new(<span class="self">self</span>.handle.clone(), lister);
+            <span class="prelude-val">Ok</span>((rp, blocking_lister))
         })
     }
 }
@@ -673,7 +673,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;I: oio::Page&gt; oio::BlockingPage <span class="kw">for </span>BlockingWrapper&lt;I&gt; {
+<span class="kw">impl</span>&lt;I: oio::List&gt; oio::BlockingList <span class="kw">for </span>BlockingWrapper&lt;I&gt; {
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
         <span class="self">self</span>.handle.block_on(<span class="self">self</span>.inner.next())
     }

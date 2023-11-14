@@ -1782,8 +1782,8 @@
     <span class="kw">type </span>BlockingReader = LoggingReader&lt;A::BlockingReader&gt;;
     <span class="kw">type </span>Writer = LoggingWriter&lt;A::Writer&gt;;
     <span class="kw">type </span>BlockingWriter = LoggingWriter&lt;A::BlockingWriter&gt;;
-    <span class="kw">type </span>Pager = LoggingPager&lt;A::Pager&gt;;
-    <span class="kw">type </span>BlockingPager = LoggingPager&lt;A::BlockingPager&gt;;
+    <span class="kw">type </span>Lister = LoggingLister&lt;A::Lister&gt;;
+    <span class="kw">type </span>BlockingLister = LoggingLister&lt;A::BlockingLister&gt;;
 
     <span class="kw">fn </span>inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Inner {
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
@@ -2089,7 +2089,7 @@
             .<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
@@ -2109,7 +2109,7 @@
                         Operation::List,
                         path
                     );
-                    <span class="kw">let </span>streamer = LoggingPager::new(<span class="self">self</span>.ctx.clone(), path, Operation::List, v);
+                    <span class="kw">let </span>streamer = LoggingLister::new(<span class="self">self</span>.ctx.clone(), path, Operation::List, v);
                     <span class="prelude-val">Ok</span>((rp, streamer))
                 }
                 <span class="prelude-val">Err</span>(err) =&gt; {
@@ -2478,7 +2478,7 @@
             })
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="macro">debug!</span>(
             target: LOGGING_TARGET,
             <span class="string">&quot;service={} operation={} path={} -&gt; started&quot;</span>,
@@ -2497,7 +2497,7 @@
                     Operation::BlockingList,
                     path
                 );
-                <span class="kw">let </span>li = LoggingPager::new(<span class="self">self</span>.ctx.clone(), path, Operation::BlockingList, v);
+                <span class="kw">let </span>li = LoggingLister::new(<span class="self">self</span>.ctx.clone(), path, Operation::BlockingList, v);
                 (rp, li)
             })
             .map_err(|err| {
@@ -2995,7 +2995,7 @@
     }
 }
 
-<span class="kw">pub struct </span>LoggingPager&lt;P&gt; {
+<span class="kw">pub struct </span>LoggingLister&lt;P&gt; {
     ctx: LoggingContext,
     path: String,
     op: Operation,
@@ -3004,7 +3004,7 @@
     inner: P,
 }
 
-<span class="kw">impl</span>&lt;P&gt; LoggingPager&lt;P&gt; {
+<span class="kw">impl</span>&lt;P&gt; LoggingLister&lt;P&gt; {
     <span class="kw">fn </span>new(ctx: LoggingContext, path: <span class="kw-2">&amp;</span>str, op: Operation, inner: P) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             ctx,
@@ -3016,7 +3016,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;P&gt; Drop <span class="kw">for </span>LoggingPager&lt;P&gt; {
+<span class="kw">impl</span>&lt;P&gt; Drop <span class="kw">for </span>LoggingLister&lt;P&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span><span class="self">self</span>.finished {
             <span class="macro">debug!</span>(
@@ -3039,7 +3039,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;P: oio::Page&gt; oio::Page <span class="kw">for </span>LoggingPager&lt;P&gt; {
+</span><span class="kw">impl</span>&lt;P: oio::List&gt; oio::List <span class="kw">for </span>LoggingLister&lt;P&gt; {
     <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
         <span class="kw">let </span>res = <span class="self">self</span>.inner.next().<span class="kw">await</span>;
 
@@ -3083,7 +3083,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;P: oio::BlockingPage&gt; oio::BlockingPage <span class="kw">for </span>LoggingPager&lt;P&gt; {
+<span class="kw">impl</span>&lt;P: oio::BlockingList&gt; oio::BlockingList <span class="kw">for </span>LoggingLister&lt;P&gt; {
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
         <span class="kw">let </span>res = <span class="self">self</span>.inner.next();
 

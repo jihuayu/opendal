@@ -623,11 +623,11 @@
     <span class="doccomment">/// BlockingWriter is the associated writer the could return in
     /// `blocking_write` operation.
     </span><span class="kw">type </span>BlockingWriter: oio::BlockingWrite;
-    <span class="doccomment">/// Pager is the associated page that return in `list` operation.
-    </span><span class="kw">type </span>Pager: oio::Page;
-    <span class="doccomment">/// BlockingPager is the associated pager that could return in
+    <span class="doccomment">/// Lister is the associated lister that return in `list` operation.
+    </span><span class="kw">type </span>Lister: oio::List;
+    <span class="doccomment">/// BlockingLister is the associated lister that could return in
     /// `blocking_list` operation.
-    </span><span class="kw">type </span>BlockingPager: oio::BlockingPage;
+    </span><span class="kw">type </span>BlockingLister: oio::BlockingList;
 
     <span class="doccomment">/// Invoke the `info` operation to get metadata of accessor.
     ///
@@ -767,7 +767,7 @@
     ///
     /// - Input path MUST be dir path, DON&#39;T NEED to check mode.
     /// - List non-exist dir should return Empty.
-    </span><span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    </span><span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
 
         <span class="prelude-val">Err</span>(Error::new(
@@ -911,7 +911,7 @@
     /// # Behavior
     ///
     /// - List non-exist dir should return Empty.
-    </span><span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    </span><span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
 
         <span class="prelude-val">Err</span>(Error::new(
@@ -928,8 +928,8 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = ();
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Pager = ();
-    <span class="kw">type </span>BlockingPager = ();
+    <span class="kw">type </span>Lister = ();
+    <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         AccessorInfo {
@@ -950,8 +950,8 @@
     <span class="kw">type </span>BlockingReader = T::BlockingReader;
     <span class="kw">type </span>Writer = T::Writer;
     <span class="kw">type </span>BlockingWriter = T::BlockingWriter;
-    <span class="kw">type </span>Pager = T::Pager;
-    <span class="kw">type </span>BlockingPager = T::BlockingPager;
+    <span class="kw">type </span>Lister = T::Lister;
+    <span class="kw">type </span>BlockingLister = T::BlockingLister;
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="self">self</span>.as_ref().info()
@@ -982,7 +982,7 @@
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="self">self</span>.as_ref().delete(path, args).<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="self">self</span>.as_ref().list(path, args).<span class="kw">await
     </span>}
 
@@ -1018,7 +1018,7 @@
     <span class="kw">fn </span>blocking_delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="self">self</span>.as_ref().blocking_delete(path, args)
     }
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="self">self</span>.as_ref().blocking_list(path, args)
     }
 }
@@ -1030,8 +1030,8 @@
         BlockingReader = oio::BlockingReader,
         Writer = oio::Writer,
         BlockingWriter = oio::BlockingWriter,
-        Pager = oio::Pager,
-        BlockingPager = oio::BlockingPager,
+        Lister = oio::Lister,
+        BlockingLister = oio::BlockingLister,
     &gt;,
 &gt;;
 

@@ -670,8 +670,8 @@
 <span class="kw">use </span>log::debug;
 
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::pager::Multistatus;
-<span class="kw">use </span><span class="kw">super</span>::pager::WebdavPager;
+<span class="kw">use </span><span class="kw">super</span>::lister::Multistatus;
+<span class="kw">use </span><span class="kw">super</span>::lister::WebdavLister;
 <span class="kw">use </span><span class="kw">super</span>::writer::WebdavWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -862,8 +862,8 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;WebdavWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Pager = <span class="prelude-ty">Option</span>&lt;WebdavPager&gt;;
-    <span class="kw">type </span>BlockingPager = ();
+    <span class="kw">type </span>Lister = <span class="prelude-ty">Option</span>&lt;WebdavLister&gt;;
+    <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>ma = AccessorInfo::default();
@@ -1017,7 +1017,7 @@
         }
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">if </span>args.recursive() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::Unsupported,
@@ -1039,7 +1039,7 @@
 
                 <span class="prelude-val">Ok</span>((
                     RpList::default(),
-                    <span class="prelude-val">Some</span>(WebdavPager::new(<span class="kw-2">&amp;</span><span class="self">self</span>.base_dir, <span class="kw-2">&amp;</span><span class="self">self</span>.root, path, result)),
+                    <span class="prelude-val">Some</span>(WebdavLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.base_dir, <span class="kw-2">&amp;</span><span class="self">self</span>.root, path, result)),
                 ))
             }
             StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) =&gt; <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">None</span>)),

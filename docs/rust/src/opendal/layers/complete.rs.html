@@ -993,8 +993,8 @@
 <span class="kw">use </span>bytes::Bytes;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Entry;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::FlatPager;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::HierarchyPager;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::FlatLister;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::HierarchyLister;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::RangeReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamableReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::{into_flat_page, FileReader};
@@ -1066,11 +1066,11 @@
 /// them. CompleteLayer will add those capabilities in a zero cost way.
 ///
 /// Underlying services will return [`Capability`] to indicate the
-/// features that returning pagers support.
+/// features that returning listers support.
 ///
 /// - If both `list_without_recursive` and `list_with_recursive`, return directly.
-/// - If only `list_with_recursive`, with [`oio::to_flat_pager`].
-/// - if only `list_without_recursive`, with [`oio::to_hierarchy_pager`].
+/// - If only `list_with_recursive`, with [`oio::to_flat_lister`].
+/// - if only `list_without_recursive`, with [`oio::to_hierarchy_lister`].
 /// - If neither not supported, something must be wrong for `list` is true.
 ///
 /// ## Capability Check
@@ -1189,7 +1189,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         args: OpList,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompletePager&lt;A, A::Pager&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompleteLister&lt;A, A::Lister&gt;)&gt; {
         <span class="kw">let </span>cap = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!cap.list {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.new_unsupported_error(Operation::List));
@@ -1207,7 +1207,7 @@
             // - If recursive is false while services can list_without_recursive
             </span>(<span class="kw">_</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>) | (<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="kw">_</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>, <span class="bool-val">true</span>) =&gt; {
                 <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
+                <span class="prelude-val">Ok</span>((rp, CompleteLister::AlreadyComplete(p)))
             }
             <span class="comment">// If services can&#39;t list_with_recursive nor list_without_recursive.
             //
@@ -1216,13 +1216,13 @@
             <span class="comment">// If recursive is true but service can&#39;t list_with_recursive
             </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; {
                 <span class="kw">let </span>p = into_flat_page(<span class="self">self</span>.inner.clone(), path, args.limit().unwrap_or(<span class="number">1000</span>));
-                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedFlat(p)))
+                <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedFlat(p)))
             }
             <span class="comment">// If recursive is false but service can&#39;t list_without_recursive
             </span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
                 <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.list(path, args.with_recursive(<span class="bool-val">true</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let </span>p = into_hierarchy_page(p, path);
-                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
+                <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedHierarchy(p)))
             }
         }
     }
@@ -1231,7 +1231,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         args: OpList,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompletePager&lt;A, A::BlockingPager&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, CompleteLister&lt;A, A::BlockingLister&gt;)&gt; {
         <span class="kw">let </span>cap = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!cap.list {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.new_unsupported_error(Operation::BlockingList));
@@ -1249,7 +1249,7 @@
             // - If recursive is false while services can list_without_recursive
             </span>(<span class="kw">_</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>) | (<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="kw">_</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>, <span class="bool-val">true</span>) =&gt; {
                 <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_list(path, args)<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>((rp, CompletePager::AlreadyComplete(p)))
+                <span class="prelude-val">Ok</span>((rp, CompleteLister::AlreadyComplete(p)))
             }
             <span class="comment">// If services can&#39;t list_with_recursive nor list_without_recursive.
             //
@@ -1258,14 +1258,14 @@
             <span class="comment">// If recursive is true but service can&#39;t list_with_recursive
             </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; {
                 <span class="kw">let </span>p = into_flat_page(<span class="self">self</span>.inner.clone(), path, args.limit().unwrap_or(<span class="number">1000</span>));
-                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedFlat(p)))
+                <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedFlat(p)))
             }
             <span class="comment">// If recursive is false but service can&#39;t list_without_recursive
             </span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
                 <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.blocking_list(path, args.with_recursive(<span class="bool-val">true</span>))<span class="question-mark">?</span>;
-                <span class="kw">let </span>p: HierarchyPager&lt;&lt;A <span class="kw">as </span>Accessor&gt;::BlockingPager&gt; =
+                <span class="kw">let </span>p: HierarchyLister&lt;&lt;A <span class="kw">as </span>Accessor&gt;::BlockingLister&gt; =
                     into_hierarchy_page(p, path);
-                <span class="prelude-val">Ok</span>((RpList::default(), CompletePager::NeedHierarchy(p)))
+                <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedHierarchy(p)))
             }
         }
     }
@@ -1281,8 +1281,8 @@
         oio::ExactBufWriter&lt;CompleteWriter&lt;A::Writer&gt;&gt;,
     &gt;;
     <span class="kw">type </span>BlockingWriter = CompleteWriter&lt;A::BlockingWriter&gt;;
-    <span class="kw">type </span>Pager = CompletePager&lt;A, A::Pager&gt;;
-    <span class="kw">type </span>BlockingPager = CompletePager&lt;A, A::BlockingPager&gt;;
+    <span class="kw">type </span>Lister = CompleteLister&lt;A, A::Lister&gt;;
+    <span class="kw">type </span>BlockingLister = CompleteLister&lt;A, A::BlockingLister&gt;;
 
     <span class="kw">fn </span>inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Inner {
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
@@ -1395,7 +1395,7 @@
         <span class="self">self</span>.inner().delete(path, args).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.list {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.new_unsupported_error(Operation::List));
@@ -1497,7 +1497,7 @@
         <span class="self">self</span>.inner().blocking_delete(path, args)
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="kw">let </span>capability = <span class="self">self</span>.meta.full_capability();
         <span class="kw">if </span>!capability.list || !capability.blocking {
             <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.new_unsupported_error(Operation::BlockingList));
@@ -1592,20 +1592,20 @@
     }
 }
 
-<span class="kw">pub enum </span>CompletePager&lt;A: Accessor, P&gt; {
+<span class="kw">pub enum </span>CompleteLister&lt;A: Accessor, P&gt; {
     AlreadyComplete(P),
-    NeedFlat(FlatPager&lt;Arc&lt;A&gt;, P&gt;),
-    NeedHierarchy(HierarchyPager&lt;P&gt;),
+    NeedFlat(FlatLister&lt;Arc&lt;A&gt;, P&gt;),
+    NeedHierarchy(HierarchyLister&lt;P&gt;),
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;A, P&gt; oio::Page <span class="kw">for </span>CompletePager&lt;A, P&gt;
+</span><span class="kw">impl</span>&lt;A, P&gt; oio::List <span class="kw">for </span>CompleteLister&lt;A, P&gt;
 <span class="kw">where
-    </span>A: Accessor&lt;Pager = P&gt;,
-    P: oio::Page,
+    </span>A: Accessor&lt;Lister = P&gt;,
+    P: oio::List,
 {
     <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
-        <span class="kw">use </span>CompletePager::<span class="kw-2">*</span>;
+        <span class="kw">use </span>CompleteLister::<span class="kw-2">*</span>;
 
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(p) =&gt; p.next().<span class="kw">await</span>,
@@ -1615,13 +1615,13 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A, P&gt; oio::BlockingPage <span class="kw">for </span>CompletePager&lt;A, P&gt;
+<span class="kw">impl</span>&lt;A, P&gt; oio::BlockingList <span class="kw">for </span>CompleteLister&lt;A, P&gt;
 <span class="kw">where
-    </span>A: Accessor&lt;BlockingPager = P&gt;,
-    P: oio::BlockingPage,
+    </span>A: Accessor&lt;BlockingLister = P&gt;,
+    P: oio::BlockingList,
 {
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
-        <span class="kw">use </span>CompletePager::<span class="kw-2">*</span>;
+        <span class="kw">use </span>CompleteLister::<span class="kw-2">*</span>;
 
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(p) =&gt; p.next(),
@@ -1735,8 +1735,8 @@
         <span class="kw">type </span>BlockingReader = oio::BlockingReader;
         <span class="kw">type </span>Writer = oio::Writer;
         <span class="kw">type </span>BlockingWriter = oio::BlockingWriter;
-        <span class="kw">type </span>Pager = oio::Pager;
-        <span class="kw">type </span>BlockingPager = oio::BlockingPager;
+        <span class="kw">type </span>Lister = oio::Lister;
+        <span class="kw">type </span>BlockingLister = oio::BlockingLister;
 
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>info = AccessorInfo::default();
@@ -1773,7 +1773,7 @@
             <span class="prelude-val">Ok</span>(RpDelete {})
         }
 
-        <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+        <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
             <span class="prelude-val">Ok</span>((RpList {}, Box::new(())))
         }
 

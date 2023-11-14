@@ -996,7 +996,7 @@
 <span class="kw">use </span>sha2::Sha256;
 
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::pager::AzblobPager;
+<span class="kw">use </span><span class="kw">super</span>::lister::AzblobLister;
 <span class="kw">use </span><span class="kw">super</span>::writer::AzblobWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::services::azblob::core::AzblobCore;
@@ -1508,8 +1508,8 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = AzblobWriters;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Pager = AzblobPager;
-    <span class="kw">type </span>BlockingPager = ();
+    <span class="kw">type </span>Lister = AzblobLister;
+    <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
@@ -1650,8 +1650,8 @@
         }
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
-        <span class="kw">let </span>op = AzblobPager::new(
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
+        <span class="kw">let </span>op = AzblobLister::new(
             <span class="self">self</span>.core.clone(),
             path.to_string(),
             args.recursive(),

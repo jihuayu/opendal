@@ -623,12 +623,12 @@
 
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error_msg;
+<span class="kw">use </span><span class="kw">super</span>::lister::WebhdfsLister;
 <span class="kw">use </span><span class="kw">super</span>::message::BooleanResp;
 <span class="kw">use </span><span class="kw">super</span>::message::DirectoryListingWrapper;
 <span class="kw">use </span><span class="kw">super</span>::message::FileStatusType;
 <span class="kw">use </span><span class="kw">super</span>::message::FileStatusWrapper;
 <span class="kw">use </span><span class="kw">super</span>::message::FileStatusesWrapper;
-<span class="kw">use </span><span class="kw">super</span>::pager::WebhdfsPager;
 <span class="kw">use </span><span class="kw">super</span>::writer::WebhdfsWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -996,8 +996,8 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;WebhdfsWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Pager = WebhdfsPager;
-    <span class="kw">type </span>BlockingPager = ();
+    <span class="kw">type </span>Lister = WebhdfsLister;
+    <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
@@ -1134,7 +1134,7 @@
         }
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">if </span>args.recursive() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::Unsupported,
@@ -1154,12 +1154,12 @@
                         .map_err(new_json_deserialize_error)<span class="question-mark">?
                         </span>.directory_listing;
                     <span class="kw">let </span>file_statuses = directory_listing.partial_listing.file_statuses.file_status;
-                    <span class="kw">let </span><span class="kw-2">mut </span>objects = WebhdfsPager::new(<span class="self">self</span>.clone(), path, file_statuses);
+                    <span class="kw">let </span><span class="kw-2">mut </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, file_statuses);
                     objects.set_remaining_entries(directory_listing.remaining_entries);
                     <span class="prelude-val">Ok</span>((RpList::default(), objects))
                 }
                 StatusCode::NOT_FOUND =&gt; {
-                    <span class="kw">let </span>objects = WebhdfsPager::new(<span class="self">self</span>.clone(), path, <span class="macro">vec!</span>[]);
+                    <span class="kw">let </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, <span class="macro">vec!</span>[]);
                     <span class="prelude-val">Ok</span>((RpList::default(), objects))
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
@@ -1174,11 +1174,11 @@
                         .map_err(new_json_deserialize_error)<span class="question-mark">?
                         </span>.file_statuses
                         .file_status;
-                    <span class="kw">let </span>objects = WebhdfsPager::new(<span class="self">self</span>.clone(), path, file_statuses);
+                    <span class="kw">let </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, file_statuses);
                     <span class="prelude-val">Ok</span>((RpList::default(), objects))
                 }
                 StatusCode::NOT_FOUND =&gt; {
-                    <span class="kw">let </span>objects = WebhdfsPager::new(<span class="self">self</span>.clone(), path, <span class="macro">vec!</span>[]);
+                    <span class="kw">let </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, <span class="macro">vec!</span>[]);
                     <span class="prelude-val">Ok</span>((RpList::default(), objects))
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),

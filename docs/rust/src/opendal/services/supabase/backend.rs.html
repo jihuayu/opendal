@@ -430,9 +430,9 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;SupabaseWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="comment">// todo: implement Pager to support list and scan
-    </span><span class="kw">type </span>Pager = ();
-    <span class="kw">type </span>BlockingPager = ();
+    <span class="comment">// todo: implement Lister to support list and scan
+    </span><span class="kw">type </span>Lister = ();
+    <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();

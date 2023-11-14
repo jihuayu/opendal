@@ -454,7 +454,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bytes::Bytes;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::PageOperation;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::ListOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::ReadOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -576,8 +576,8 @@
     <span class="kw">type </span>BlockingReader = A::BlockingReader;
     <span class="kw">type </span>Writer = TimeoutWrapper&lt;A::Writer&gt;;
     <span class="kw">type </span>BlockingWriter = A::BlockingWriter;
-    <span class="kw">type </span>Pager = TimeoutWrapper&lt;A::Pager&gt;;
-    <span class="kw">type </span>BlockingPager = A::BlockingPager;
+    <span class="kw">type </span>Lister = TimeoutWrapper&lt;A::Lister&gt;;
+    <span class="kw">type </span>BlockingLister = A::BlockingLister;
 
     <span class="kw">fn </span>inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Inner {
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
@@ -607,7 +607,7 @@
             </span>.map(|(rp, r)| (rp, TimeoutWrapper::new(r, <span class="self">self</span>.timeout, <span class="self">self</span>.speed)))
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         tokio::time::timeout(<span class="self">self</span>.timeout, <span class="self">self</span>.inner.list(path, args))
             .<span class="kw">await
             </span>.map_err(|<span class="kw">_</span>| {
@@ -627,7 +627,7 @@
         <span class="self">self</span>.inner.blocking_write(path, args)
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="self">self</span>.inner.blocking_list(path, args)
     }
 }
@@ -846,13 +846,13 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;R: oio::Page&gt; oio::Page <span class="kw">for </span>TimeoutWrapper&lt;R&gt; {
+</span><span class="kw">impl</span>&lt;R: oio::List&gt; oio::List <span class="kw">for </span>TimeoutWrapper&lt;R&gt; {
     <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
         tokio::time::timeout(<span class="self">self</span>.timeout, <span class="self">self</span>.inner.next())
             .<span class="kw">await
             </span>.map_err(|<span class="kw">_</span>| {
                 Error::new(ErrorKind::Unexpected, <span class="string">&quot;operation timeout&quot;</span>)
-                    .with_operation(PageOperation::Next)
+                    .with_operation(ListOperation::Next)
                     .with_context(<span class="string">&quot;timeout&quot;</span>, <span class="self">self</span>.timeout.as_secs_f64().to_string())
                     .set_temporary()
             })<span class="question-mark">?

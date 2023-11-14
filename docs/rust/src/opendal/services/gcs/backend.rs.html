@@ -663,7 +663,7 @@
 
 <span class="kw">use </span><span class="kw">super</span>::core::GcsCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::pager::GcsPager;
+<span class="kw">use </span><span class="kw">super</span>::lister::GcsLister;
 <span class="kw">use </span><span class="kw">super</span>::writer::GcsWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::services::gcs::writer::GcsWriters;
@@ -943,8 +943,8 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = GcsWriters;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Pager = GcsPager;
-    <span class="kw">type </span>BlockingPager = ();
+    <span class="kw">type </span>Lister = GcsLister;
+    <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();
@@ -1102,10 +1102,10 @@
         }
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="prelude-val">Ok</span>((
             RpList::default(),
-            GcsPager::new(
+            GcsLister::new(
                 <span class="self">self</span>.core.clone(),
                 path,
                 args.recursive(),

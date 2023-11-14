@@ -421,8 +421,8 @@
 ///     type BlockingReader = A::BlockingReader;
 ///     type Writer = A::Writer;
 ///     type BlockingWriter = A::BlockingWriter;
-///     type Pager = A::Pager;
-///     type BlockingPager = A::BlockingPager;
+///     type Lister = A::Lister;
+///     type BlockingLister = A::BlockingLister;
 ///
 ///     fn inner(&amp;self) -&gt; &amp;Self::Inner {
 ///         &amp;self.inner
@@ -452,11 +452,11 @@
 ///         self.inner.blocking_write(path, args)
 ///     }
 ///
-///     async fn list(&amp;self, path: &amp;str, args: OpList) -&gt; Result&lt;(RpList, Self::Pager)&gt; {
+///     async fn list(&amp;self, path: &amp;str, args: OpList) -&gt; Result&lt;(RpList, Self::Lister)&gt; {
 ///         self.inner.list(path, args).await
 ///     }
 ///
-///     fn blocking_list(&amp;self, path: &amp;str, args: OpList) -&gt; Result&lt;(RpList, Self::BlockingPager)&gt; {
+///     fn blocking_list(&amp;self, path: &amp;str, args: OpList) -&gt; Result&lt;(RpList, Self::BlockingLister)&gt; {
 ///         self.inner.blocking_list(path, args)
 ///     }
 /// }
@@ -492,8 +492,8 @@
     <span class="kw">type </span>BlockingReader: oio::BlockingRead;
     <span class="kw">type </span>Writer: oio::Write;
     <span class="kw">type </span>BlockingWriter: oio::BlockingWrite;
-    <span class="kw">type </span>Pager: oio::Page;
-    <span class="kw">type </span>BlockingPager: oio::BlockingPage;
+    <span class="kw">type </span>Lister: oio::List;
+    <span class="kw">type </span>BlockingLister: oio::BlockingList;
 
     <span class="kw">fn </span>inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Inner;
 
@@ -525,7 +525,7 @@
         <span class="self">self</span>.inner().delete(path, args).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt;;
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt;;
 
     <span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {
         <span class="self">self</span>.inner().batch(args).<span class="kw">await
@@ -559,7 +559,7 @@
         <span class="self">self</span>.inner().blocking_delete(path, args)
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt;;
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt;;
 }
 
 <span class="attr">#[async_trait]
@@ -568,8 +568,8 @@
     <span class="kw">type </span>BlockingReader = L::BlockingReader;
     <span class="kw">type </span>Writer = L::Writer;
     <span class="kw">type </span>BlockingWriter = L::BlockingWriter;
-    <span class="kw">type </span>Pager = L::Pager;
-    <span class="kw">type </span>BlockingPager = L::BlockingPager;
+    <span class="kw">type </span>Lister = L::Lister;
+    <span class="kw">type </span>BlockingLister = L::BlockingLister;
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
         (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).metadata()
@@ -603,7 +603,7 @@
         (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).delete(path, args).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).list(path, args).<span class="kw">await
     </span>}
 
@@ -643,7 +643,7 @@
         (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).blocking_delete(path, args)
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         (<span class="self">self </span><span class="kw">as </span><span class="kw-2">&amp;</span>L).blocking_list(path, args)
     }
 }
@@ -681,8 +681,8 @@
         <span class="kw">type </span>BlockingReader = ();
         <span class="kw">type </span>Writer = ();
         <span class="kw">type </span>BlockingWriter = ();
-        <span class="kw">type </span>Pager = ();
-        <span class="kw">type </span>BlockingPager = ();
+        <span class="kw">type </span>Lister = ();
+        <span class="kw">type </span>BlockingLister = ();
 
         <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
             <span class="kw">let </span><span class="kw-2">mut </span>am = AccessorInfo::default();

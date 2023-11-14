@@ -417,7 +417,7 @@
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>minitrace::prelude::<span class="kw-2">*</span>;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::PageOperation;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::ListOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::ReadOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteOperation;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -528,8 +528,8 @@
     <span class="kw">type </span>BlockingReader = MinitraceWrapper&lt;A::BlockingReader&gt;;
     <span class="kw">type </span>Writer = MinitraceWrapper&lt;A::Writer&gt;;
     <span class="kw">type </span>BlockingWriter = MinitraceWrapper&lt;A::BlockingWriter&gt;;
-    <span class="kw">type </span>Pager = MinitraceWrapper&lt;A::Pager&gt;;
-    <span class="kw">type </span>BlockingPager = MinitraceWrapper&lt;A::BlockingPager&gt;;
+    <span class="kw">type </span>Lister = MinitraceWrapper&lt;A::Lister&gt;;
+    <span class="kw">type </span>BlockingLister = MinitraceWrapper&lt;A::BlockingLister&gt;;
 
     <span class="kw">fn </span>inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Inner {
         <span class="kw-2">&amp;</span><span class="self">self</span>.inner
@@ -596,7 +596,7 @@
     </span>}
 
     <span class="attr">#[trace(enter_on_poll = <span class="bool-val">true</span>)]
-    </span><span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Pager)&gt; {
+    </span><span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="self">self</span>.inner
             .list(path, args)
             .map(|v| {
@@ -666,7 +666,7 @@
     }
 
     <span class="attr">#[trace]
-    </span><span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingPager)&gt; {
+    </span><span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="self">self</span>.inner.blocking_list(path, args).map(|(rp, it)| {
             (
                 rp,
@@ -763,22 +763,22 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;R: oio::Page&gt; oio::Page <span class="kw">for </span>MinitraceWrapper&lt;R&gt; {
+</span><span class="kw">impl</span>&lt;R: oio::List&gt; oio::List <span class="kw">for </span>MinitraceWrapper&lt;R&gt; {
     <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
         <span class="self">self</span>.inner
             .next()
             .in_span(Span::enter_with_parent(
-                PageOperation::Next.into_static(),
+                ListOperation::Next.into_static(),
                 <span class="kw-2">&amp;</span><span class="self">self</span>.span,
             ))
             .<span class="kw">await
     </span>}
 }
 
-<span class="kw">impl</span>&lt;R: oio::BlockingPage&gt; oio::BlockingPage <span class="kw">for </span>MinitraceWrapper&lt;R&gt; {
+<span class="kw">impl</span>&lt;R: oio::BlockingList&gt; oio::BlockingList <span class="kw">for </span>MinitraceWrapper&lt;R&gt; {
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
         <span class="kw">let </span>_g = <span class="self">self</span>.span.set_local_parent();
-        <span class="kw">let </span>_span = LocalSpan::enter_with_local_parent(PageOperation::BlockingNext.into_static());
+        <span class="kw">let </span>_span = LocalSpan::enter_with_local_parent(ListOperation::BlockingNext.into_static());
         <span class="self">self</span>.inner.next()
     }
 }
