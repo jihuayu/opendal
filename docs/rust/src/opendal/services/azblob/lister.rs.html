@@ -339,17 +339,6 @@
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
 <a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -385,9 +374,6 @@
     path: String,
     delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-
-    next_marker: String,
-    done: bool,
 }
 
 <span class="kw">impl </span>AzblobLister {
@@ -399,23 +385,16 @@
             path,
             delimiter,
             limit,
-
-            next_marker: <span class="string">&quot;&quot;</span>.to_string(),
-            done: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>AzblobLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>AzblobLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .azblob_list_blobs(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.next_marker, <span class="self">self</span>.delimiter, <span class="self">self</span>.limit)
+            .azblob_list_blobs(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span>ctx.token, <span class="self">self</span>.delimiter, <span class="self">self</span>.limit)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span>resp.status() != http::StatusCode::OK {
@@ -432,12 +411,11 @@
         //
         // - Check `next_marker`
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(next_marker) = output.next_marker.as_ref() {
-            <span class="self">self</span>.done = next_marker.is_empty();
+            ctx.done = next_marker.is_empty();
         };
-        <span class="self">self</span>.next_marker = output.next_marker.clone().unwrap_or_default();
+        ctx.token = output.next_marker.clone().unwrap_or_default();
 
         <span class="kw">let </span>prefixes = output.blobs.blob_prefix;
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(prefixes.len() + output.blobs.blob.len());
 
         <span class="kw">for </span>prefix <span class="kw">in </span>prefixes {
             <span class="kw">let </span>de = oio::Entry::new(
@@ -445,7 +423,7 @@
                 Metadata::new(EntryMode::DIR),
             );
 
-            entries.push(de)
+            ctx.entries.push_back(de)
         }
 
         <span class="kw">for </span>object <span class="kw">in </span>output.blobs.blob {
@@ -468,10 +446,10 @@
 
             <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.name), meta);
 
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

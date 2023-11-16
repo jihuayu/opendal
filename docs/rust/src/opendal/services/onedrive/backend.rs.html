@@ -367,7 +367,6 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -436,7 +435,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;OneDriveWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Lister = OnedriveLister;
+    <span class="kw">type </span>Lister = oio::PageLister&lt;OnedriveLister&gt;;
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -533,10 +532,9 @@
     }
 
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, _op_list: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
-        <span class="kw">let </span>lister: OnedriveLister =
-            OnedriveLister::new(<span class="self">self</span>.root.clone(), path.into(), <span class="self">self</span>.clone());
+        <span class="kw">let </span>l = OnedriveLister::new(<span class="self">self</span>.root.clone(), path.into(), <span class="self">self</span>.clone());
 
-        <span class="prelude-val">Ok</span>((RpList::default(), lister))
+        <span class="prelude-val">Ok</span>((RpList::default(), oio::PageLister::new(l)))
     }
 
     <span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {

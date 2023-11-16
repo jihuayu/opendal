@@ -116,27 +116,6 @@
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -155,28 +134,19 @@
 // under the License.
 
 </span><span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>http::Response;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::OnedriveBackend;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::graph_model::GraphApiOnedriveListResponse;
 <span class="kw">use </span><span class="kw">super</span>::graph_model::ItemType;
-<span class="kw">use </span><span class="kw">crate</span>::raw::build_rel_path;
-<span class="kw">use </span><span class="kw">crate</span>::raw::build_rooted_abs_path;
-<span class="kw">use </span><span class="kw">crate</span>::raw::new_json_deserialize_error;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::{<span class="self">self</span>};
-<span class="kw">use </span><span class="kw">crate</span>::raw::percent_encode_path;
-<span class="kw">use </span><span class="kw">crate</span>::raw::IncomingAsyncBody;
-<span class="kw">use </span><span class="kw">crate</span>::EntryMode;
-<span class="kw">use </span><span class="kw">crate</span>::Metadata;
-<span class="kw">use </span><span class="kw">crate</span>::Result;
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub struct </span>OnedriveLister {
     root: String,
     path: String,
     backend: OnedriveBackend,
-    next_link: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    done: bool,
 }
 
 <span class="kw">impl </span>OnedriveLister {
@@ -187,77 +157,14 @@
             root,
             path,
             backend,
-            next_link: <span class="prelude-val">None</span>,
-            done: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>OnedriveLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-        <span class="kw">let </span>response = <span class="self">self</span>.onedrive_get().<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status_code = response.status();
-        <span class="kw">if </span>!status_code.is_success() {
-            <span class="kw">if </span>status_code == http::StatusCode::NOT_FOUND {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-            }
-            <span class="kw">let </span>error = parse_error(response).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">return </span><span class="prelude-val">Err</span>(error);
-        }
-
-        <span class="kw">let </span>bytes = response.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>decoded_response = serde_json::from_slice::&lt;GraphApiOnedriveListResponse&gt;(<span class="kw-2">&amp;</span>bytes)
-            .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(next_link) = decoded_response.next_link {
-            <span class="self">self</span>.next_link = <span class="prelude-val">Some</span>(next_link);
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.done = <span class="bool-val">true</span>;
-        }
-
-        <span class="kw">let </span>entries: Vec&lt;oio::Entry&gt; = decoded_response
-            .value
-            .into_iter()
-            .map(|drive_item| {
-                <span class="kw">let </span>name = drive_item.name;
-                <span class="kw">let </span>parent_path = drive_item.parent_reference.path;
-                <span class="kw">let </span>parent_path = parent_path
-                    .strip_prefix(<span class="self">Self</span>::DRIVE_ROOT_PREFIX)
-                    .unwrap_or(<span class="string">&quot;&quot;</span>);
-
-                <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, parent_path, name);
-
-                <span class="kw">let </span>normalized_path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>path);
-
-                <span class="kw">let </span>entry: oio::Entry = <span class="kw">match </span>drive_item.item_type {
-                    ItemType::Folder { .. } =&gt; {
-                        <span class="kw">let </span>normalized_path = <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, normalized_path);
-                        oio::Entry::new(<span class="kw-2">&amp;</span>normalized_path, Metadata::new(EntryMode::DIR))
-                    }
-                    ItemType::File { .. } =&gt; {
-                        oio::Entry::new(<span class="kw-2">&amp;</span>normalized_path, Metadata::new(EntryMode::FILE))
-                    }
-                };
-                entry
-            })
-            .collect();
-
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
-    }
-}
-
-<span class="kw">impl </span>OnedriveLister {
-    <span class="kw">async fn </span>onedrive_get(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
-        <span class="kw">let </span>request_url = <span class="kw">if let </span><span class="prelude-val">Some</span>(next_link) = <span class="kw-2">&amp;</span><span class="self">self</span>.next_link {
-            <span class="kw">let </span>next_link_clone = next_link.clone();
-            <span class="self">self</span>.next_link = <span class="prelude-val">None</span>;
-            next_link_clone
-        } <span class="kw">else </span>{
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>OnedriveLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>request_url = <span class="kw">if </span>ctx.token.is_empty() {
             <span class="kw">let </span>path = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span><span class="self">self</span>.path);
             <span class="kw">let </span>url: String = <span class="kw">if </span>path == <span class="string">&quot;.&quot; </span>|| path == <span class="string">&quot;/&quot; </span>{
                 <span class="string">&quot;https://graph.microsoft.com/v1.0/me/drive/root/children&quot;</span>.to_string()
@@ -271,9 +178,60 @@
                 )
             };
             url
+        } <span class="kw">else </span>{
+            ctx.token.clone()
         };
 
-        <span class="self">self</span>.backend.onedrive_get_next_list_page(<span class="kw-2">&amp;</span>request_url).<span class="kw">await
-    </span>}
+        <span class="kw">let </span>resp = <span class="self">self
+            </span>.backend
+            .onedrive_get_next_list_page(<span class="kw-2">&amp;</span>request_url)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status_code = resp.status();
+        <span class="kw">if </span>!status_code.is_success() {
+            <span class="kw">if </span>status_code == http::StatusCode::NOT_FOUND {
+                ctx.done = <span class="bool-val">true</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
+            <span class="kw">let </span>error = parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">return </span><span class="prelude-val">Err</span>(error);
+        }
+
+        <span class="kw">let </span>bytes = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>decoded_response = serde_json::from_slice::&lt;GraphApiOnedriveListResponse&gt;(<span class="kw-2">&amp;</span>bytes)
+            .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(next_link) = decoded_response.next_link {
+            ctx.token = next_link;
+        } <span class="kw">else </span>{
+            ctx.done = <span class="bool-val">true</span>;
+        }
+
+        <span class="kw">for </span>drive_item <span class="kw">in </span>decoded_response.value {
+            <span class="kw">let </span>name = drive_item.name;
+            <span class="kw">let </span>parent_path = drive_item.parent_reference.path;
+            <span class="kw">let </span>parent_path = parent_path
+                .strip_prefix(<span class="self">Self</span>::DRIVE_ROOT_PREFIX)
+                .unwrap_or(<span class="string">&quot;&quot;</span>);
+
+            <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, parent_path, name);
+
+            <span class="kw">let </span>normalized_path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>path);
+
+            <span class="kw">let </span>entry: oio::Entry = <span class="kw">match </span>drive_item.item_type {
+                ItemType::Folder { .. } =&gt; {
+                    <span class="kw">let </span>normalized_path = <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, normalized_path);
+                    oio::Entry::new(<span class="kw-2">&amp;</span>normalized_path, Metadata::new(EntryMode::DIR))
+                }
+                ItemType::File { .. } =&gt; {
+                    oio::Entry::new(<span class="kw-2">&amp;</span>normalized_path, Metadata::new(EntryMode::FILE))
+                }
+            };
+
+            ctx.entries.push_back(entry)
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 </code></pre></div></section></main></body></html>

@@ -7,6 +7,15 @@
 <li><code>op.list_with(path).delimiter(&quot;/&quot;)</code> -&gt; <code>op.list_with(path).recursive(false)</code></li>
 </ul>
 <p><code>delimiter</code> other than <code>&quot;&quot;</code> and <code>&quot;/&quot;</code> is not supported anymore.</p>
+<h3 id="raw-api"><a href="#raw-api">Raw API</a></h3><h4 id="lister-align"><a href="#lister-align">Lister Align</a></h4>
+<p>We changed our internal <code>lister</code> implementation to align with the <code>list</code> public API for better performance and readability.</p>
+<ul>
+<li>trait <code>Page</code> =&gt; <code>List</code></li>
+<li>struct <code>Pager</code> =&gt; <code>Lister</code></li>
+<li>trait <code>BlockingPage</code> =&gt; <code>BlockingList</code></li>
+<li>struct <code>BlockingPager</code> =&gt; <code>BlockingLister</code></li>
+</ul>
+<p>Every call to <code>next</code> will return an entry instead a page of entries. Also, we changed our async list api into poll based instead of <code>async_trait</code>.</p>
 <h2 id="upgrade-to-v042"><a href="#upgrade-to-v042">Upgrade to v0.42</a></h2><h3 id="public-api-1"><a href="#public-api-1">Public API</a></h3><h4 id="msrv-changed"><a href="#msrv-changed">MSRV Changed</a></h4>
 <p>OpenDAL bumps it’s MSRV to 1.67.0.</p>
 <h4 id="s3-service-configuration"><a href="#s3-service-configuration">S3 Service Configuration</a></h4>
@@ -81,7 +90,7 @@
 + op.read_with(path).range(range_start..range_end).await?;
 </code></pre></div><div class="example-wrap"><pre class="language-diff"><code>- let reader = op.range_reader(path, range_start..range_end).await?;
 + let reader = op.reader_with(path).range(range_start..range_end).await?;
-</code></pre></div><h3 id="raw-api"><a href="#raw-api">Raw API</a></h3><h4 id="rfc-3017-remove-write-copy-from"><a href="#rfc-3017-remove-write-copy-from">RFC-3017 Remove Write Copy From</a></h4>
+</code></pre></div><h3 id="raw-api-1"><a href="#raw-api-1">Raw API</a></h3><h4 id="rfc-3017-remove-write-copy-from"><a href="#rfc-3017-remove-write-copy-from">RFC-3017 Remove Write Copy From</a></h4>
 <p><a href="opendal::docs::rfcs::rfc_3017_remove_write_copy_from">RFC-3017</a> removes <code>copy_from</code> API from the <code>oio::Write</code> trait. Users who implements services and layers by hand should remove this API.</p>
 <h2 id="upgrade-to-v039"><a href="#upgrade-to-v039">Upgrade to v0.39</a></h2><h3 id="public-api-3"><a href="#public-api-3">Public API</a></h3><h4 id="service-s3-role-arn-behavior"><a href="#service-s3-role-arn-behavior">Service S3 Role Arn Behavior</a></h4>
 <p>In PR #2687, OpenDAL changed the behavior when <code>role_arn</code> has been specified.</p>
@@ -89,11 +98,11 @@
 <h4 id="retrylayer-supports-retryinterceptor"><a href="#retrylayer-supports-retryinterceptor">RetryLayer supports RetryInterceptor</a></h4>
 <p>In PR #2666, <code>RetryLayer</code> supports <code>RetryInterceptor</code>. To implement this change, <code>RetryLayer</code> changed it’s in-memory layout by adding a new generic parameter <code>I</code> to <code>RetryLayer&lt;I&gt;</code>.</p>
 <p>Users who stores <code>RetryLayer</code> in struct or enum will need to change the type if they don’t want to use default behavior.</p>
-<h3 id="raw-api-1"><a href="#raw-api-1">Raw API</a></h3>
+<h3 id="raw-api-2"><a href="#raw-api-2">Raw API</a></h3>
 <p>In PR #2698, OpenDAL re-org the internal structure of <code>opendal::raw::oio</code> and changed some APIs name.</p>
 <h2 id="upgrade-to-v038"><a href="#upgrade-to-v038">Upgrade to v0.38</a></h2>
 <p>There are no public API changes.</p>
-<h3 id="raw-api-2"><a href="#raw-api-2">Raw API</a></h3>
+<h3 id="raw-api-3"><a href="#raw-api-3">Raw API</a></h3>
 <p>OpenDAL add the <code>Write::sink</code> API to enable streaming writing. This is a breaking change for users who depend on the raw API.</p>
 <p>For a quick fix, users who have implemented <code>opendal::raw::oio::Write</code> can return an <code>Unsupported</code> error for <code>Write::sink()</code>. </p>
 <p>More detailes could be found at <a href="../rfcs/rfc_2083_writer_sink_api/index.html" title="mod opendal::docs::rfcs::rfc_2083_writer_sink_api">RFC: Writer <code>sink</code> API</a>.</p>
@@ -133,7 +142,7 @@
   .call()<span class="question-mark">?</span>;</code></pre></div>
 <p>Along with this change, users don’t need to call <code>OpXxx</code> anymore so we moved it to <code>raw</code> API.</p>
 <p>More detailes could be found at <a href="../rfcs/rfc_2299_chain_based_operator_api/index.html" title="mod opendal::docs::rfcs::rfc_2299_chain_based_operator_api">RFC: Chain Based Operator API</a>.</p>
-<h3 id="raw-api-3"><a href="#raw-api-3">Raw API</a></h3>
+<h3 id="raw-api-4"><a href="#raw-api-4">Raw API</a></h3>
 <p>Migrated <code>opendal::ops</code> to <code>opendal::raw::ops</code>.</p>
 <h2 id="upgrade-to-v035"><a href="#upgrade-to-v035">Upgrade to v0.35</a></h2><h3 id="public-api-5"><a href="#public-api-5">Public API</a></h3>
 <ul>
@@ -143,7 +152,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="raw-api-4"><a href="#raw-api-4">Raw API</a></h3>
+<h3 id="raw-api-5"><a href="#raw-api-5">Raw API</a></h3>
 <ul>
 <li>OpenDAL adds <code>append</code> support with could break existing layers. Please make sure <code>append</code> requests have been forward correctly.</li>
 <li>After the merging of <code>scan</code> and <code>list</code>, OpenDAL removes the <code>scan</code> from raw API. Please use <code>list_without_delimiter</code> instead.</li>
@@ -153,14 +162,14 @@
 <li>OpenDAL raises it’s MSRV to 1.65 for dependences changes</li>
 <li><code>OperatorInfo::can_scan</code> has been removed, to check if underlying services support scan a dir natively, please use <code>Capability::list_without_delimiter</code> instead.</li>
 </ul>
-<h3 id="raw-api-5"><a href="#raw-api-5">Raw API</a></h3><h4 id="merged-scan-into-list"><a href="#merged-scan-into-list">Merged <code>scan</code> into <code>list</code></a></h4>
+<h3 id="raw-api-6"><a href="#raw-api-6">Raw API</a></h3><h4 id="merged-scan-into-list"><a href="#merged-scan-into-list">Merged <code>scan</code> into <code>list</code></a></h4>
 <p>After <code>Capability</code> introduced, we have added <code>delimiter</code> in <code>OpList</code>. Users can specify the delimiter to <code>&quot;&quot;</code> or <code>&quot;/&quot;</code> to control the list behavior.</p>
 <p>Along with this change, <code>Operator::scan()</code> becomes a short alias of <code>Operator::list_with(OpList::new().with_delimiter(&quot;&quot;))</code>.</p>
 <h4 id="typed-kv-adapter"><a href="#typed-kv-adapter">Typed Kv Adapter</a></h4>
 <p>In v0.34, OpenDAL adds a typed kv adapter for zero-copy read and write. If you are implemented kv adapter for a rust in-memory data struct, please consider migrate.</p>
 <h2 id="upgrade-to-v033"><a href="#upgrade-to-v033">Upgrade to v0.33</a></h2><h3 id="public-api-7"><a href="#public-api-7">Public API</a></h3>
 <p>OpenDAL 0.33 has redesigned the <code>Writer</code> API, replacing all instances of <code>writer.append()</code> with <code>writer.write()</code>. For more information, please refer to <a href="../../struct.Writer.html" title="struct opendal::Writer"><code>Writer</code></a>.</p>
-<h3 id="raw-api-6"><a href="#raw-api-6">Raw API</a></h3>
+<h3 id="raw-api-7"><a href="#raw-api-7">Raw API</a></h3>
 <p>In addition to the redesign of the <code>Writer</code> API, we have removed <code>append</code> from <code>oio::Write</code>. Therefore, users who implement services and layers should also remove it.</p>
 <p>After v0.33 landing, services should handle <code>OpWrite::content_length</code> correctly by following these guidelines:</p>
 <ul>

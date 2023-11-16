@@ -68,13 +68,6 @@
 <a href="#68" id="68">68</a>
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -94,6 +87,7 @@
 
 </span><span class="kw">use </span>std::str;
 <span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::task::{Context, Poll};
 <span class="kw">use </span>std::vec::IntoIter;
 
 <span class="kw">use </span>async_trait::async_trait;
@@ -104,15 +98,13 @@
 
 <span class="kw">pub struct </span>FtpLister {
     path: String,
-    size: usize,
     file_iter: IntoIter&lt;String&gt;,
 }
 
 <span class="kw">impl </span>FtpLister {
-    <span class="kw">pub fn </span>new(path: <span class="kw-2">&amp;</span>str, files: Vec&lt;String&gt;, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(path: <span class="kw-2">&amp;</span>str, files: Vec&lt;String&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             path: path.to_string(),
-            size: limit.unwrap_or(<span class="number">1000</span>),
             file_iter: files.into_iter(),
         }
     }
@@ -120,36 +112,30 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>oio::List <span class="kw">for </span>FtpLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>oes: Vec&lt;oio::Entry&gt; = Vec::with_capacity(<span class="self">self</span>.size);
+    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;oio::Entry&gt;&gt;&gt; {
+        <span class="kw">let </span>de = <span class="kw">match </span><span class="self">self</span>.file_iter.next() {
+            <span class="prelude-val">Some</span>(file_str) =&gt; File::from_str(file_str.as_str()).map_err(|e| {
+                Error::new(ErrorKind::Unexpected, <span class="string">&quot;parse file from response&quot;</span>).set_source(e)
+            })<span class="question-mark">?</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)),
+        };
 
-        <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.size {
-            <span class="kw">let </span>de = <span class="kw">match </span><span class="self">self</span>.file_iter.next() {
-                <span class="prelude-val">Some</span>(file_str) =&gt; File::from_str(file_str.as_str()).map_err(|e| {
-                    Error::new(ErrorKind::Unexpected, <span class="string">&quot;parse file from response&quot;</span>).set_source(e)
-                })<span class="question-mark">?</span>,
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
-            };
+        <span class="kw">let </span>path = <span class="self">self</span>.path.to_string() + de.name();
 
-            <span class="kw">let </span>path = <span class="self">self</span>.path.to_string() + de.name();
+        <span class="kw">let </span>entry = <span class="kw">if </span>de.is_file() {
+            oio::Entry::new(
+                <span class="kw-2">&amp;</span>path,
+                Metadata::new(EntryMode::FILE)
+                    .with_content_length(de.size() <span class="kw">as </span>u64)
+                    .with_last_modified(de.modified().into()),
+            )
+        } <span class="kw">else if </span>de.is_directory() {
+            oio::Entry::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="kw-2">&amp;</span>path), Metadata::new(EntryMode::DIR))
+        } <span class="kw">else </span>{
+            oio::Entry::new(<span class="kw-2">&amp;</span>path, Metadata::new(EntryMode::Unknown))
+        };
 
-            <span class="kw">let </span>d = <span class="kw">if </span>de.is_file() {
-                oio::Entry::new(
-                    <span class="kw-2">&amp;</span>path,
-                    Metadata::new(EntryMode::FILE)
-                        .with_content_length(de.size() <span class="kw">as </span>u64)
-                        .with_last_modified(de.modified().into()),
-                )
-            } <span class="kw">else if </span>de.is_directory() {
-                oio::Entry::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="kw-2">&amp;</span>path), Metadata::new(EntryMode::DIR))
-            } <span class="kw">else </span>{
-                oio::Entry::new(<span class="kw-2">&amp;</span>path, Metadata::new(EntryMode::Unknown))
-            };
-
-            oes.push(d)
-        }
-
-        <span class="prelude-val">Ok</span>(<span class="kw">if </span>oes.is_empty() { <span class="prelude-val">None </span>} <span class="kw">else </span>{ <span class="prelude-val">Some</span>(oes) })
+        Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entry)))
     }
 }
 </code></pre></div></section></main></body></html>

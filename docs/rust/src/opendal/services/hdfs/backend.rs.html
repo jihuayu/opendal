@@ -730,7 +730,7 @@
         <span class="prelude-val">Ok</span>(RpDelete::default())
     }
 
-    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
+    <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>f = <span class="kw">match </span><span class="self">self</span>.client.read_dir(<span class="kw-2">&amp;</span>p) {
@@ -744,7 +744,7 @@
             }
         };
 
-        <span class="kw">let </span>rd = HdfsLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root, f, args.limit());
+        <span class="kw">let </span>rd = HdfsLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root, f);
 
         <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">Some</span>(rd)))
     }
@@ -847,7 +847,7 @@
         <span class="prelude-val">Ok</span>(RpDelete::default())
     }
 
-    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
+    <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
         <span class="kw">let </span>f = <span class="kw">match </span><span class="self">self</span>.client.read_dir(<span class="kw-2">&amp;</span>p) {
@@ -861,7 +861,7 @@
             }
         };
 
-        <span class="kw">let </span>rd = HdfsLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root, f, args.limit());
+        <span class="kw">let </span>rd = HdfsLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root, f);
 
         <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">Some</span>(rd)))
     }

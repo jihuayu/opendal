@@ -428,6 +428,25 @@
 <a href="#428" id="428">428</a>
 <a href="#429" id="429">429</a>
 <a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -847,15 +866,34 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;R: oio::List&gt; oio::List <span class="kw">for </span>TimeoutWrapper&lt;R&gt; {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        tokio::time::timeout(<span class="self">self</span>.timeout, <span class="self">self</span>.inner.next())
-            .<span class="kw">await
-            </span>.map_err(|<span class="kw">_</span>| {
-                Error::new(ErrorKind::Unexpected, <span class="string">&quot;operation timeout&quot;</span>)
+    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;oio::Entry&gt;&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.start {
+            <span class="prelude-val">Some</span>(start) =&gt; {
+                <span class="kw">if </span>start.elapsed() &gt; <span class="self">self</span>.timeout {
+                    <span class="comment">// Clean up the start time before return ready.
+                    </span><span class="self">self</span>.start = <span class="prelude-val">None</span>;
+
+                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Err</span>(Error::new(
+                        ErrorKind::Unexpected,
+                        <span class="string">&quot;operation timeout&quot;</span>,
+                    )
                     .with_operation(ListOperation::Next)
                     .with_context(<span class="string">&quot;timeout&quot;</span>, <span class="self">self</span>.timeout.as_secs_f64().to_string())
-                    .set_temporary()
-            })<span class="question-mark">?
-    </span>}
+                    .set_temporary()));
+                }
+            }
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="self">self</span>.start = <span class="prelude-val">Some</span>(Instant::now());
+            }
+        }
+
+        <span class="kw">match </span><span class="self">self</span>.inner.poll_next(cx) {
+            Poll::Pending =&gt; Poll::Pending,
+            Poll::Ready(v) =&gt; {
+                <span class="self">self</span>.start = <span class="prelude-val">None</span>;
+                Poll::Ready(v)
+            }
+        }
+    }
 }
 </code></pre></div></section></main></body></html>

@@ -96,16 +96,6 @@
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -138,46 +128,36 @@
 <span class="kw">pub struct </span>DbfsLister {
     core: Arc&lt;DbfsCore&gt;,
     path: String,
-    done: bool,
 }
 
 <span class="kw">impl </span>DbfsLister {
     <span class="kw">pub fn </span>new(core: Arc&lt;DbfsCore&gt;, path: String) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            core,
-            path,
-            done: <span class="bool-val">false</span>,
-        }
+        <span class="self">Self </span>{ core, path }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>DbfsLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>DbfsLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>response = <span class="self">self</span>.core.dbfs_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status_code = response.status();
         <span class="kw">if </span>!status_code.is_success() {
             <span class="kw">if </span>status_code == StatusCode::NOT_FOUND {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                ctx.done = <span class="bool-val">true</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
             <span class="kw">let </span>error = parse_error(response).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">return </span><span class="prelude-val">Err</span>(error);
         }
 
         <span class="kw">let </span>bytes = response.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>decoded_response =
+        <span class="kw">let </span>decoded_response =
             serde_json::from_slice::&lt;DbfsOutputList&gt;(<span class="kw-2">&amp;</span>bytes).map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.done = <span class="bool-val">true</span>;
+        ctx.done = <span class="bool-val">true</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(decoded_response.files.len());
-
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(status) = decoded_response.files.pop() {
+        <span class="kw">for </span>status <span class="kw">in </span>decoded_response.files {
             <span class="kw">let </span>entry: oio::Entry = <span class="kw">match </span>status.is_dir {
                 <span class="bool-val">true </span>=&gt; {
                     <span class="kw">let </span>normalized_path = <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="kw-2">&amp;</span>status.path);
@@ -196,9 +176,9 @@
                     oio::Entry::new(<span class="kw-2">&amp;</span>status.path, meta)
                 }
             };
-            entries.push(entry);
+            ctx.entries.push_back(entry);
         }
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

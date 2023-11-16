@@ -210,25 +210,6 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -263,39 +244,28 @@
     core: Arc&lt;AzfileCore&gt;,
     path: String,
     limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    done: bool,
-    continuation: String,
 }
 
 <span class="kw">impl </span>AzfileLister {
     <span class="kw">pub fn </span>new(core: Arc&lt;AzfileCore&gt;, path: String, limit: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            core,
-            path,
-            limit,
-            done: <span class="bool-val">false</span>,
-            continuation: <span class="string">&quot;&quot;</span>.to_string(),
-        }
+        <span class="self">Self </span>{ core, path, limit }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>AzfileLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>AzfileLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .azfile_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.limit, <span class="kw-2">&amp;</span><span class="self">self</span>.continuation)
+            .azfile_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span><span class="self">self</span>.limit, <span class="kw-2">&amp;</span>ctx.token)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
 
         <span class="kw">if </span>status != StatusCode::OK {
             <span class="kw">if </span>status == StatusCode::NOT_FOUND {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+                ctx.done = <span class="bool-val">true</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
             <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
         }
@@ -304,11 +274,13 @@
 
         <span class="kw">let </span>text = String::from_utf8(bs.to_vec()).expect(<span class="string">&quot;response convert to string must success&quot;</span>);
 
-        <span class="kw">let </span>results: EnumerationResults = from_str(<span class="kw-2">&amp;</span>text).map_err(|e| {
-            Error::new(ErrorKind::Unexpected, <span class="string">&quot;deserialize xml from response&quot;</span>).set_source(e)
-        })<span class="question-mark">?</span>;
+        <span class="kw">let </span>results: EnumerationResults = from_str(<span class="kw-2">&amp;</span>text).map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::new();
+        <span class="kw">if </span>results.next_marker.is_empty() {
+            ctx.done = <span class="bool-val">true</span>;
+        } <span class="kw">else </span>{
+            ctx.token = results.next_marker;
+        }
 
         <span class="kw">for </span>file <span class="kw">in </span>results.entries.file {
             <span class="kw">let </span>meta = Metadata::new(EntryMode::FILE)
@@ -316,7 +288,7 @@
                 .with_content_length(file.properties.content_length.unwrap_or(<span class="number">0</span>))
                 .with_last_modified(parse_datetime_from_rfc2822(<span class="kw-2">&amp;</span>file.properties.last_modified)<span class="question-mark">?</span>);
             <span class="kw">let </span>path = <span class="self">self</span>.path.clone().trim_start_matches(<span class="string">&#39;/&#39;</span>).to_string() + <span class="kw-2">&amp;</span>file.name;
-            entries.push(oio::Entry::new(<span class="kw-2">&amp;</span>path, meta));
+            ctx.entries.push_back(oio::Entry::new(<span class="kw-2">&amp;</span>path, meta));
         }
 
         <span class="kw">for </span>dir <span class="kw">in </span>results.entries.directory {
@@ -324,20 +296,10 @@
                 .with_etag(dir.properties.etag)
                 .with_last_modified(parse_datetime_from_rfc2822(<span class="kw-2">&amp;</span>dir.properties.last_modified)<span class="question-mark">?</span>);
             <span class="kw">let </span>path = <span class="self">self</span>.path.clone().trim_start_matches(<span class="string">&#39;/&#39;</span>).to_string() + <span class="kw-2">&amp;</span>dir.name + <span class="string">&quot;/&quot;</span>;
-            entries.push(oio::Entry::new(<span class="kw-2">&amp;</span>path, meta));
+            ctx.entries.push_back(oio::Entry::new(<span class="kw-2">&amp;</span>path, meta));
         }
 
-        <span class="kw">if </span>results.next_marker.is_empty() {
-            <span class="self">self</span>.done = <span class="bool-val">true</span>;
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.continuation = results.next_marker;
-        }
-
-        <span class="kw">if </span>entries.is_empty() {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
-        }
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

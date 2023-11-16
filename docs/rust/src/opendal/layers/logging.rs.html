@@ -3040,18 +3040,18 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;P: oio::List&gt; oio::List <span class="kw">for </span>LoggingLister&lt;P&gt; {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">let </span>res = <span class="self">self</span>.inner.next().<span class="kw">await</span>;
+    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;oio::Entry&gt;&gt;&gt; {
+        <span class="kw">let </span>res = <span class="macro">ready!</span>(<span class="self">self</span>.inner.poll_next(cx));
 
         <span class="kw">match </span><span class="kw-2">&amp;</span>res {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(des)) =&gt; {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(de)) =&gt; {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
-                    <span class="string">&quot;service={} operation={} path={} -&gt; listed {} entries&quot;</span>,
+                    <span class="string">&quot;service={} operation={} path={} -&gt; listed entry: {}&quot;</span>,
                     <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
-                    des.len(),
+                    de.path(),
                 );
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
@@ -3079,23 +3079,23 @@
             }
         };
 
-        res
+        Poll::Ready(res)
     }
 }
 
 <span class="kw">impl</span>&lt;P: oio::BlockingList&gt; oio::BlockingList <span class="kw">for </span>LoggingLister&lt;P&gt; {
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;oio::Entry&gt;&gt; {
         <span class="kw">let </span>res = <span class="self">self</span>.inner.next();
 
         <span class="kw">match </span><span class="kw-2">&amp;</span>res {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(des)) =&gt; {
                 <span class="macro">debug!</span>(
                     target: LOGGING_TARGET,
-                    <span class="string">&quot;service={} operation={} path={} -&gt; got {} entries&quot;</span>,
+                    <span class="string">&quot;service={} operation={} path={} -&gt; listed entry: {}&quot;</span>,
                     <span class="self">self</span>.ctx.scheme,
                     <span class="self">self</span>.op,
                     <span class="self">self</span>.path,
-                    des.len(),
+                    des.path(),
                 );
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {

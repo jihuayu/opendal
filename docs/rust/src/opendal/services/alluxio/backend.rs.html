@@ -287,8 +287,6 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -476,7 +474,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = AlluxioWriters;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Lister = AlluxioLister;
+    <span class="kw">type </span>Lister = oio::PageLister&lt;AlluxioLister&gt;;
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -544,10 +542,8 @@
     }
 
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, _args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
-        <span class="prelude-val">Ok</span>((
-            RpList::default(),
-            AlluxioLister::new(<span class="self">self</span>.core.clone(), path),
-        ))
+        <span class="kw">let </span>l = AlluxioLister::new(<span class="self">self</span>.core.clone(), path);
+        <span class="prelude-val">Ok</span>((RpList::default(), oio::PageLister::new(l)))
     }
 }
 

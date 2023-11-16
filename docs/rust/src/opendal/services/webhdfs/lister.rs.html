@@ -117,20 +117,6 @@
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -153,90 +139,75 @@
 
 <span class="kw">use </span><span class="kw">super</span>::backend::WebhdfsBackend;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::message::DirectoryListingWrapper;
-<span class="kw">use </span><span class="kw">super</span>::message::FileStatus;
-<span class="kw">use </span><span class="kw">super</span>::message::FileStatusType;
+<span class="kw">use </span><span class="kw">super</span>::message::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub struct </span>WebhdfsLister {
     backend: WebhdfsBackend,
     path: String,
-    statuses: Vec&lt;FileStatus&gt;,
-    batch_start_after: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    remaining_entries: u32,
 }
 
 <span class="kw">impl </span>WebhdfsLister {
-    <span class="kw">pub fn </span>new(backend: WebhdfsBackend, path: <span class="kw-2">&amp;</span>str, statuses: Vec&lt;FileStatus&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(backend: WebhdfsBackend, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             backend,
             path: path.to_string(),
-            batch_start_after: statuses.last().map(|f| f.path_suffix.clone()),
-            statuses,
-            remaining_entries: <span class="number">0</span>,
         }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>set_remaining_entries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, remaining_entries: u32) {
-        <span class="self">self</span>.remaining_entries = remaining_entries;
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>WebhdfsLister {
-    <span class="doccomment">/// Returns the next page of entries.
-    ///
-    /// Note: default list status with batch, calling next will query for next batch if `remaining_entries` &gt; 0.
-    </span><span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.statuses.is_empty() &amp;&amp; <span class="self">self</span>.remaining_entries == <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>WebhdfsLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>file_status = <span class="kw">if </span><span class="self">self</span>.backend.disable_list_batch {
+            <span class="kw">let </span>resp = <span class="self">self</span>.backend.webhdfs_list_status_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">match </span>resp.status() {
+                StatusCode::OK =&gt; {
+                    ctx.done = <span class="bool-val">true</span>;
 
-        <span class="kw">return match </span><span class="self">self</span>.backend.disable_list_batch {
-            <span class="bool-val">true </span>=&gt; <span class="self">self</span>.webhdfs_get_next_list_statuses(),
-            <span class="bool-val">false </span>=&gt; {
-                <span class="kw">let </span>args = OpList::with_start_after(
-                    OpList::default(),
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.batch_start_after.clone().unwrap(),
-                );
-                <span class="kw">let </span>req = <span class="self">self
-                    </span>.backend
-                    .webhdfs_list_status_batch_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span>args)<span class="question-mark">?</span>;
-                <span class="kw">let </span>resp = <span class="self">self</span>.backend.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-                <span class="kw">match </span>resp.status() {
-                    StatusCode::OK =&gt; {
-                        <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="kw">let </span>directory_listing =
-                            serde_json::from_slice::&lt;DirectoryListingWrapper&gt;(<span class="kw-2">&amp;</span>bs)
-                                .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>file_statuses = directory_listing
-                            .directory_listing
-                            .partial_listing
-                            .file_statuses
-                            .file_status;
-                        <span class="self">self</span>.remaining_entries =
-                            directory_listing.directory_listing.remaining_entries;
-                        <span class="self">self</span>.batch_start_after =
-                            file_statuses.last().map(|f| f.path_suffix.clone());
-                        <span class="self">self</span>.statuses.extend(file_statuses);
-                        <span class="self">self</span>.webhdfs_get_next_list_statuses()
-                    }
-                    StatusCode::NOT_FOUND =&gt; <span class="self">self</span>.webhdfs_get_next_list_statuses(),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+                    <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+                    serde_json::from_slice::&lt;FileStatusesWrapper&gt;(<span class="kw-2">&amp;</span>bs)
+                        .map_err(new_json_deserialize_error)<span class="question-mark">?
+                        </span>.file_statuses
+                        .file_status
                 }
+                StatusCode::NOT_FOUND =&gt; {
+                    ctx.done = <span class="bool-val">true</span>;
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                }
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+            }
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>resp = <span class="self">self
+                </span>.backend
+                .webhdfs_list_status_batch_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span>ctx.token)
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">match </span>resp.status() {
+                StatusCode::OK =&gt; {
+                    <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">let </span>directory_listing = serde_json::from_slice::&lt;DirectoryListingWrapper&gt;(<span class="kw-2">&amp;</span>bs)
+                        .map_err(new_json_deserialize_error)<span class="question-mark">?
+                        </span>.directory_listing;
+                    <span class="kw">let </span>file_statuses = directory_listing.partial_listing.file_statuses.file_status;
+
+                    <span class="kw">if </span>directory_listing.remaining_entries == <span class="number">0 </span>{
+                        ctx.done = <span class="bool-val">true</span>;
+                    } <span class="kw">else if </span>!file_statuses.is_empty() {
+                        ctx.token = file_statuses.last().unwrap().path_suffix.clone();
+                    }
+
+                    file_statuses
+                }
+                StatusCode::NOT_FOUND =&gt; {
+                    ctx.done = <span class="bool-val">true</span>;
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+                }
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
             }
         };
-    }
-}
 
-<span class="kw">impl </span>WebhdfsLister {
-    <span class="doccomment">/// Returns the next page of entries.
-    </span><span class="kw">fn </span>webhdfs_get_next_list_statuses(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(<span class="self">self</span>.statuses.len());
-
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(status) = <span class="self">self</span>.statuses.pop() {
+        <span class="kw">for </span>status <span class="kw">in </span>file_status {
             <span class="kw">let </span><span class="kw-2">mut </span>path = <span class="kw">if </span><span class="self">self</span>.path.is_empty() {
                 status.path_suffix.to_string()
             } <span class="kw">else </span>{
@@ -259,9 +230,10 @@
                 path += <span class="string">&quot;/&quot;
             </span>}
             <span class="kw">let </span>entry = oio::Entry::new(<span class="kw-2">&amp;</span>path, meta);
-            entries.push(entry);
+            ctx.entries.push_back(entry);
         }
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>

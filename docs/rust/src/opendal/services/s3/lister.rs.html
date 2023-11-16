@@ -252,13 +252,6 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -299,9 +292,6 @@
 
     <span class="doccomment">/// Amazon S3 starts listing **after** this specified key
     </span>start_after: <span class="prelude-ty">Option</span>&lt;String&gt;,
-
-    token: String,
-    done: bool,
 }
 
 <span class="kw">impl </span>S3Lister {
@@ -320,28 +310,26 @@
             delimiter,
             limit,
             start_after: start_after.map(String::from),
-
-            token: <span class="string">&quot;&quot;</span>.to_string(),
-            done: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>S3Lister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>S3Lister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
             .s3_list_objects(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.token,
+                <span class="kw-2">&amp;</span>ctx.token,
                 <span class="self">self</span>.delimiter,
                 <span class="self">self</span>.limit,
-                <span class="self">self</span>.start_after.clone(),
+                <span class="comment">// State after should only be set for the first page.
+                </span><span class="kw">if </span>ctx.token.is_empty() {
+                    <span class="self">self</span>.start_after.clone()
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>},
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -358,16 +346,14 @@
         // - Check `is_truncated`
         // - Check `next_continuation_token`
         // - Check the length of `common_prefixes` and `contents` (very rarely case)
-        </span><span class="self">self</span>.done = <span class="kw">if let </span><span class="prelude-val">Some</span>(is_truncated) = output.is_truncated {
+        </span>ctx.done = <span class="kw">if let </span><span class="prelude-val">Some</span>(is_truncated) = output.is_truncated {
             !is_truncated
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(next_continuation_token) = output.next_continuation_token.as_ref() {
             next_continuation_token.is_empty()
         } <span class="kw">else </span>{
             output.common_prefixes.is_empty() &amp;&amp; output.contents.is_empty()
         };
-        <span class="self">self</span>.token = output.next_continuation_token.clone().unwrap_or_default();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(output.common_prefixes.len() + output.contents.len());
+        ctx.token = output.next_continuation_token.clone().unwrap_or_default();
 
         <span class="kw">for </span>prefix <span class="kw">in </span>output.common_prefixes {
             <span class="kw">let </span>de = oio::Entry::new(
@@ -375,7 +361,7 @@
                 Metadata::new(EntryMode::DIR),
             );
 
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
         <span class="kw">for </span>object <span class="kw">in </span>output.contents {
@@ -400,10 +386,10 @@
 
             <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.key), meta);
 
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

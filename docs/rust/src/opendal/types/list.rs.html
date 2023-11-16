@@ -236,19 +236,6 @@
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -266,8 +253,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::collections::VecDeque;
-<span class="kw">use </span>std::pin::Pin;
+</span><span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
@@ -277,29 +263,28 @@
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>futures::Stream;
 
+<span class="kw">use </span><span class="kw">crate</span>::raw::oio::List;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Future constructed by listing.
-</span><span class="kw">type </span>ListFuture = BoxFuture&lt;<span class="lifetime">&#39;static</span>, (oio::Lister, <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt;)&gt;;
 <span class="doccomment">/// Future constructed by stating.
 </span><span class="kw">type </span>StatFuture = BoxFuture&lt;<span class="lifetime">&#39;static</span>, (String, <span class="prelude-ty">Result</span>&lt;RpStat&gt;)&gt;;
 
 <span class="doccomment">/// Lister is designed to list entries at given path in an asynchronous
 /// manner.
 ///
-/// Users can construct Lister by [`Operator::lister`].
+/// Users can construct Lister by [`Operator::lister`] or [`Operator::lister_with`].
 ///
-/// User can use lister as `Stream&lt;Item = Result&lt;Entry&gt;&gt;`.
+/// - Lister implements `Stream&lt;Item = Result&lt;Entry&gt;&gt;`.
+/// - Lister will return `None` if there is no more entries or error has been returned.
 </span><span class="kw">pub struct </span>Lister {
     acc: FusedAccessor,
+    lister: oio::Lister,
     <span class="doccomment">/// required_metakey is the metakey required by users.
     </span>required_metakey: FlagSet&lt;Metakey&gt;,
 
-    buf: VecDeque&lt;oio::Entry&gt;,
-    lister: <span class="prelude-ty">Option</span>&lt;oio::Lister&gt;,
-    listing: <span class="prelude-ty">Option</span>&lt;ListFuture&gt;,
     stating: <span class="prelude-ty">Option</span>&lt;StatFuture&gt;,
+    errored: bool,
 }
 
 <span class="doccomment">/// # Safety
@@ -315,12 +300,11 @@
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             acc,
+            lister,
             required_metakey,
 
-            buf: VecDeque::new(),
-            lister: <span class="prelude-val">Some</span>(lister),
-            listing: <span class="prelude-val">None</span>,
             stating: <span class="prelude-val">None</span>,
+            errored: <span class="bool-val">false</span>,
         })
     }
 }
@@ -329,60 +313,49 @@
     <span class="kw">type </span>Item = <span class="prelude-ty">Result</span>&lt;Entry&gt;;
 
     <span class="kw">fn </span>poll_next(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt;&gt; {
+        <span class="comment">// Returns `None` if we have errored.
+        </span><span class="kw">if </span><span class="self">self</span>.errored {
+            <span class="kw">return </span>Poll::Ready(<span class="prelude-val">None</span>);
+        }
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(fut) = <span class="self">self</span>.stating.as_mut() {
             <span class="kw">let </span>(path, rp) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
 
             <span class="comment">// Make sure we will not poll this future again.
             </span><span class="self">self</span>.stating = <span class="prelude-val">None</span>;
-            <span class="kw">let </span>metadata = rp<span class="question-mark">?</span>.into_metadata();
+            <span class="kw">let </span>metadata = <span class="kw">match </span>rp {
+                <span class="prelude-val">Ok</span>(rp) =&gt; rp.into_metadata(),
+                <span class="prelude-val">Err</span>(err) =&gt; {
+                    <span class="self">self</span>.errored = <span class="bool-val">true</span>;
+                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)));
+                }
+            };
 
             <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(oe) = <span class="self">self</span>.buf.pop_front() {
-            <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
-            <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
-            </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
-                <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
-            }
-
-            <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
-            <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
-
-                (path, res)
-            };
-            <span class="self">self</span>.stating = <span class="prelude-val">Some</span>(Box::pin(fut));
-            <span class="kw">return </span><span class="self">self</span>.poll_next(cx);
-        }
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(fut) = <span class="self">self</span>.listing.as_mut() {
-            <span class="kw">let </span>(op, res) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
-
-            <span class="comment">// Make sure we will not poll this future again.
-            </span><span class="self">self</span>.listing = <span class="prelude-val">None</span>;
-
-            <span class="kw">return match </span>res<span class="question-mark">? </span>{
-                <span class="prelude-val">Some</span>(oes) =&gt; {
-                    <span class="self">self</span>.lister = <span class="prelude-val">Some</span>(op);
-                    <span class="self">self</span>.buf = oes.into();
-                    <span class="self">self</span>.poll_next(cx)
+        <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.lister.poll_next(cx)) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oe)) =&gt; {
+                <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
+                <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
+                </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
+                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
                 }
-                <span class="prelude-val">None </span>=&gt; Poll::Ready(<span class="prelude-val">None</span>),
-            };
-        }
 
-        <span class="kw">match </span><span class="self">self</span>.lister.take() {
-            <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>lister) =&gt; {
+                <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
                 <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                    <span class="kw">let </span>res = lister.next().<span class="kw">await</span>;
+                    <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
 
-                    (lister, res)
+                    (path, res)
                 };
-                <span class="self">self</span>.listing = <span class="prelude-val">Some</span>(Box::pin(fut));
+                <span class="self">self</span>.stating = <span class="prelude-val">Some</span>(Box::pin(fut));
                 <span class="self">self</span>.poll_next(cx)
             }
-            <span class="prelude-val">None </span>=&gt; Poll::Ready(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; Poll::Ready(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="self">self</span>.errored = <span class="bool-val">true</span>;
+                Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)))
+            }
         }
     }
 }
@@ -390,14 +363,17 @@
 <span class="doccomment">/// BlockingLister is designed to list entries at given path in a blocking
 /// manner.
 ///
-/// Users can construct Lister by `blocking_lister`.
+/// Users can construct Lister by [`BlockingOperator::lister`] or [`BlockingOperator::lister_with`].
+///
+/// - Lister implements `Iterator&lt;Item = Result&lt;Entry&gt;&gt;`.
+/// - Lister will return `None` if there is no more entries or error has been returned.
 </span><span class="kw">pub struct </span>BlockingLister {
     acc: FusedAccessor,
     <span class="doccomment">/// required_metakey is the metakey required by users.
     </span>required_metakey: FlagSet&lt;Metakey&gt;,
 
-    lister: <span class="prelude-ty">Option</span>&lt;oio::BlockingLister&gt;,
-    buf: VecDeque&lt;oio::Entry&gt;,
+    lister: oio::BlockingLister,
+    errored: bool,
 }
 
 <span class="doccomment">/// # Safety
@@ -415,8 +391,8 @@
             acc,
             required_metakey,
 
-            buf: VecDeque::new(),
-            lister: <span class="prelude-val">Some</span>(lister),
+            lister,
+            errored: <span class="bool-val">false</span>,
         })
     }
 }
@@ -426,38 +402,34 @@
     <span class="kw">type </span>Item = <span class="prelude-ty">Result</span>&lt;Entry&gt;;
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(oe) = <span class="self">self</span>.buf.pop_front() {
-            <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
-            <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
-            </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
-                <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata)));
-            }
+        <span class="comment">// Returns `None` if we have errored.
+        </span><span class="kw">if </span><span class="self">self</span>.errored {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
 
-            <span class="kw">let </span>metadata = <span class="kw">match </span><span class="self">self</span>.acc.blocking_stat(<span class="kw-2">&amp;</span>path, OpStat::default()) {
-                <span class="prelude-val">Ok</span>(rp) =&gt; rp.into_metadata(),
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)),
-            };
+        <span class="kw">let </span>entry = <span class="kw">match </span><span class="self">self</span>.lister.next() {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entry)) =&gt; entry,
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="self">self</span>.errored = <span class="bool-val">true</span>;
+                <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err));
+            }
+        };
+
+        <span class="kw">let </span>(path, metadata) = entry.into_entry().into_parts();
+        <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
+        </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
             <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata)));
         }
 
-        <span class="kw">let </span>lister = <span class="kw">match </span><span class="self">self</span>.lister.as_mut() {
-            <span class="prelude-val">Some</span>(lister) =&gt; lister,
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-        };
-
-        <span class="self">self</span>.buf = <span class="kw">match </span>lister.next() {
-            <span class="comment">// Ideally, the convert from `Vec` to `VecDeque` will not do reallocation.
-            //
-            // However, this could be changed as described in [impl&lt;T, A&gt; From&lt;Vec&lt;T, A&gt;&gt; for VecDeque&lt;T, A&gt;](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#impl-From%3CVec%3CT%2C%20A%3E%3E-for-VecDeque%3CT%2C%20A%3E)
-            </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries)) =&gt; entries.into(),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
-                <span class="self">self</span>.lister = <span class="prelude-val">None</span>;
-                <span class="kw">return </span><span class="prelude-val">None</span>;
+        <span class="kw">let </span>metadata = <span class="kw">match </span><span class="self">self</span>.acc.blocking_stat(<span class="kw-2">&amp;</span>path, OpStat::default()) {
+            <span class="prelude-val">Ok</span>(rp) =&gt; rp.into_metadata(),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="self">self</span>.errored = <span class="bool-val">true</span>;
+                <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err));
             }
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)),
         };
-
-        <span class="self">self</span>.next()
+        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata)))
     }
 }
 
@@ -474,6 +446,8 @@
     /// Invalid lister should not panic nor endless loop.
     </span><span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_invalid_lister() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let _ </span>= tracing_subscriber::fmt().try_init();
+
         <span class="kw">let </span><span class="kw-2">mut </span>builder = Azblob::default();
 
         builder

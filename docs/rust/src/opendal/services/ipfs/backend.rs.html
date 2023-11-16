@@ -462,16 +462,6 @@
 <a href="#462" id="462">462</a>
 <a href="#463" id="463">463</a>
 <a href="#464" id="464">464</a>
-<a href="#465" id="465">465</a>
-<a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a>
-<a href="#468" id="468">468</a>
-<a href="#469" id="469">469</a>
-<a href="#470" id="470">470</a>
-<a href="#471" id="471">471</a>
-<a href="#472" id="472">472</a>
-<a href="#473" id="473">473</a>
-<a href="#474" id="474">474</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -639,7 +629,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = ();
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Lister = DirStream;
+    <span class="kw">type </span>Lister = oio::PageLister&lt;DirStream&gt;;
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -825,10 +815,8 @@
     }
 
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
-        <span class="prelude-val">Ok</span>((
-            RpList::default(),
-            DirStream::new(Arc::new(<span class="self">self</span>.clone()), path),
-        ))
+        <span class="kw">let </span>l = DirStream::new(Arc::new(<span class="self">self</span>.clone()), path);
+        <span class="prelude-val">Ok</span>((RpList::default(), oio::PageLister::new(l)))
     }
 }
 
@@ -889,7 +877,6 @@
 <span class="kw">pub struct </span>DirStream {
     backend: Arc&lt;IpfsBackend&gt;,
     path: String,
-    consumed: bool,
 }
 
 <span class="kw">impl </span>DirStream {
@@ -897,18 +884,13 @@
         <span class="self">Self </span>{
             backend,
             path: path.to_string(),
-            consumed: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>DirStream {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.consumed {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>DirStream {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.backend.ipfs_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span>resp.status() != StatusCode::OK {
@@ -926,8 +908,6 @@
             .map(|v| v.name.unwrap())
             .collect::&lt;Vec&lt;String&gt;&gt;();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>oes = Vec::with_capacity(names.len());
-
         <span class="kw">for </span><span class="kw-2">mut </span>name <span class="kw">in </span>names {
             <span class="kw">let </span>meta = <span class="self">self
                 </span>.backend
@@ -939,11 +919,11 @@
                 name += <span class="string">&quot;/&quot;</span>;
             }
 
-            oes.push(oio::Entry::new(<span class="kw-2">&amp;</span>name, meta))
+            ctx.entries.push_back(oio::Entry::new(<span class="kw-2">&amp;</span>name, meta))
         }
 
-        <span class="self">self</span>.consumed = <span class="bool-val">true</span>;
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oes))
+        ctx.done = <span class="bool-val">true</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>

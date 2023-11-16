@@ -126,6 +126,7 @@
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -145,6 +146,7 @@
 
 </span><span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::task::{Context, Poll};
 
 <span class="kw">use </span>async_trait::async_trait;
 
@@ -155,7 +157,7 @@
 </span><span class="attr">#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 #[non_exhaustive]
 </span><span class="kw">pub enum </span>ListOperation {
-    <span class="doccomment">/// Operation for [`List::next`]
+    <span class="doccomment">/// Operation for [`List::poll_next`]
     </span>Next,
     <span class="doccomment">/// Operation for [`BlockingList::next`]
     </span>BlockingNext,
@@ -192,7 +194,7 @@
     ///
     /// `Ok(None)` means all pages have been returned. Any following call
     /// to `next` will always get the same result.
-    </span><span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt;;
+    </span><span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;&gt;;
 }
 
 <span class="doccomment">/// The boxed version of [`List`]
@@ -200,24 +202,24 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;P: List + <span class="question-mark">?</span>Sized&gt; List <span class="kw">for </span>Box&lt;P&gt; {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
-        (<span class="kw-2">**</span><span class="self">self</span>).next().<span class="kw">await
-    </span>}
+    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).poll_next(cx)
+    }
 }
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>List <span class="kw">for </span>() {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;&gt; {
+        Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>))
     }
 }
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;P: List&gt; List <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;P&gt; {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
+    <span class="kw">fn </span>poll_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="prelude-val">Some</span>(p) =&gt; p.next().<span class="kw">await</span>,
-            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Some</span>(p) =&gt; p.poll_next(cx),
+            <span class="prelude-val">None </span>=&gt; Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)),
         }
     }
 }
@@ -228,26 +230,26 @@
     ///
     /// `Ok(None)` means all pages have been returned. Any following call
     /// to `next` will always get the same result.
-    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt;;
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;;
 }
 
 <span class="doccomment">/// BlockingLister is a boxed [`BlockingList`]
 </span><span class="kw">pub type </span>BlockingLister = Box&lt;<span class="kw">dyn </span>BlockingList&gt;;
 
 <span class="kw">impl</span>&lt;P: BlockingList + <span class="question-mark">?</span>Sized&gt; BlockingList <span class="kw">for </span>Box&lt;P&gt; {
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt; {
         (<span class="kw-2">**</span><span class="self">self</span>).next()
     }
 }
 
 <span class="kw">impl </span>BlockingList <span class="kw">for </span>() {
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 }
 
 <span class="kw">impl</span>&lt;P: BlockingList&gt; BlockingList <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;P&gt; {
-    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;Entry&gt;&gt;&gt; {
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="prelude-val">Some</span>(p) =&gt; p.next(),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),

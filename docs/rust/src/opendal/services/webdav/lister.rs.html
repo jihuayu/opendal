@@ -548,10 +548,6 @@
 <a href="#548" id="548">548</a>
 <a href="#549" id="549">549</a>
 <a href="#550" id="550">550</a>
-<a href="#551" id="551">551</a>
-<a href="#552" id="552">552</a>
-<a href="#553" id="553">553</a>
-<a href="#554" id="554">554</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -569,9 +565,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::mem;
-
-<span class="kw">use </span>async_trait::async_trait;
+</span><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -584,7 +578,8 @@
 }
 
 <span class="kw">impl </span>WebdavLister {
-    <span class="kw">pub fn </span>new(base_dir: <span class="kw-2">&amp;</span>str, root: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str, multistates: Multistatus) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// TODO: sending request in `next_page` instead of in `new`.
+    </span><span class="kw">pub fn </span>new(base_dir: <span class="kw-2">&amp;</span>str, root: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str, multistates: Multistatus) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             base_dir: base_dir.to_string(),
             root: root.into(),
@@ -595,14 +590,10 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>WebdavLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.multistates.response.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        };
-        <span class="kw">let </span>oes = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.multistates.response);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(oes.len());
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>WebdavLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// Build request instead of clone here.
+        </span><span class="kw">let </span>oes = <span class="self">self</span>.multistates.response.clone();
 
         <span class="kw">for </span>res <span class="kw">in </span>oes {
             <span class="kw">let </span>path = res
@@ -624,19 +615,20 @@
             }
 
             <span class="kw">let </span>meta = res.parse_into_metadata()<span class="question-mark">?</span>;
-            entries.push(oio::Entry::new(<span class="kw-2">&amp;</span>decoded_path, meta))
+            ctx.entries.push_back(oio::Entry::new(<span class="kw-2">&amp;</span>decoded_path, meta))
         }
+        ctx.done = <span class="bool-val">true</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>Multistatus {
     <span class="kw">pub </span>response: Vec&lt;ListOpResponse&gt;,
 }
 
-<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>ListOpResponse {
     <span class="kw">pub </span>href: String,
     <span class="kw">pub </span>propstat: Propstat,
@@ -695,13 +687,13 @@
     }
 }
 
-<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>Propstat {
     <span class="kw">pub </span>prop: Prop,
     <span class="kw">pub </span>status: String,
 }
 
-<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>Prop {
     <span class="attr">#[serde(default)]
     </span><span class="kw">pub </span>displayname: String,
@@ -712,13 +704,13 @@
     <span class="kw">pub </span>resourcetype: ResourceTypeContainer,
 }
 
-<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>ResourceTypeContainer {
     <span class="attr">#[serde(rename = <span class="string">&quot;$value&quot;</span>)]
     </span><span class="kw">pub </span>value: <span class="prelude-ty">Option</span>&lt;ResourceType&gt;,
 }
 
-<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
 </span><span class="kw">pub enum </span>ResourceType {
     Collection,

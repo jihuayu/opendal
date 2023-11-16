@@ -172,14 +172,6 @@
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
 <a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -211,7 +203,6 @@
     core: Arc&lt;SwiftCore&gt;,
     path: String,
     delimiter: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
-    done: bool,
 }
 
 <span class="kw">impl </span>SwiftLister {
@@ -221,18 +212,13 @@
             core,
             path,
             delimiter,
-            done: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>SwiftLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>SwiftLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>response = <span class="self">self</span>.core.swift_list(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="self">self</span>.delimiter).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status_code = response.status();
@@ -242,15 +228,13 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(error);
         }
 
+        ctx.done = <span class="bool-val">true</span>;
+
         <span class="kw">let </span>bytes = response.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>decoded_response = serde_json::from_slice::&lt;Vec&lt;ListOpResponse&gt;&gt;(<span class="kw-2">&amp;</span>bytes)
+        <span class="kw">let </span>decoded_response = serde_json::from_slice::&lt;Vec&lt;ListOpResponse&gt;&gt;(<span class="kw-2">&amp;</span>bytes)
             .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.done = <span class="bool-val">true</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(decoded_response.len());
-
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(status) = decoded_response.pop() {
+        <span class="kw">for </span>status <span class="kw">in </span>decoded_response {
             <span class="kw">let </span>entry: oio::Entry = <span class="kw">match </span>status {
                 ListOpResponse::Subdir { subdir } =&gt; {
                     <span class="kw">let </span>meta = Metadata::new(EntryMode::DIR);
@@ -281,9 +265,9 @@
                     oio::Entry::new(<span class="kw-2">&amp;</span>name, meta)
                 }
             };
-            entries.push(entry);
+            ctx.entries.push_back(entry);
         }
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

@@ -591,15 +591,6 @@
 <a href="#591" id="591">591</a>
 <a href="#592" id="592">592</a>
 <a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
-<a href="#598" id="598">598</a>
-<a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -912,7 +903,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
         page_size: i32,
-        next_page_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
+        next_page_token: <span class="kw-2">&amp;</span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>file_id = <span class="self">self</span>.get_file_id_by_path(path).<span class="kw">await</span>;
 
@@ -943,22 +934,13 @@
             },
         };
 
-        <span class="kw">let </span>url = <span class="kw">match </span>next_page_token {
-            <span class="prelude-val">Some</span>(page_token) =&gt; {
-                <span class="macro">format!</span>(
-                    <span class="string">&quot;https://www.googleapis.com/drive/v3/files?pageSize={}&amp;pageToken={}&amp;q={}&quot;</span>,
-                    page_size,
-                    page_token,
-                    percent_encode_path(q.as_str())
-                )
-            }
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="macro">format!</span>(
-                    <span class="string">&quot;https://www.googleapis.com/drive/v3/files?pageSize={}&amp;q={}&quot;</span>,
-                    page_size,
-                    percent_encode_path(q.as_str())
-                )
-            }
+        <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
+            <span class="string">&quot;https://www.googleapis.com/drive/v3/files?pageSize={}&amp;q={}&quot;</span>,
+            page_size,
+            percent_encode_path(<span class="kw-2">&amp;</span>q)
+        );
+        <span class="kw">if </span>!next_page_token.is_empty() {
+            url += <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;&amp;pageToken={next_page_token}&quot;</span>);
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>req = Request::get(<span class="kw-2">&amp;</span>url)

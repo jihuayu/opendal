@@ -242,14 +242,6 @@
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -293,9 +285,6 @@
     <span class="doccomment">/// Filter results to objects whose names are lexicographically
     /// **equal to or after** startOffset
     </span>start_after: <span class="prelude-ty">Option</span>&lt;String&gt;,
-
-    token: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    done: bool,
 }
 
 <span class="kw">impl </span>OssLister {
@@ -313,28 +302,25 @@
             delimiter,
             limit,
             start_after: start_after.map(String::from),
-            token: <span class="prelude-val">None</span>,
-
-            done: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>OssLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>OssLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
             .oss_list_object(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
-                <span class="self">self</span>.token.as_deref(),
+                <span class="kw-2">&amp;</span>ctx.token,
                 <span class="self">self</span>.delimiter,
                 <span class="self">self</span>.limit,
-                <span class="self">self</span>.start_after.clone(),
+                <span class="kw">if </span>ctx.token.is_empty() {
+                    <span class="self">self</span>.start_after.clone()
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>},
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -347,17 +333,15 @@
         <span class="kw">let </span>output: ListBucketOutput = de::from_reader(bs.reader())
             .map_err(|e| Error::new(ErrorKind::Unexpected, <span class="string">&quot;deserialize xml&quot;</span>).set_source(e))<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.done = !output.is_truncated;
-        <span class="self">self</span>.token = output.next_continuation_token.clone();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(output.common_prefixes.len() + output.contents.len());
+        ctx.done = !output.is_truncated;
+        ctx.token = output.next_continuation_token.unwrap_or_default();
 
         <span class="kw">for </span>prefix <span class="kw">in </span>output.common_prefixes {
             <span class="kw">let </span>de = oio::Entry::new(
                 <span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>prefix.prefix),
                 Metadata::new(EntryMode::DIR),
             );
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
         <span class="kw">for </span>object <span class="kw">in </span>output.contents {
@@ -381,10 +365,10 @@
             <span class="kw">let </span>path = unescape(<span class="kw-2">&amp;</span>rel)
                 .map_err(|e| Error::new(ErrorKind::Unexpected, <span class="string">&quot;excapse xml&quot;</span>).set_source(e))<span class="question-mark">?</span>;
             <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>path, meta);
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

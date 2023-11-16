@@ -636,7 +636,6 @@
 <a href="#636" id="636">636</a>
 <a href="#637" id="637">637</a>
 <a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -862,7 +861,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;WebdavWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Lister = <span class="prelude-ty">Option</span>&lt;WebdavLister&gt;;
+    <span class="kw">type </span>Lister = <span class="prelude-ty">Option</span>&lt;oio::PageLister&lt;WebdavLister&gt;&gt;;
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -1037,10 +1036,9 @@
                 <span class="kw">let </span>result: Multistatus =
                     quick_xml::de::from_reader(bs.reader()).map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
 
-                <span class="prelude-val">Ok</span>((
-                    RpList::default(),
-                    <span class="prelude-val">Some</span>(WebdavLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.base_dir, <span class="kw-2">&amp;</span><span class="self">self</span>.root, path, result)),
-                ))
+                <span class="kw">let </span>l = WebdavLister::new(<span class="kw-2">&amp;</span><span class="self">self</span>.base_dir, <span class="kw-2">&amp;</span><span class="self">self</span>.root, path, result);
+
+                <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">Some</span>(oio::PageLister::new(l))))
             }
             StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) =&gt; <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">None</span>)),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),

@@ -549,49 +549,6 @@
 <a href="#549" id="549">549</a>
 <a href="#550" id="550">550</a>
 <a href="#551" id="551">551</a>
-<a href="#552" id="552">552</a>
-<a href="#553" id="553">553</a>
-<a href="#554" id="554">554</a>
-<a href="#555" id="555">555</a>
-<a href="#556" id="556">556</a>
-<a href="#557" id="557">557</a>
-<a href="#558" id="558">558</a>
-<a href="#559" id="559">559</a>
-<a href="#560" id="560">560</a>
-<a href="#561" id="561">561</a>
-<a href="#562" id="562">562</a>
-<a href="#563" id="563">563</a>
-<a href="#564" id="564">564</a>
-<a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a>
-<a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
-<a href="#592" id="592">592</a>
-<a href="#593" id="593">593</a>
-<a href="#594" id="594">594</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -625,10 +582,8 @@
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error_msg;
 <span class="kw">use </span><span class="kw">super</span>::lister::WebhdfsLister;
 <span class="kw">use </span><span class="kw">super</span>::message::BooleanResp;
-<span class="kw">use </span><span class="kw">super</span>::message::DirectoryListingWrapper;
 <span class="kw">use </span><span class="kw">super</span>::message::FileStatusType;
 <span class="kw">use </span><span class="kw">super</span>::message::FileStatusWrapper;
-<span class="kw">use </span><span class="kw">super</span>::message::FileStatusesWrapper;
 <span class="kw">use </span><span class="kw">super</span>::writer::WebhdfsWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -871,7 +826,10 @@
         <span class="prelude-val">Ok</span>(req)
     }
 
-    <span class="kw">fn </span>webhdfs_list_status_request(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+    <span class="kw">pub async fn </span>webhdfs_list_status_request(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        path: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
         <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
             <span class="string">&quot;{}/webhdfs/v1/{}?op=LISTSTATUS&quot;</span>,
@@ -885,29 +843,24 @@
         <span class="kw">let </span>req = Request::get(<span class="kw-2">&amp;</span>url)
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(req)
-    }
+        <span class="self">self</span>.client.send(req).<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>webhdfs_list_status_batch_request(
+    <span class="kw">pub async fn </span>webhdfs_list_status_batch_request(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         path: <span class="kw-2">&amp;</span>str,
-        args: <span class="kw-2">&amp;</span>OpList,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
+        start_after: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;IncomingAsyncBody&gt;&gt; {
         <span class="kw">let </span>p = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
 
-        <span class="comment">// if it&#39;s not the first time to call LISTSTATUS_BATCH, we will add &amp;startAfter=&lt;CHILD&gt;
-        </span><span class="kw">let </span>start_after_param = <span class="kw">match </span>args.start_after() {
-            <span class="prelude-val">Some</span>(sa) <span class="kw">if </span>sa.is_empty() =&gt; String::new(),
-            <span class="prelude-val">Some</span>(sa) =&gt; <span class="macro">format!</span>(<span class="string">&quot;&amp;startAfter={}&quot;</span>, sa),
-            <span class="prelude-val">None </span>=&gt; String::new(),
-        };
-
         <span class="kw">let </span><span class="kw-2">mut </span>url = <span class="macro">format!</span>(
-            <span class="string">&quot;{}/webhdfs/v1/{}?op=LISTSTATUS_BATCH{}&quot;</span>,
+            <span class="string">&quot;{}/webhdfs/v1/{}?op=LISTSTATUS_BATCH&quot;</span>,
             <span class="self">self</span>.endpoint,
             percent_encode_path(<span class="kw-2">&amp;</span>p),
-            start_after_param
         );
+        <span class="kw">if </span>!start_after.is_empty() {
+            url += <span class="macro">format!</span>(<span class="string">&quot;&amp;startAfter={}&quot;</span>, start_after).as_str();
+        }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(auth) = <span class="kw-2">&amp;</span><span class="self">self</span>.auth {
             url += <span class="macro">format!</span>(<span class="string">&quot;&amp;{auth}&quot;</span>).as_str();
         }
@@ -915,8 +868,8 @@
         <span class="kw">let </span>req = Request::get(<span class="kw-2">&amp;</span>url)
             .body(AsyncBody::Empty)
             .map_err(new_request_build_error)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(req)
-    }
+        <span class="self">self</span>.client.send(req).<span class="kw">await
+    </span>}
 
     <span class="kw">async fn </span>webhdfs_read_file(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -996,7 +949,7 @@
     <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;WebhdfsWriter&gt;;
     <span class="kw">type </span>BlockingWriter = ();
-    <span class="kw">type </span>Lister = WebhdfsLister;
+    <span class="kw">type </span>Lister = oio::PageLister&lt;WebhdfsLister&gt;;
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -1143,47 +1096,8 @@
         }
 
         <span class="kw">let </span>path = path.trim_end_matches(<span class="string">&#39;/&#39;</span>);
-
-        <span class="kw">if </span>!<span class="self">self</span>.disable_list_batch {
-            <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_list_status_batch_request(path, <span class="kw-2">&amp;</span>OpList::default())<span class="question-mark">?</span>;
-            <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">match </span>resp.status() {
-                StatusCode::OK =&gt; {
-                    <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="kw">let </span>directory_listing = serde_json::from_slice::&lt;DirectoryListingWrapper&gt;(<span class="kw-2">&amp;</span>bs)
-                        .map_err(new_json_deserialize_error)<span class="question-mark">?
-                        </span>.directory_listing;
-                    <span class="kw">let </span>file_statuses = directory_listing.partial_listing.file_statuses.file_status;
-                    <span class="kw">let </span><span class="kw-2">mut </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, file_statuses);
-                    objects.set_remaining_entries(directory_listing.remaining_entries);
-                    <span class="prelude-val">Ok</span>((RpList::default(), objects))
-                }
-                StatusCode::NOT_FOUND =&gt; {
-                    <span class="kw">let </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, <span class="macro">vec!</span>[]);
-                    <span class="prelude-val">Ok</span>((RpList::default(), objects))
-                }
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-            }
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>req = <span class="self">self</span>.webhdfs_list_status_request(path)<span class="question-mark">?</span>;
-            <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">match </span>resp.status() {
-                StatusCode::OK =&gt; {
-                    <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="kw">let </span>file_statuses = serde_json::from_slice::&lt;FileStatusesWrapper&gt;(<span class="kw-2">&amp;</span>bs)
-                        .map_err(new_json_deserialize_error)<span class="question-mark">?
-                        </span>.file_statuses
-                        .file_status;
-                    <span class="kw">let </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, file_statuses);
-                    <span class="prelude-val">Ok</span>((RpList::default(), objects))
-                }
-                StatusCode::NOT_FOUND =&gt; {
-                    <span class="kw">let </span>objects = WebhdfsLister::new(<span class="self">self</span>.clone(), path, <span class="macro">vec!</span>[]);
-                    <span class="prelude-val">Ok</span>((RpList::default(), objects))
-                }
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-            }
-        }
+        <span class="kw">let </span>l = WebhdfsLister::new(<span class="self">self</span>.clone(), path);
+        <span class="prelude-val">Ok</span>((RpList::default(), oio::PageLister::new(l)))
     }
 }
 </code></pre></div></section></main></body></html>

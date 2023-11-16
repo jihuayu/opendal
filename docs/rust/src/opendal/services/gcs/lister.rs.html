@@ -311,14 +311,6 @@
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
 <a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -359,9 +351,6 @@
     <span class="doccomment">/// Filter results to objects whose names are lexicographically
     /// **equal to or after** startOffset
     </span>start_after: <span class="prelude-ty">Option</span>&lt;String&gt;,
-
-    page_token: String,
-    done: bool,
 }
 
 <span class="kw">impl </span>GcsLister {
@@ -381,28 +370,25 @@
             delimiter,
             limit,
             start_after: start_after.map(String::from),
-
-            page_token: <span class="string">&quot;&quot;</span>.to_string(),
-            done: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::List <span class="kw">for </span>GcsLister {
-    <span class="kw">async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;oio::Entry&gt;&gt;&gt; {
-        <span class="kw">if </span><span class="self">self</span>.done {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-        }
-
+</span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>GcsLister {
+    <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
             .gcs_list_objects(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.path,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.page_token,
+                <span class="kw-2">&amp;</span>ctx.token,
                 <span class="self">self</span>.delimiter,
                 <span class="self">self</span>.limit,
-                <span class="self">self</span>.start_after.clone(),
+                <span class="kw">if </span>ctx.token.is_empty() {
+                    <span class="self">self</span>.start_after.clone()
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>},
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -415,12 +401,10 @@
             serde_json::from_slice(<span class="kw-2">&amp;</span>bytes).map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(token) = <span class="kw-2">&amp;</span>output.next_page_token {
-            <span class="self">self</span>.page_token = token.clone();
+            ctx.token = token.clone();
         } <span class="kw">else </span>{
-            <span class="self">self</span>.done = <span class="bool-val">true</span>;
+            ctx.done = <span class="bool-val">true</span>;
         }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>entries = Vec::with_capacity(output.prefixes.len() + output.items.len());
 
         <span class="kw">for </span>prefix <span class="kw">in </span>output.prefixes {
             <span class="kw">let </span>de = oio::Entry::new(
@@ -428,7 +412,7 @@
                 Metadata::new(EntryMode::DIR),
             );
 
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
         <span class="kw">for </span>object <span class="kw">in </span>output.items {
@@ -460,10 +444,10 @@
 
             <span class="kw">let </span>de = oio::Entry::new(path, meta);
 
-            entries.push(de);
+            ctx.entries.push_back(de);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(entries))
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
