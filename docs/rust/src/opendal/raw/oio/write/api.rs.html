@@ -245,10 +245,6 @@
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
 <a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -273,7 +269,6 @@
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
-<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>pin_project::pin_project;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -326,7 +321,6 @@
 </span><span class="kw">pub type </span>Writer = Box&lt;<span class="kw">dyn </span>Write&gt;;
 
 <span class="doccomment">/// Write is the trait that OpenDAL returns to callers.
-</span><span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>Write: Unpin + Send + Sync {
     <span class="doccomment">/// Write given bytes into writer.
     ///
@@ -346,8 +340,7 @@
     </span><span class="kw">fn </span>poll_abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt;;
 }
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl </span>Write <span class="kw">for </span>() {
+<span class="kw">impl </span>Write <span class="kw">for </span>() {
     <span class="kw">fn </span>poll_write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
         <span class="macro">unimplemented!</span>(<span class="string">&quot;write is required to be implemented for oio::Write&quot;</span>)
     }
@@ -370,7 +363,6 @@
 <span class="doccomment">/// `Box&lt;dyn Write&gt;` won&#39;t implement `Write` automatically.
 ///
 /// To make Writer work as expected, we must add this impl.
-</span><span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;T: Write + <span class="question-mark">?</span>Sized&gt; Write <span class="kw">for </span>Box&lt;T&gt; {
     <span class="kw">fn </span>poll_write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
         (<span class="kw-2">**</span><span class="self">self</span>).poll_write(cx, bs)

@@ -79,8 +79,6 @@
 <a href="#79" id="79">79</a>
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -101,16 +99,14 @@
 </span><span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
-
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::Error;
-<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
-<span class="kw">use </span><span class="kw">crate</span>::Result;
-
 <span class="kw">use </span>serde_json::de;
 
 <span class="kw">use </span><span class="kw">super</span>::model::D1Error;
 <span class="kw">use </span><span class="kw">super</span>::model::D1Response;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::Error;
+<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
+<span class="kw">use </span><span class="kw">crate</span>::Result;
 
 <span class="doccomment">/// Parse error response into Error.
 </span><span class="kw">pub async fn </span>parse_error(resp: Response&lt;IncomingAsyncBody&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Error&gt; {

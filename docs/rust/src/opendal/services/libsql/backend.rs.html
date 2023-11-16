@@ -413,6 +413,13 @@
 <a href="#413" id="413">413</a>
 <a href="#414" id="414">414</a>
 <a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -436,20 +443,27 @@
 
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>hrana_client_proto::pipeline::{
-    ClientMsg, Response, ServerMsg, StreamExecuteReq, StreamExecuteResult, StreamRequest,
-    StreamResponse, StreamResponseError, StreamResponseOk,
-};
+<span class="kw">use </span>hrana_client_proto::pipeline::ClientMsg;
+<span class="kw">use </span>hrana_client_proto::pipeline::Response;
+<span class="kw">use </span>hrana_client_proto::pipeline::ServerMsg;
+<span class="kw">use </span>hrana_client_proto::pipeline::StreamExecuteReq;
+<span class="kw">use </span>hrana_client_proto::pipeline::StreamExecuteResult;
+<span class="kw">use </span>hrana_client_proto::pipeline::StreamRequest;
+<span class="kw">use </span>hrana_client_proto::pipeline::StreamResponse;
+<span class="kw">use </span>hrana_client_proto::pipeline::StreamResponseError;
+<span class="kw">use </span>hrana_client_proto::pipeline::StreamResponseOk;
 <span class="kw">use </span>hrana_client_proto::Error <span class="kw">as </span>PipelineError;
-<span class="kw">use </span>hrana_client_proto::{Stmt, StmtResult, Value};
-<span class="kw">use </span>http::{Request, Uri};
+<span class="kw">use </span>hrana_client_proto::Stmt;
+<span class="kw">use </span>hrana_client_proto::StmtResult;
+<span class="kw">use </span>hrana_client_proto::Value;
+<span class="kw">use </span>http::Request;
+<span class="kw">use </span>http::Uri;
 <span class="kw">use </span>serde::Deserialize;
 
+<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 
 <span class="doccomment">/// Config for Libsqlservices support.
 </span><span class="attr">#[derive(Default, Deserialize)]

@@ -344,6 +344,7 @@
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
 <a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -366,7 +367,8 @@
 <span class="kw">use </span>std::fmt::Formatter;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>rusqlite::{params, Connection};
+<span class="kw">use </span>rusqlite::params;
+<span class="kw">use </span>rusqlite::Connection;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>tokio::task;
 

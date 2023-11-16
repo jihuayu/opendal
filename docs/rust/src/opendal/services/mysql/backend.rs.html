@@ -313,7 +313,6 @@
 <a href="#313" id="313">313</a>
 <a href="#314" id="314">314</a>
 <a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -402,7 +401,6 @@
     /// - `mysql://user:password@localhost:3306/db`
     ///
     /// For more information, please refer to [mysql client](https://dev.mysql.com/doc/refman/8.0/en/connecting-using-uri-or-key-value-pairs.html)
-    ///
     </span><span class="kw">pub fn </span>connection_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!v.is_empty() {
             <span class="self">self</span>.config.connection_string = <span class="prelude-val">Some</span>(v.to_string());

@@ -316,7 +316,6 @@
 <a href="#316" id="316">316</a>
 <a href="#317" id="317">317</a>
 <a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -345,13 +344,12 @@
 <span class="kw">use </span>once_cell::sync::Lazy;
 <span class="kw">use </span>serde::Deserialize;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::services::dropbox::error::DropboxErrorResponse;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
 <span class="kw">use </span><span class="kw">super</span>::core::DropboxCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::writer::DropboxWriter;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::services::dropbox::error::DropboxErrorResponse;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">static </span>BACKOFF: Lazy&lt;ExponentialBuilder&gt; = Lazy::new(|| {
     ExponentialBuilder::default()

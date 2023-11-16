@@ -547,7 +547,6 @@
 <a href="#547" id="547">547</a>
 <a href="#548" id="548">548</a>
 <a href="#549" id="549">549</a>
-<a href="#550" id="550">550</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -578,6 +577,7 @@
 <span class="kw">use </span>futures::AsyncReadExt;
 <span class="kw">use </span>http::Uri;
 <span class="kw">use </span>log::debug;
+<span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>suppaftp::async_native_tls::TlsConnector;
 <span class="kw">use </span>suppaftp::list::File;
 <span class="kw">use </span>suppaftp::types::FileType;
@@ -595,8 +595,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::services::ftp::writer::FtpWriters;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span>serde::Deserialize;
 
 <span class="doccomment">/// Config for Ftpservices support.
 </span><span class="attr">#[derive(Default, Deserialize)]

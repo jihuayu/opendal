@@ -191,7 +191,6 @@
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
 <a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -296,8 +295,7 @@
         buf: Vec&lt;u8&gt;,
     }
 
-    <span class="attr">#[async_trait]
-    </span><span class="kw">impl </span>Write <span class="kw">for </span>MockWriter {
+    <span class="kw">impl </span>Write <span class="kw">for </span>MockWriter {
         <span class="kw">fn </span>poll_write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WriteBuf) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
             <span class="macro">debug!</span>(
                 <span class="string">&quot;test_fuzz_exact_buf_writer: flush size: {}&quot;</span>,

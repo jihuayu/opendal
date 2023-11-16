@@ -843,6 +843,7 @@
 <a href="#843" id="843">843</a>
 <a href="#844" id="844">844</a>
 <a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -860,7 +861,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>bytes::Bytes;
+</span><span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::fmt::Write;
+<span class="kw">use </span>std::time::Duration;
+
+<span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
@@ -877,10 +883,6 @@
 <span class="kw">use </span>reqsign::AliyunOssSigner;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde::Serialize;
-<span class="kw">use </span>std::fmt::Debug;
-<span class="kw">use </span>std::fmt::Formatter;
-<span class="kw">use </span>std::fmt::Write;
-<span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;

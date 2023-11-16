@@ -144,6 +144,8 @@
 <a href="#144" id="144">144</a>
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -161,8 +163,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>bytes::{Bytes, BytesMut};
-<span class="kw">use </span>std::cmp;
+</span><span class="kw">use </span>std::cmp;
+
+<span class="kw">use </span>bytes::Bytes;
+<span class="kw">use </span>bytes::BytesMut;
 <span class="kw">use </span>tokio::io::ReadBuf;
 
 <span class="doccomment">/// The default minimum adaptive buffer size is 8 KiB.

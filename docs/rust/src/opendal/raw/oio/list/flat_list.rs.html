@@ -301,6 +301,7 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -318,9 +319,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::task::{ready, Context, Poll};
+</span><span class="kw">use </span>std::task::ready;
+<span class="kw">use </span>std::task::Context;
+<span class="kw">use </span>std::task::Poll;
 
-<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>futures::FutureExt;
 
@@ -405,8 +407,7 @@
     }
 }
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;A, L&gt; oio::List <span class="kw">for </span>FlatLister&lt;A, L&gt;
+<span class="kw">impl</span>&lt;A, L&gt; oio::List <span class="kw">for </span>FlatLister&lt;A, L&gt;
 <span class="kw">where
     </span>A: Accessor&lt;Lister = L&gt;,
     L: oio::List,
@@ -511,6 +512,7 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>std::collections::HashMap;
     <span class="kw">use </span>std::vec;
     <span class="kw">use </span>std::vec::IntoIter;

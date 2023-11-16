@@ -83,6 +83,8 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -100,11 +102,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use crate</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span>once_cell::sync::Lazy;
-<span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::env;
 <span class="kw">use </span>std::str::FromStr;
+
+<span class="kw">use </span>once_cell::sync::Lazy;
+
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// TEST_RUNTIME is the runtime used for running tests.
 </span><span class="kw">pub static </span>TEST_RUNTIME: Lazy&lt;tokio::runtime::Runtime&gt; = Lazy::new(|| {

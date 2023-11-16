@@ -545,7 +545,6 @@
 <a href="#545" id="545">545</a>
 <a href="#546" id="546">546</a>
 <a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -578,6 +577,7 @@
 <span class="kw">use </span>openssh_sftp_client::file::TokioCompatFile;
 <span class="kw">use </span>openssh_sftp_client::Sftp;
 <span class="kw">use </span>openssh_sftp_client::SftpOptions;
+<span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span><span class="kw">super</span>::error::is_not_found;
 <span class="kw">use </span><span class="kw">super</span>::error::is_sftp_protocol_error;
@@ -585,8 +585,6 @@
 <span class="kw">use </span><span class="kw">super</span>::writer::SftpWriter;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span>serde::Deserialize;
 
 <span class="doccomment">/// Config for Sftpservices support.
 </span><span class="attr">#[derive(Default, Deserialize)]

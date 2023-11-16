@@ -484,6 +484,8 @@
 <a href="#484" id="484">484</a>
 <a href="#485" id="485">485</a>
 <a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -501,12 +503,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::fmt::Display;
+</span><span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::io;
 <span class="kw">use </span>std::pin::Pin;
+<span class="kw">use </span>std::task::ready;
+<span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
-<span class="kw">use </span>std::task::{ready, Context};
-<span class="kw">use </span>std::{cmp, io};
 
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>futures::Future;

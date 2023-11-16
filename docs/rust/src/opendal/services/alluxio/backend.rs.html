@@ -285,8 +285,6 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -313,12 +311,12 @@
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>serde::Deserialize;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
+<span class="kw">use </span><span class="kw">super</span>::core::AlluxioCore;
+<span class="kw">use </span><span class="kw">super</span>::lister::AlluxioLister;
 <span class="kw">use </span><span class="kw">super</span>::writer::AlluxioWriter;
 <span class="kw">use </span><span class="kw">super</span>::writer::AlluxioWriters;
-<span class="kw">use super</span>::{core::AlluxioCore, lister::AlluxioLister};
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Config for alluxio services support.
 </span><span class="attr">#[derive(Default, Deserialize)]
@@ -487,8 +485,6 @@
                 read: <span class="bool-val">true</span>,
 
                 write: <span class="bool-val">true</span>,
-                <span class="doccomment">/// https://github.com/Alluxio/alluxio/issues/8212
-                </span>write_can_append: <span class="bool-val">false</span>,
                 write_can_multi: <span class="bool-val">true</span>,
 
                 create_dir: <span class="bool-val">true</span>,

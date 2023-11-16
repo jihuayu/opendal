@@ -331,7 +331,6 @@
 <a href="#331" id="331">331</a>
 <a href="#332" id="332">332</a>
 <a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -359,13 +358,12 @@
 <span class="kw">use </span>http::StatusCode;
 <span class="kw">use </span>serde_json::Value;
 
+<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">super</span>::model::D1Response;
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
-<span class="kw">use </span><span class="kw">super</span>::model::D1Response;
 
 <span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">&quot;docs.md&quot;</span>)]
 #[derive(Default)]

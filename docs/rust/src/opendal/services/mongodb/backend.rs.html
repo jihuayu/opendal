@@ -293,6 +293,10 @@
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -310,11 +314,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>async_trait::async_trait;
+</span><span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
+
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>mongodb::bson::doc;
 <span class="kw">use </span>mongodb::bson::Binary;
-<span class="kw">use </span>mongodb::bson::{doc, Document};
-<span class="kw">use </span>mongodb::options::{ClientOptions, UpdateOptions};
-<span class="kw">use </span>std::fmt::{Debug, Formatter};
+<span class="kw">use </span>mongodb::bson::Document;
+<span class="kw">use </span>mongodb::options::ClientOptions;
+<span class="kw">use </span>mongodb::options::UpdateOptions;
 <span class="kw">use </span>tokio::sync::OnceCell;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;

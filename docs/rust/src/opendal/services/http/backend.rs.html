@@ -519,7 +519,6 @@
 <a href="#519" id="519">519</a>
 <a href="#520" id="520">520</a>
 <a href="#521" id="521">521</a>
-<a href="#522" id="522">522</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -549,12 +548,11 @@
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
 <span class="kw">use </span>log::debug;
+<span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span>serde::Deserialize;
 
 <span class="doccomment">/// Config for Http service support.
 </span><span class="attr">#[derive(Default, Deserialize)]
