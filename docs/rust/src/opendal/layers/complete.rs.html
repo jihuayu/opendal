@@ -962,6 +962,7 @@
 <a href="#962" id="962">962</a>
 <a href="#963" id="963">963</a>
 <a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1799,6 +1800,7 @@
 
         <span class="kw">let </span>op = new_test_operator(Capability {
             read: <span class="bool-val">true</span>,
+            stat: <span class="bool-val">true</span>,
             ..Default::default()
         });
         <span class="kw">let </span>res = op.read(<span class="string">&quot;path&quot;</span>).<span class="kw">await</span>;
