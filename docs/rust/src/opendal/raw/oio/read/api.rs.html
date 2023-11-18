@@ -486,6 +486,8 @@
 <a href="#486" id="486">486</a>
 <a href="#487" id="487">487</a>
 <a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -515,6 +517,7 @@
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>futures::Future;
 <span class="kw">use </span>pin_project::pin_project;
+<span class="kw">use </span>tokio::io::ReadBuf;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -847,46 +850,47 @@
 
     <span class="doccomment">/// Read all data of current reader to the end of buf.
     </span><span class="kw">fn </span>read_to_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
-        <span class="kw">let </span>start = buf.len();
-        <span class="kw">let </span><span class="kw-2">mut </span>next = MAX_READ_TO_END_GROW_SIZE;
-        <span class="kw">let </span><span class="kw-2">mut </span>length = start;
+        <span class="kw">let </span>start_len = buf.len();
+        <span class="kw">let </span>start_cap = buf.capacity();
 
         <span class="kw">loop </span>{
-            <span class="kw">if </span>buf.capacity() == length {
-                buf.reserve(next);
-                <span class="comment">// # Safety
-                //
-                // We make sure that the length of buf is maintained correctly.
-                </span><span class="attr">#[allow(clippy::uninit_vec)]
-                </span><span class="kw">unsafe </span>{
-                    buf.set_len(buf.capacity());
-                }
+            <span class="kw">if </span>buf.len() == buf.capacity() {
+                buf.reserve(<span class="number">32</span>); <span class="comment">// buf is full, need more space
+            </span>}
+
+            <span class="kw">let </span>spare = buf.spare_capacity_mut();
+            <span class="kw">let </span><span class="kw-2">mut </span>read_buf: ReadBuf = ReadBuf::uninit(spare);
+
+            <span class="comment">// SAFETY: These bytes were initialized but not filled in the previous loop
+            </span><span class="kw">unsafe </span>{
+                read_buf.assume_init(read_buf.capacity());
             }
 
-            <span class="kw">let </span>bs = <span class="kw-2">&amp;mut </span>buf[length..];
-            <span class="kw">match </span><span class="self">self</span>.read(bs) {
-                <span class="prelude-val">Ok</span>(<span class="number">0</span>) =&gt; {
-                    <span class="kw">unsafe </span>{
-                        buf.set_len(length);
-                    }
-                    <span class="kw">return </span><span class="prelude-val">Ok</span>(length - start);
-                }
+            <span class="kw">match </span><span class="self">self</span>.read(read_buf.initialize_unfilled()) {
+                <span class="prelude-val">Ok</span>(<span class="number">0</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(buf.len() - start_len),
                 <span class="prelude-val">Ok</span>(n) =&gt; {
-                    next = <span class="kw">if </span>n &gt;= next {
-                        cmp::min(next.saturating_mul(<span class="number">2</span>), MAX_READ_TO_END_GROW_SIZE)
-                    } <span class="kw">else if </span>n &gt;= next / <span class="number">2 </span>{
-                        next
-                    } <span class="kw">else </span>{
-                        cmp::max(next.saturating_div(<span class="number">2</span>), MIN_READ_TO_END_GROW_SIZE)
-                    };
-
-                    <span class="comment">// We can&#39;t allow bogus values from read. If it is too large, the returned vec could have its length
-                    // set past its capacity, or if it overflows the vec could be shortened which could create an invalid
-                    // string if this is called via read_to_string.
-                    </span><span class="macro">assert!</span>(n &lt;= buf.len());
-                    length += n;
+                    <span class="comment">// SAFETY: Read API makes sure that returning `n` is correct.
+                    </span><span class="kw">unsafe </span>{
+                        buf.set_len(buf.len() + n);
+                    }
                 }
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
+            }
+
+            <span class="comment">// The buffer might be an exact fit. Let&#39;s read into a probe buffer
+            // and see if it returns `Ok(0)`. If so, we&#39;ve avoided an
+            // unnecessary doubling of the capacity. But if not, append the
+            // probe buffer to the primary buffer and let its capacity grow.
+            </span><span class="kw">if </span>buf.len() == buf.capacity() &amp;&amp; buf.capacity() == start_cap {
+                <span class="kw">let </span><span class="kw-2">mut </span>probe = [<span class="number">0u8</span>; <span class="number">32</span>];
+
+                <span class="kw">match </span><span class="self">self</span>.read(<span class="kw-2">&amp;mut </span>probe) {
+                    <span class="prelude-val">Ok</span>(<span class="number">0</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(buf.len() - start_len),
+                    <span class="prelude-val">Ok</span>(n) =&gt; {
+                        buf.extend_from_slice(<span class="kw-2">&amp;</span>probe[..n]);
+                    }
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(e),
+                }
             }
         }
     }
