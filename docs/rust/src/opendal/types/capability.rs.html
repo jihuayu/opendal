@@ -186,6 +186,16 @@
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -204,6 +214,7 @@
 // under the License.
 
 </span><span class="kw">use </span>std::fmt::Debug;
+
 <span class="doccomment">/// Capability is used to describe what operations are supported
 /// by current Operator.
 ///
@@ -217,12 +228,21 @@
 ///
 /// # Notes
 ///
-/// Capabilities reflects the native support for operations. It&#39;s possible
-/// that some operations are not supported by current Operator, but still
-/// can be used.
+/// Every operator has two kinds of capabilities:
 ///
-/// For examples, we will support `seek` and `next` for all readers
-/// returned by services.
+/// - [`OperatorInfo::native_capability`][crate::OperatorInfo::native_capability] reflects the native
+///   support for operations.
+/// - [`OperatorInfo::full_capability`][crate::OperatorInfo::full_capability] reflects the full support
+///   for operations.
+///
+/// It&#39;s possible that some operations are not supported by current Operator, but still
+/// can be used. For examples:
+///
+/// - S3 doesn&#39;t support `seek` natively, but we implement it via `range` header.
+/// - S3 doesn&#39;t support blocking API, but `BlockingLayer` makes it possible.
+///
+/// Users can use full_capability to decide what operations can be used and use native_capability to
+/// decide if this operation optimized or not.
 ///
 /// # Naming Style
 ///

@@ -235,7 +235,6 @@
 <a href="#235" id="235">235</a>
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -337,8 +336,7 @@
         <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.lister.poll_next(cx)) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oe)) =&gt; {
                 <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
-                <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
-                </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
+                <span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
                     <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
                 }
 
