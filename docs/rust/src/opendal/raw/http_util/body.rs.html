@@ -229,6 +229,11 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -256,12 +261,9 @@
 <span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>bytes::BufMut;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>futures::StreamExt;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::Error;
-<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
-<span class="kw">use </span><span class="kw">crate</span>::Result;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Body used in async HTTP requests.
 </span><span class="attr">#[derive(Default)]
@@ -403,13 +405,21 @@
             chunk
         } <span class="kw">else </span>{
             <span class="kw">loop </span>{
-                <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.poll_next(cx)) {
+                <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.inner.poll_next(cx)) {
                     <span class="comment">// It&#39;s possible for underlying stream to return empty bytes, we should continue
                     // to fetch next one.
                     </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs)) <span class="kw">if </span>bs.is_empty() =&gt; <span class="kw">continue</span>,
-                    <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs)) =&gt; <span class="kw">break </span>bs,
+                    <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs)) =&gt; {
+                        <span class="self">self</span>.consumed += bs.len() <span class="kw">as </span>u64;
+                        <span class="kw">break </span>bs;
+                    }
                     <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)) =&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Err</span>(err)),
-                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(<span class="number">0</span>)),
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = <span class="self">self</span>.size {
+                            <span class="self">Self</span>::check(size, <span class="self">self</span>.consumed)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(<span class="number">0</span>));
+                    }
                 }
             }
         };
@@ -442,7 +452,7 @@
             <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs)));
         }
 
-        <span class="kw">let </span>res = <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.inner.poll_next_unpin(cx)) {
+        <span class="kw">let </span>res = <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.inner.poll_next(cx)) {
             <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs)) =&gt; {
                 <span class="self">self</span>.consumed += bs.len() <span class="kw">as </span>u64;
                 <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(bs))
