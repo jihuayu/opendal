@@ -289,6 +289,13 @@
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -580,4 +587,11 @@
 </span><span class="kw">pub use </span>alluxio::Alluxio;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-alluxio&quot;</span>)]
 </span><span class="kw">pub use </span>alluxio::AlluxioConfig;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-b2&quot;</span>)]
+</span><span class="kw">mod </span>b2;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-b2&quot;</span>)]
+</span><span class="kw">pub use </span>b2::B2Config;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-b2&quot;</span>)]
+</span><span class="kw">pub use </span>b2::B2;
 </code></pre></div></section></main></body></html>

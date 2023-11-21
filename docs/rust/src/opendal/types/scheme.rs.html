@@ -394,6 +394,12 @@
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -434,6 +440,8 @@
     </span>Azblob,
     <span class="doccomment">/// [Azdls][crate::services::Azdls]: Azure Data Lake Storage Gen2.
     </span>Azdls,
+    <span class="doccomment">/// [B2][crate::services::B2]: Backblaze B2 Services.
+    </span>B2,
     <span class="doccomment">/// [cacache][crate::services::Cacache]: cacache backend support.
     </span>Cacache,
     <span class="doccomment">/// [cloudflare-kv][crate::services::CloudflareKv]: Cloudflare KV services.
@@ -569,6 +577,8 @@
             </span>Scheme::Azdls,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-azfile&quot;</span>)]
             </span>Scheme::Azfile,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-b2&quot;</span>)]
+            </span>Scheme::B2,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-cacache&quot;</span>)]
             </span>Scheme::Cacache,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-cos&quot;</span>)]
@@ -679,6 +689,7 @@
             // OpenDAL used to call `azdls` as `azdfs`, we keep it for backward compatibility.
             // And abfs is widely used in hadoop ecosystem, keep it for easy to use.
             </span><span class="string">&quot;azdls&quot; </span>| <span class="string">&quot;azdfs&quot; </span>| <span class="string">&quot;abfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Azdls),
+            <span class="string">&quot;b2&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::B2),
             <span class="string">&quot;cacache&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Cacache),
             <span class="string">&quot;cloudflare_kv&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::CloudflareKv),
             <span class="string">&quot;cos&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Cos),
@@ -734,6 +745,7 @@
             Scheme::Atomicserver =&gt; <span class="string">&quot;atomicserver&quot;</span>,
             Scheme::Azblob =&gt; <span class="string">&quot;azblob&quot;</span>,
             Scheme::Azdls =&gt; <span class="string">&quot;azdls&quot;</span>,
+            Scheme::B2 =&gt; <span class="string">&quot;b2&quot;</span>,
             Scheme::Cacache =&gt; <span class="string">&quot;cacache&quot;</span>,
             Scheme::CloudflareKv =&gt; <span class="string">&quot;cloudflare_kv&quot;</span>,
             Scheme::Cos =&gt; <span class="string">&quot;cos&quot;</span>,

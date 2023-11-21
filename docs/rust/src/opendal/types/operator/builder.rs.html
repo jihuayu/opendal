@@ -397,6 +397,8 @@
 <a href="#397" id="397">397</a>
 <a href="#398" id="398">398</a>
 <a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -562,6 +564,8 @@
             </span>Scheme::Azdls =&gt; <span class="self">Self</span>::from_map::&lt;services::Azdls&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-azfile&quot;</span>)]
             </span>Scheme::Azfile =&gt; <span class="self">Self</span>::from_map::&lt;services::Azfile&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-b2&quot;</span>)]
+            </span>Scheme::B2 =&gt; <span class="self">Self</span>::from_map::&lt;services::B2&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-cacache&quot;</span>)]
             </span>Scheme::Cacache =&gt; <span class="self">Self</span>::from_map::&lt;services::Cacache&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-cos&quot;</span>)]
