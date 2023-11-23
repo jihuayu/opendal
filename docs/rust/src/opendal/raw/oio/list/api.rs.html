@@ -254,7 +254,7 @@
 <span class="doccomment">/// Impl ListExt for all T: List
 </span><span class="kw">impl</span>&lt;T: List&gt; ListExt <span class="kw">for </span>T {}
 
-<span class="doccomment">/// Extension of [`Read`] to make it easier for use.
+<span class="doccomment">/// Extension of [`List`] to make it easier for use.
 </span><span class="kw">pub trait </span>ListExt: List {
     <span class="doccomment">/// Build a future for `poll_next`.
     </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NextFuture&lt;<span class="self">Self</span>&gt; {

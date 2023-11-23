@@ -1512,6 +1512,22 @@
 <a href="#1512" id="1512">1512</a>
 <a href="#1513" id="1513">1513</a>
 <a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1682,6 +1698,8 @@
     ///
     /// # Behavior
     ///
+    /// ## Services that support `create_dir`
+    ///
     /// `test` and `test/` may vary in some services such as S3. However, on a local file system,
     /// they&#39;re identical. Therefore, the behavior of `stat(&quot;test&quot;)` and `stat(&quot;test/&quot;)` might differ
     /// in certain edge cases. Always use `stat(&quot;test/&quot;)` when you need to access a directory if possible.
@@ -1697,6 +1715,12 @@
     /// | stat not existing path | `xyz`           | Error `NotFound`                           |
     ///
     /// Refer to [RFC: List Prefix][crate::docs::rfcs::rfc_3243_list_prefix] for more details.
+    ///
+    /// ## Services that not support `create_dir`
+    ///
+    /// For services that not support `create_dir`, `stat(&quot;test/&quot;)` will return `NotFound` even
+    /// when `test/abc` exists since the service won&#39;t have the concept of dir. There is nothing
+    /// we can do about this.
     ///
     /// # Examples
     ///
@@ -1732,6 +1756,8 @@
     ///
     /// # Behavior
     ///
+    /// ## Services that support `create_dir`
+    ///
     /// `test` and `test/` may vary in some services such as S3. However, on a local file system,
     /// they&#39;re identical. Therefore, the behavior of `stat(&quot;test&quot;)` and `stat(&quot;test/&quot;)` might differ
     /// in certain edge cases. Always use `stat(&quot;test/&quot;)` when you need to access a directory if possible.
@@ -1747,6 +1773,12 @@
     /// | stat not existing path | `xyz`           | Error `NotFound`                           |
     ///
     /// Refer to [RFC: List Prefix][crate::docs::rfcs::rfc_3243_list_prefix] for more details.
+    ///
+    /// ## Services that not support `create_dir`
+    ///
+    /// For services that not support `create_dir`, `stat(&quot;test/&quot;)` will return `NotFound` even
+    /// when `test/abc` exists since the service won&#39;t have the concept of dir. There is nothing
+    /// we can do about this.
     ///
     /// # Examples
     ///
