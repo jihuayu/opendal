@@ -235,6 +235,41 @@
 <a href="#235" id="235">235</a>
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -252,22 +287,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::pin::Pin;
+</span><span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::collections::VecDeque;
+<span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>flagset::FlagSet;
-<span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>futures::Stream;
+<span class="kw">use </span>tokio::task::JoinHandle;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::List;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="doccomment">/// Future constructed by stating.
-</span><span class="kw">type </span>StatFuture = BoxFuture&lt;<span class="lifetime">&#39;static</span>, (String, <span class="prelude-ty">Result</span>&lt;RpStat&gt;)&gt;;
 
 <span class="doccomment">/// Lister is designed to list entries at given path in an asynchronous
 /// manner.
@@ -278,12 +312,20 @@
 /// - Lister will return `None` if there is no more entries or error has been returned.
 </span><span class="kw">pub struct </span>Lister {
     acc: FusedAccessor,
-    lister: oio::Lister,
+    lister: <span class="prelude-ty">Option</span>&lt;oio::Lister&gt;,
     <span class="doccomment">/// required_metakey is the metakey required by users.
     </span>required_metakey: FlagSet&lt;Metakey&gt;,
 
-    stating: <span class="prelude-ty">Option</span>&lt;StatFuture&gt;,
+    <span class="doccomment">/// task_queue is used to store tasks that are run in concurrent.
+    </span>task_queue: VecDeque&lt;StatTask&gt;,
     errored: bool,
+}
+
+<span class="kw">enum </span>StatTask {
+    <span class="doccomment">/// Handle is used to store the join handle of spawned task.
+    </span>Handle(JoinHandle&lt;(String, <span class="prelude-ty">Result</span>&lt;RpStat&gt;)&gt;),
+    <span class="doccomment">/// KnownEntry is used to store the entry that already contains the required metakey.
+    </span>KnownEntry(Box&lt;<span class="prelude-ty">Option</span>&lt;(String, Metadata)&gt;&gt;),
 }
 
 <span class="doccomment">/// # Safety
@@ -295,14 +337,16 @@
     <span class="doccomment">/// Create a new lister.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>create(acc: FusedAccessor, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>required_metakey = args.metakey();
+        <span class="kw">let </span>concurrent = cmp::max(<span class="number">1</span>, args.concurrent());
+
         <span class="kw">let </span>(<span class="kw">_</span>, lister) = acc.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             acc,
-            lister,
+            lister: <span class="prelude-val">Some</span>(lister),
             required_metakey,
 
-            stating: <span class="prelude-val">None</span>,
+            task_queue: VecDeque::with_capacity(concurrent),
             errored: <span class="bool-val">false</span>,
         })
     }
@@ -317,44 +361,70 @@
             <span class="kw">return </span>Poll::Ready(<span class="prelude-val">None</span>);
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(fut) = <span class="self">self</span>.stating.as_mut() {
-            <span class="kw">let </span>(path, rp) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
+        <span class="kw">let </span>task_queue_len = <span class="self">self</span>.task_queue.len();
+        <span class="kw">let </span>task_queue_cap = <span class="self">self</span>.task_queue.capacity();
 
-            <span class="comment">// Make sure we will not poll this future again.
-            </span><span class="self">self</span>.stating = <span class="prelude-val">None</span>;
-            <span class="kw">let </span>metadata = <span class="kw">match </span>rp {
-                <span class="prelude-val">Ok</span>(rp) =&gt; rp.into_metadata(),
-                <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="self">self</span>.errored = <span class="bool-val">true</span>;
-                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(lister) = <span class="self">self</span>.lister.as_mut() {
+            <span class="kw">if </span>task_queue_len &lt; task_queue_cap {
+                <span class="kw">match </span>lister.poll_next(cx) {
+                    Poll::Pending =&gt; {
+                        <span class="kw">if </span>task_queue_len == <span class="number">0 </span>{
+                            <span class="kw">return </span>Poll::Pending;
+                        }
+                    }
+                    Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oe))) =&gt; {
+                        <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
+                        <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
+                        </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
+                            <span class="self">self</span>.task_queue
+                                .push_back(StatTask::KnownEntry(Box::new(<span class="prelude-val">Some</span>((path, metadata)))));
+                        } <span class="kw">else </span>{
+                            <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
+                            <span class="kw">let </span>fut = <span class="kw">async move </span>{
+                                <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
+                                (path, res)
+                            };
+                            <span class="self">self</span>.task_queue
+                                .push_back(StatTask::Handle(tokio::spawn(fut)));
+                        }
+                    }
+                    Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)) =&gt; {
+                        <span class="self">self</span>.lister = <span class="prelude-val">None</span>;
+                    }
+                    Poll::Ready(<span class="prelude-val">Err</span>(err)) =&gt; {
+                        <span class="self">self</span>.errored = <span class="bool-val">true</span>;
+                        <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)));
+                    }
+                };
+            }
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(handle) = <span class="self">self</span>.task_queue.front_mut() {
+            <span class="kw">return match </span>handle {
+                StatTask::Handle(handle) =&gt; {
+                    <span class="kw">let </span>(path, rp) = <span class="macro">ready!</span>(handle.poll_unpin(cx)).map_err(new_task_join_error)<span class="question-mark">?</span>;
+
+                    <span class="kw">match </span>rp {
+                        <span class="prelude-val">Ok</span>(rp) =&gt; {
+                            <span class="self">self</span>.task_queue.pop_front();
+                            <span class="kw">let </span>metadata = rp.into_metadata();
+                            Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))))
+                        }
+                        <span class="prelude-val">Err</span>(err) =&gt; {
+                            <span class="self">self</span>.errored = <span class="bool-val">true</span>;
+                            Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)))
+                        }
+                    }
+                }
+                StatTask::KnownEntry(entry) =&gt; {
+                    <span class="kw">let </span>(path, metadata) = entry.take().expect(<span class="string">&quot;entry must be valid&quot;</span>);
+                    <span class="self">self</span>.task_queue.pop_front();
+                    Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))))
                 }
             };
-
-            <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
         }
 
-        <span class="kw">match </span><span class="macro">ready!</span>(<span class="self">self</span>.lister.poll_next(cx)) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oe)) =&gt; {
-                <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
-                <span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
-                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))));
-                }
-
-                <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
-                <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                    <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
-
-                    (path, res)
-                };
-                <span class="self">self</span>.stating = <span class="prelude-val">Some</span>(Box::pin(fut));
-                <span class="self">self</span>.poll_next(cx)
-            }
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; Poll::Ready(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="self">self</span>.errored = <span class="bool-val">true</span>;
-                Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)))
-            }
-        }
+        Poll::Ready(<span class="prelude-val">None</span>)
     }
 }
 
