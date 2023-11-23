@@ -398,6 +398,9 @@
 <a href="#398" id="398">398</a>
 <a href="#399" id="399">399</a>
 <a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -745,7 +748,6 @@
             Capability {
                 read: <span class="bool-val">true</span>,
                 write: <span class="bool-val">true</span>,
-                create_dir: <span class="bool-val">true</span>,
                 list: <span class="bool-val">true</span>,
 
                 ..Default::default()
@@ -781,10 +783,14 @@
         <span class="kw">let </span>resp = client.get(path, get_options).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>res = Vec::default();
         <span class="kw">for </span>kv <span class="kw">in </span>resp.kvs() {
-            res.push(kv.key_str().map(String::from).map_err(|err| {
+            <span class="kw">let </span>v = kv.key_str().map(String::from).map_err(|err| {
                 Error::new(ErrorKind::Unexpected, <span class="string">&quot;store key is not valid utf-8 string&quot;</span>)
                     .set_source(err)
-            })<span class="question-mark">?</span>);
+            })<span class="question-mark">?</span>;
+            <span class="kw">if </span>v == path {
+                <span class="kw">continue</span>;
+            }
+            res.push(v);
         }
 
         <span class="prelude-val">Ok</span>(res)

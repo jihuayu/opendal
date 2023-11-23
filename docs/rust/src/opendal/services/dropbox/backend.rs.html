@@ -311,11 +311,6 @@
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
 <a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -467,9 +462,6 @@
     }
 
     <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">if </span>path == <span class="string">&quot;/&quot; </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
-        }
         <span class="kw">let </span>resp = <span class="self">self</span>.core.dropbox_get_metadata(path).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>status = resp.status();
         <span class="kw">match </span>status {
@@ -482,6 +474,7 @@
                     <span class="string">&quot;folder&quot; </span>=&gt; EntryMode::DIR,
                     <span class="kw">_ </span>=&gt; EntryMode::Unknown,
                 };
+
                 <span class="kw">let </span><span class="kw-2">mut </span>metadata = Metadata::new(entry_mode);
                 <span class="comment">// Only set last_modified and size if entry_mode is FILE, because Dropbox API
                 // returns last_modified and size only for files.
@@ -501,9 +494,6 @@
                     }
                 }
                 <span class="prelude-val">Ok</span>(RpStat::new(metadata))
-            }
-            StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">&#39;/&#39;</span>) =&gt; {
-                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }

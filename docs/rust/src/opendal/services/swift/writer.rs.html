@@ -104,7 +104,7 @@
 
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core
-            .swift_create_object(<span class="kw-2">&amp;</span><span class="self">self</span>.path, AsyncBody::Bytes(bs))
+            .swift_create_object(<span class="kw-2">&amp;</span><span class="self">self</span>.path, bs.len() <span class="kw">as </span>u64, AsyncBody::Bytes(bs))
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();

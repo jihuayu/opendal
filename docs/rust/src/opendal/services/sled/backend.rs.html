@@ -223,6 +223,10 @@
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
 <a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -434,11 +438,15 @@
 
         <span class="kw">for </span>i <span class="kw">in </span>it {
             <span class="kw">let </span>bs = i.map_err(parse_error)<span class="question-mark">?</span>.to_vec();
-
-            res.push(String::from_utf8(bs).map_err(|err| {
+            <span class="kw">let </span>v = String::from_utf8(bs).map_err(|err| {
                 Error::new(ErrorKind::Unexpected, <span class="string">&quot;store key is not valid utf-8 string&quot;</span>)
                     .set_source(err)
-            })<span class="question-mark">?</span>);
+            })<span class="question-mark">?</span>;
+            <span class="kw">if </span>v == path {
+                <span class="kw">continue</span>;
+            }
+
+            res.push(v);
         }
 
         <span class="prelude-val">Ok</span>(res)

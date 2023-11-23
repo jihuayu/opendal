@@ -704,6 +704,12 @@
 <a href="#704" id="704">704</a>
 <a href="#705" id="705">705</a>
 <a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -721,21 +727,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::fmt::{Debug, Formatter};
+</span><span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use </span>chrono::{DateTime, Utc};
-<span class="kw">use </span>http::{header, Request, Response, StatusCode};
-<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>chrono::DateTime;
+<span class="kw">use </span>chrono::Utc;
+<span class="kw">use </span>http::header;
+<span class="kw">use </span>http::Request;
+<span class="kw">use </span>http::Response;
+<span class="kw">use </span>http::StatusCode;
+<span class="kw">use </span>serde::Deserialize;
+<span class="kw">use </span>serde::Serialize;
 <span class="kw">use </span>tokio::sync::RwLock;
 
+<span class="kw">use </span><span class="self">self</span>::constants::X_BZ_CONTENT_SHA1;
+<span class="kw">use </span><span class="self">self</span>::constants::X_BZ_FILE_NAME;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::services::b2::core::constants::X_BZ_PART_NUMBER;
 <span class="kw">use </span><span class="kw">crate</span>::services::b2::error::parse_error;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span><span class="self">self</span>::constants::{X_BZ_CONTENT_SHA1, X_BZ_FILE_NAME};
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod </span>constants {
     <span class="kw">pub const </span>X_BZ_FILE_NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;X-Bz-File-Name&quot;</span>;

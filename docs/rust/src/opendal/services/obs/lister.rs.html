@@ -101,104 +101,6 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -221,14 +123,11 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bytes::Buf;
 <span class="kw">use </span>quick_xml::de;
-<span class="kw">use </span>serde::Deserialize;
 
-<span class="kw">use </span><span class="kw">super</span>::core::ObsCore;
+<span class="kw">use </span><span class="kw">super</span>::core::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::EntryMode;
-<span class="kw">use </span><span class="kw">crate</span>::Error;
-<span class="kw">use </span><span class="kw">crate</span>::ErrorKind;
 <span class="kw">use </span><span class="kw">crate</span>::Metadata;
 <span class="kw">use </span><span class="kw">crate</span>::Result;
 
@@ -266,8 +165,8 @@
 
         <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let </span>output: Output = de::from_reader(bs.reader())
-            .map_err(|e| Error::new(ErrorKind::Unexpected, <span class="string">&quot;deserialize xml&quot;</span>).set_source(e))<span class="question-mark">?</span>;
+        <span class="kw">let </span>output: ListObjectsOutput =
+            de::from_reader(bs.reader()).map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
 
         <span class="comment">// Try our best to check whether this list is done.
         //
@@ -290,114 +189,19 @@
         }
 
         <span class="kw">for </span>object <span class="kw">in </span>output.contents {
-            <span class="kw">if </span>object.key.ends_with(<span class="string">&#39;/&#39;</span>) {
+            <span class="kw">let </span>path = build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.key);
+            <span class="kw">if </span>path == <span class="self">self</span>.path {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let </span>meta = Metadata::new(EntryMode::FILE).with_content_length(object.size);
+            <span class="kw">let </span>meta = Metadata::new(EntryMode::from_path(<span class="kw-2">&amp;</span>path)).with_content_length(object.size);
 
-            <span class="kw">let </span>de = oio::Entry::new(<span class="kw-2">&amp;</span>build_rel_path(<span class="kw-2">&amp;</span><span class="self">self</span>.core.root, <span class="kw-2">&amp;</span>object.key), meta);
+            <span class="kw">let </span>de = oio::Entry::with(path, meta);
 
             ctx.entries.push_back(de);
         }
 
         <span class="prelude-val">Ok</span>(())
-    }
-}
-
-<span class="attr">#[derive(Default, Debug, Deserialize)]
-#[serde(default, rename_all = <span class="string">&quot;PascalCase&quot;</span>)]
-</span><span class="kw">struct </span>Output {
-    name: String,
-    prefix: String,
-    contents: Vec&lt;Content&gt;,
-    common_prefixes: Vec&lt;CommonPrefix&gt;,
-    marker: String,
-    next_marker: <span class="prelude-ty">Option</span>&lt;String&gt;,
-}
-
-<span class="attr">#[derive(Default, Debug, Deserialize)]
-#[serde(default, rename_all = <span class="string">&quot;PascalCase&quot;</span>)]
-</span><span class="kw">struct </span>CommonPrefix {
-    prefix: String,
-}
-
-<span class="attr">#[derive(Default, Debug, Deserialize)]
-#[serde(default, rename_all = <span class="string">&quot;PascalCase&quot;</span>)]
-</span><span class="kw">struct </span>Content {
-    key: String,
-    size: u64,
-}
-
-<span class="attr">#[cfg(test)]
-</span><span class="kw">mod </span>tests {
-    <span class="kw">use </span>bytes::Buf;
-
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_parse_xml() {
-        <span class="kw">let </span>bs = bytes::Bytes::from(
-            <span class="string">r#&quot;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;yes&quot;?&gt;
-&lt;ListBucketResult xmlns=&quot;http://obs.cn-north-4.myhuaweicloud.com/doc/2015-06-30/&quot;&gt;
-    &lt;Name&gt;examplebucket&lt;/Name&gt;
-    &lt;Prefix&gt;obj&lt;/Prefix&gt;
-    &lt;Marker&gt;obj002&lt;/Marker&gt;
-    &lt;NextMarker&gt;obj004&lt;/NextMarker&gt;
-    &lt;MaxKeys&gt;1000&lt;/MaxKeys&gt;
-    &lt;IsTruncated&gt;false&lt;/IsTruncated&gt;
-    &lt;Contents&gt;
-        &lt;Key&gt;obj002&lt;/Key&gt;
-        &lt;LastModified&gt;2015-07-01T02:11:19.775Z&lt;/LastModified&gt;
-        &lt;ETag&gt;&quot;a72e382246ac83e86bd203389849e71d&quot;&lt;/ETag&gt;
-        &lt;Size&gt;9&lt;/Size&gt;
-        &lt;Owner&gt;
-            &lt;ID&gt;b4bf1b36d9ca43d984fbcb9491b6fce9&lt;/ID&gt;
-        &lt;/Owner&gt;
-        &lt;StorageClass&gt;STANDARD&lt;/StorageClass&gt;
-    &lt;/Contents&gt;
-    &lt;Contents&gt;
-        &lt;Key&gt;obj003&lt;/Key&gt;
-        &lt;LastModified&gt;2015-07-01T02:11:19.775Z&lt;/LastModified&gt;
-        &lt;ETag&gt;&quot;a72e382246ac83e86bd203389849e71d&quot;&lt;/ETag&gt;
-        &lt;Size&gt;10&lt;/Size&gt;
-        &lt;Owner&gt;
-            &lt;ID&gt;b4bf1b36d9ca43d984fbcb9491b6fce9&lt;/ID&gt;
-        &lt;/Owner&gt;
-        &lt;StorageClass&gt;STANDARD&lt;/StorageClass&gt;
-    &lt;/Contents&gt;
-    &lt;CommonPrefixes&gt;
-        &lt;Prefix&gt;hello&lt;/Prefix&gt;
-    &lt;/CommonPrefixes&gt;
-    &lt;CommonPrefixes&gt;
-        &lt;Prefix&gt;world&lt;/Prefix&gt;
-    &lt;/CommonPrefixes&gt;
-&lt;/ListBucketResult&gt;&quot;#</span>,
-        );
-        <span class="kw">let </span>out: Output = de::from_reader(bs.reader()).expect(<span class="string">&quot;must success&quot;</span>);
-
-        <span class="macro">assert_eq!</span>(out.name, <span class="string">&quot;examplebucket&quot;</span>.to_string());
-        <span class="macro">assert_eq!</span>(out.prefix, <span class="string">&quot;obj&quot;</span>.to_string());
-        <span class="macro">assert_eq!</span>(out.marker, <span class="string">&quot;obj002&quot;</span>.to_string());
-        <span class="macro">assert_eq!</span>(out.next_marker, <span class="prelude-val">Some</span>(<span class="string">&quot;obj004&quot;</span>.to_string()),);
-        <span class="macro">assert_eq!</span>(
-            out.contents
-                .iter()
-                .map(|v| v.key.clone())
-                .collect::&lt;Vec&lt;String&gt;&gt;(),
-            [<span class="string">&quot;obj002&quot;</span>, <span class="string">&quot;obj003&quot;</span>],
-        );
-        <span class="macro">assert_eq!</span>(
-            out.contents.iter().map(|v| v.size).collect::&lt;Vec&lt;u64&gt;&gt;(),
-            [<span class="number">9</span>, <span class="number">10</span>],
-        );
-        <span class="macro">assert_eq!</span>(
-            out.common_prefixes
-                .iter()
-                .map(|v| v.prefix.clone())
-                .collect::&lt;Vec&lt;String&gt;&gt;(),
-            [<span class="string">&quot;hello&quot;</span>, <span class="string">&quot;world&quot;</span>],
-        )
     }
 }
 </code></pre></div></section></main></body></html>

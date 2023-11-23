@@ -543,10 +543,6 @@
 <a href="#543" id="543">543</a>
 <a href="#544" id="544">544</a>
 <a href="#545" id="545">545</a>
-<a href="#546" id="546">546</a>
-<a href="#547" id="547">547</a>
-<a href="#548" id="548">548</a>
-<a href="#549" id="549">549</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -952,11 +948,6 @@
     }
 
     <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="comment">// root dir, return default Metadata with Dir EntryMode.
-        </span><span class="kw">if </span>path == <span class="string">&quot;/&quot; </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
-        }
-
         <span class="kw">let </span>file = <span class="self">self</span>.ftp_stat(path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>mode = <span class="kw">if </span>file.is_file() {
@@ -966,6 +957,7 @@
         } <span class="kw">else </span>{
             EntryMode::Unknown
         };
+
         <span class="kw">let </span><span class="kw-2">mut </span>meta = Metadata::new(mode);
         meta.set_content_length(file.size() <span class="kw">as </span>u64);
         meta.set_last_modified(file.modified().into());

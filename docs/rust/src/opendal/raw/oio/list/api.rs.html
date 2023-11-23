@@ -122,6 +122,39 @@
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -141,8 +174,12 @@
 
 </span><span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::future::Future;
+<span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
+
+<span class="kw">use </span>pin_project::pin_project;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Entry;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -182,7 +219,7 @@
 }
 
 <span class="doccomment">/// Page trait is used by [`raw::Accessor`] to implement `list` operation.
-</span><span class="kw">pub trait </span>List: Send + Sync + <span class="lifetime">&#39;static </span>{
+</span><span class="kw">pub trait </span>List: Unpin + Send + Sync + <span class="lifetime">&#39;static </span>{
     <span class="doccomment">/// Fetch a new page of [`Entry`]
     ///
     /// `Ok(None)` means all pages have been returned. Any following call
@@ -211,6 +248,35 @@
             <span class="prelude-val">Some</span>(p) =&gt; p.poll_next(cx),
             <span class="prelude-val">None </span>=&gt; Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)),
         }
+    }
+}
+
+<span class="doccomment">/// Impl ListExt for all T: List
+</span><span class="kw">impl</span>&lt;T: List&gt; ListExt <span class="kw">for </span>T {}
+
+<span class="doccomment">/// Extension of [`Read`] to make it easier for use.
+</span><span class="kw">pub trait </span>ListExt: List {
+    <span class="doccomment">/// Build a future for `poll_next`.
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; NextFuture&lt;<span class="self">Self</span>&gt; {
+        NextFuture { lister: <span class="self">self </span>}
+    }
+}
+
+<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
+</span><span class="attr">#[pin_project(!Unpin)]
+</span><span class="kw">pub struct </span>NextFuture&lt;<span class="lifetime">&#39;a</span>, L: List + Unpin + <span class="question-mark">?</span>Sized&gt; {
+    lister: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>L,
+}
+
+<span class="kw">impl</span>&lt;L&gt; Future <span class="kw">for </span>NextFuture&lt;<span class="lifetime">&#39;_</span>, L&gt;
+<span class="kw">where
+    </span>L: List + Unpin + <span class="question-mark">?</span>Sized,
+{
+    <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;;
+
+    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Entry&gt;&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.project();
+        Pin::new(this.lister).poll_next(cx)
     }
 }
 

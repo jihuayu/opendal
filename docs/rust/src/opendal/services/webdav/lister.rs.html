@@ -548,6 +548,7 @@
 <a href="#548" id="548">548</a>
 <a href="#549" id="549">549</a>
 <a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -637,7 +638,6 @@
 <span class="kw">impl </span>ListOpResponse {
     <span class="kw">pub fn </span>parse_into_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Metadata&gt; {
         <span class="kw">let </span>ListOpResponse {
-            href,
             propstat:
                 Propstat {
                     prop:
@@ -646,10 +646,12 @@
                             getcontentlength,
                             getcontenttype,
                             getetag,
+                            resourcetype,
                             ..
                         },
                     status,
                 },
+            ..
         } = <span class="self">self</span>;
         <span class="kw">if let </span>[<span class="kw">_</span>, code, text] = status.split(<span class="string">&#39; &#39;</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()[..<span class="number">3</span>] {
             <span class="comment">// As defined in https://tools.ietf.org/html/rfc2068#section-6.1
@@ -662,7 +664,7 @@
             }
         }
 
-        <span class="kw">let </span>mode: EntryMode = <span class="kw">if </span>href.ends_with(<span class="string">&#39;/&#39;</span>) {
+        <span class="kw">let </span>mode: EntryMode = <span class="kw">if </span>resourcetype.value == <span class="prelude-val">Some</span>(ResourceType::Collection) {
             EntryMode::DIR
         } <span class="kw">else </span>{
             EntryMode::FILE

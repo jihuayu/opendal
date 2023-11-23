@@ -161,6 +161,7 @@
 <a href="#161" id="161">161</a>
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -183,11 +184,12 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>http::StatusCode;
 
+<span class="kw">use </span><span class="kw">super</span>::core::B2Core;
+<span class="kw">use </span><span class="kw">super</span>::core::StartLargeFileResponse;
+<span class="kw">use </span><span class="kw">super</span>::core::UploadPartResponse;
+<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
-<span class="kw">use </span><span class="kw">super</span>::core::{B2Core, StartLargeFileResponse, UploadPartResponse};
-<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 
 <span class="kw">pub type </span>B2Writers = oio::MultipartUploadWriter&lt;B2Writer&gt;;
 
