@@ -270,6 +270,45 @@
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -316,16 +355,58 @@
     <span class="doccomment">/// required_metakey is the metakey required by users.
     </span>required_metakey: FlagSet&lt;Metakey&gt;,
 
-    <span class="doccomment">/// task_queue is used to store tasks that are run in concurrent.
-    </span>task_queue: VecDeque&lt;StatTask&gt;,
+    <span class="doccomment">/// tasks is used to store tasks that are run in concurrent.
+    </span>tasks: VecDeque&lt;StatTask&gt;,
     errored: bool,
 }
 
-<span class="kw">enum </span>StatTask {
-    <span class="doccomment">/// Handle is used to store the join handle of spawned task.
-    </span>Handle(JoinHandle&lt;(String, <span class="prelude-ty">Result</span>&lt;RpStat&gt;)&gt;),
-    <span class="doccomment">/// KnownEntry is used to store the entry that already contains the required metakey.
-    </span>KnownEntry(Box&lt;<span class="prelude-ty">Option</span>&lt;(String, Metadata)&gt;&gt;),
+<span class="doccomment">/// StatTask is used to store the task that is run in concurrent.
+///
+/// # Note for clippy
+///
+/// Clippy will raise error for this enum like the following:
+///
+/// ```shell
+/// error: large size difference between variants
+///   --&gt; core/src/types/list.rs:64:1
+///    |
+/// 64 | / enum StatTask {
+/// 65 | |     /// Handle is used to store the join handle of spawned task.
+/// 66 | |     Handle(JoinHandle&lt;(String, Result&lt;RpStat&gt;)&gt;),
+///    | |     -------------------------------------------- the second-largest variant contains at least 0 bytes
+/// 67 | |     /// KnownEntry is used to store the entry that already contains the required metakey.
+/// 68 | |     KnownEntry(Option&lt;Entry&gt;),
+///    | |     ------------------------- the largest variant contains at least 264 bytes
+/// 69 | | }
+///    | |_^ the entire enum is at least 0 bytes
+///    |
+///    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#large_enum_variant
+///    = note: `-D clippy::large-enum-variant` implied by `-D warnings`
+///    = help: to override `-D warnings` add `#[allow(clippy::large_enum_variant)]`
+/// help: consider boxing the large fields to reduce the total size of the enum
+///    |
+/// 68 |     KnownEntry(Box&lt;Option&lt;Entry&gt;&gt;),
+///    |                ~~~~~~~~~~~~~~~~~~
+/// ```
+/// But this lint is wrong since it doesn&#39;t take the generic param JoinHandle into account. In fact, they have exactly
+/// the same size:
+///
+/// ```rust
+/// use std::mem::size_of;
+/// use opendal::Result;
+/// use opendal::Entry;
+///
+/// assert_eq!(264, size_of::&lt;(String, Result&lt;opendal::raw::RpStat&gt;)&gt;());
+/// assert_eq!(264, size_of::&lt;Option&lt;Entry&gt;&gt;());
+/// ```
+///
+/// So let&#39;s ignore this lint:
+</span><span class="attr">#[allow(clippy::large_enum_variant)]
+</span><span class="kw">enum </span>StatTask {
+    <span class="doccomment">/// Stating is used to store the join handle of spawned task.
+    </span>Stating(JoinHandle&lt;(String, <span class="prelude-ty">Result</span>&lt;RpStat&gt;)&gt;),
+    <span class="doccomment">/// Known is used to store the entry that already contains the required metakey.
+    </span>Known(<span class="prelude-ty">Option</span>&lt;Entry&gt;),
 }
 
 <span class="doccomment">/// # Safety
@@ -346,7 +427,7 @@
             lister: <span class="prelude-val">Some</span>(lister),
             required_metakey,
 
-            task_queue: VecDeque::with_capacity(concurrent),
+            tasks: VecDeque::with_capacity(concurrent),
             errored: <span class="bool-val">false</span>,
         })
     }
@@ -361,31 +442,23 @@
             <span class="kw">return </span>Poll::Ready(<span class="prelude-val">None</span>);
         }
 
-        <span class="kw">let </span>task_queue_len = <span class="self">self</span>.task_queue.len();
-        <span class="kw">let </span>task_queue_cap = <span class="self">self</span>.task_queue.capacity();
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(lister) = <span class="self">self</span>.lister.as_mut() {
-            <span class="kw">if </span>task_queue_len &lt; task_queue_cap {
+        <span class="comment">// Trying to pull more tasks if there are more space.
+        </span><span class="kw">if </span><span class="self">self</span>.tasks.len() &lt; <span class="self">self</span>.tasks.capacity() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(lister) = <span class="self">self</span>.lister.as_mut() {
                 <span class="kw">match </span>lister.poll_next(cx) {
-                    Poll::Pending =&gt; {
-                        <span class="kw">if </span>task_queue_len == <span class="number">0 </span>{
-                            <span class="kw">return </span>Poll::Pending;
-                        }
-                    }
+                    Poll::Pending =&gt; {}
                     Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oe))) =&gt; {
                         <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
-                        <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
-                        </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
-                            <span class="self">self</span>.task_queue
-                                .push_back(StatTask::KnownEntry(Box::new(<span class="prelude-val">Some</span>((path, metadata)))));
+                        <span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
+                            <span class="self">self</span>.tasks
+                                .push_back(StatTask::Known(<span class="prelude-val">Some</span>(Entry::new(path, metadata))));
                         } <span class="kw">else </span>{
                             <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
                             <span class="kw">let </span>fut = <span class="kw">async move </span>{
                                 <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
                                 (path, res)
                             };
-                            <span class="self">self</span>.task_queue
-                                .push_back(StatTask::Handle(tokio::spawn(fut)));
+                            <span class="self">self</span>.tasks.push_back(StatTask::Stating(tokio::spawn(fut)));
                         }
                     }
                     Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)) =&gt; {
@@ -399,14 +472,16 @@
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(handle) = <span class="self">self</span>.task_queue.front_mut() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(handle) = <span class="self">self</span>.tasks.front_mut() {
             <span class="kw">return match </span>handle {
-                StatTask::Handle(handle) =&gt; {
+                StatTask::Stating(handle) =&gt; {
                     <span class="kw">let </span>(path, rp) = <span class="macro">ready!</span>(handle.poll_unpin(cx)).map_err(new_task_join_error)<span class="question-mark">?</span>;
+
+                    <span class="comment">// Make sure this task has been popped after it&#39;s ready.
+                    </span><span class="self">self</span>.tasks.pop_front();
 
                     <span class="kw">match </span>rp {
                         <span class="prelude-val">Ok</span>(rp) =&gt; {
-                            <span class="self">self</span>.task_queue.pop_front();
                             <span class="kw">let </span>metadata = rp.into_metadata();
                             Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))))
                         }
@@ -416,15 +491,19 @@
                         }
                     }
                 }
-                StatTask::KnownEntry(entry) =&gt; {
-                    <span class="kw">let </span>(path, metadata) = entry.take().expect(<span class="string">&quot;entry must be valid&quot;</span>);
-                    <span class="self">self</span>.task_queue.pop_front();
-                    Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata))))
+                StatTask::Known(entry) =&gt; {
+                    <span class="kw">let </span>entry = entry.take().expect(<span class="string">&quot;entry must be valid&quot;</span>);
+                    <span class="self">self</span>.tasks.pop_front();
+                    Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(entry)))
                 }
             };
         }
 
-        Poll::Ready(<span class="prelude-val">None</span>)
+        <span class="kw">if </span><span class="self">self</span>.lister.is_none() {
+            Poll::Ready(<span class="prelude-val">None</span>)
+        } <span class="kw">else </span>{
+            Poll::Pending
+        }
     }
 }
 
@@ -485,8 +564,7 @@
         };
 
         <span class="kw">let </span>(path, metadata) = entry.into_entry().into_parts();
-        <span class="comment">// TODO: we can optimize this by checking the provided metakey provided by services.
-        </span><span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
+        <span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
             <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(Entry::new(path, metadata)));
         }
 
