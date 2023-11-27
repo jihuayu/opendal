@@ -1528,6 +1528,8 @@
 <a href="#1528" id="1528">1528</a>
 <a href="#1529" id="1529">1529</a>
 <a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -2441,6 +2443,8 @@
     /// # }
     /// ```
     </span><span class="kw">pub async fn </span>remove_via(<span class="kw-2">&amp;</span><span class="self">self</span>, input: <span class="kw">impl </span>Stream&lt;Item = String&gt; + Unpin) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>input = input.map(|v| normalize_path(<span class="kw-2">&amp;</span>v));
+
         <span class="kw">if </span><span class="self">self</span>.info().full_capability().batch {
             <span class="kw">let </span><span class="kw-2">mut </span>input = input
                 .map(|v| (v, OpDelete::default().into()))
