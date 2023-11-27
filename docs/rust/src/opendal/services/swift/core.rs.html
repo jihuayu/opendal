@@ -297,6 +297,7 @@
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
 <a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -316,8 +317,9 @@
 
 </span><span class="kw">use </span>std::fmt::Debug;
 
+<span class="kw">use </span>http::header;
+<span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
-<span class="kw">use </span>http::{header, Request};
 <span class="kw">use </span>serde::Deserialize;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
