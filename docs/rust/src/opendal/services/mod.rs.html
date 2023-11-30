@@ -450,9 +450,9 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
 </span><span class="kw">mod </span>redis;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
-</span><span class="kw">pub use </span>redis::Redis;
+</span><span class="kw">pub use </span><span class="self">self</span>::redis::Redis;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-redis&quot;</span>)]
-</span><span class="kw">pub use </span>redis::RedisConfig;
+</span><span class="kw">pub use </span><span class="self">self</span>::redis::RedisConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-rocksdb&quot;</span>)]
 </span><span class="kw">mod </span>rocksdb;
