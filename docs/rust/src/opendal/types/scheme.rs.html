@@ -400,6 +400,12 @@
 <a href="#400" id="400">400</a>
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -470,6 +476,8 @@
     </span>Hdfs,
     <span class="doccomment">/// [http][crate::services::Http]: HTTP backend.
     </span>Http,
+    <span class="doccomment">/// [huggingface][crate::services::Huggingface]: Huggingface services.
+    </span>Huggingface,
     <span class="doccomment">/// [alluxio][created::services::Alluxio]: Alluxio services.
     </span>Alluxio,
 
@@ -603,6 +611,8 @@
             </span>Scheme::Hdfs,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-http&quot;</span>)]
             </span>Scheme::Http,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;services-huggingface&quot;</span>)]
+            </span>Scheme::Huggingface,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-ipfs&quot;</span>)]
             </span>Scheme::Ipfs,
             <span class="attr">#[cfg(feature = <span class="string">&quot;services-ipmfs&quot;</span>)]
@@ -705,6 +715,7 @@
             <span class="string">&quot;gridfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Gridfs),
             <span class="string">&quot;hdfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Hdfs),
             <span class="string">&quot;http&quot; </span>| <span class="string">&quot;https&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Http),
+            <span class="string">&quot;huggingface&quot; </span>| <span class="string">&quot;hf&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Huggingface),
             <span class="string">&quot;ftp&quot; </span>| <span class="string">&quot;ftps&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ftp),
             <span class="string">&quot;ipfs&quot; </span>| <span class="string">&quot;ipns&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipfs),
             <span class="string">&quot;ipmfs&quot; </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipmfs),
@@ -759,6 +770,7 @@
             Scheme::Gridfs =&gt; <span class="string">&quot;gridfs&quot;</span>,
             Scheme::Hdfs =&gt; <span class="string">&quot;hdfs&quot;</span>,
             Scheme::Http =&gt; <span class="string">&quot;http&quot;</span>,
+            Scheme::Huggingface =&gt; <span class="string">&quot;huggingface&quot;</span>,
             Scheme::Foundationdb =&gt; <span class="string">&quot;foundationdb&quot;</span>,
             Scheme::Ftp =&gt; <span class="string">&quot;ftp&quot;</span>,
             Scheme::Ipfs =&gt; <span class="string">&quot;ipfs&quot;</span>,

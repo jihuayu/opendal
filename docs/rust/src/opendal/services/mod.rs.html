@@ -296,6 +296,13 @@
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -389,6 +396,13 @@
 </span><span class="kw">pub use </span><span class="self">self</span>::http::Http;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-http&quot;</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::http::HttpConfig;
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-huggingface&quot;</span>)]
+</span><span class="kw">mod </span>huggingface;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-huggingface&quot;</span>)]
+</span><span class="kw">pub use </span>huggingface::Huggingface;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-huggingface&quot;</span>)]
+</span><span class="kw">pub use </span>huggingface::HuggingfaceConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-ipfs&quot;</span>)]
 </span><span class="kw">mod </span>ipfs;
