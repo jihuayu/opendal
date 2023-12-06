@@ -697,19 +697,6 @@
 <a href="#697" id="697">697</a>
 <a href="#698" id="698">698</a>
 <a href="#699" id="699">699</a>
-<a href="#700" id="700">700</a>
-<a href="#701" id="701">701</a>
-<a href="#702" id="702">702</a>
-<a href="#703" id="703">703</a>
-<a href="#704" id="704">704</a>
-<a href="#705" id="705">705</a>
-<a href="#706" id="706">706</a>
-<a href="#707" id="707">707</a>
-<a href="#708" id="708">708</a>
-<a href="#709" id="709">709</a>
-<a href="#710" id="710">710</a>
-<a href="#711" id="711">711</a>
-<a href="#712" id="712">712</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -801,7 +788,7 @@
 
         {
             <span class="kw">let </span><span class="kw-2">mut </span>signer = <span class="self">self</span>.signer.write().<span class="kw">await</span>;
-            <span class="kw">let </span>req = Request::get(<span class="string">&quot;https://api.backblazeb2.com/b2api/v3/b2_authorize_account&quot;</span>)
+            <span class="kw">let </span>req = Request::get(<span class="string">&quot;https://api.backblazeb2.com/b2api/v2/b2_authorize_account&quot;</span>)
                 .header(
                     header::AUTHORIZATION,
                     format_authorization_by_basic(
@@ -822,8 +809,8 @@
                         .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
                     signer.auth_info = AuthInfo {
                         authorization_token: token.authorization_token.clone(),
-                        api_url: token.api_info.storage_api.api_url.clone(),
-                        download_url: token.api_info.storage_api.download_url.clone(),
+                        api_url: token.api_url.clone(),
+                        download_url: token.download_url.clone(),
                         <span class="comment">// This authorization token is valid for at most 24 hours.
                         </span>expires_in: Utc::now() + chrono::Duration::hours(<span class="number">20</span>),
                     };
@@ -861,7 +848,7 @@
 
         <span class="kw">let </span>range = args.range();
         <span class="kw">if </span>!range.is_full() {
-            req = req.header(http::header::RANGE, range.to_header());
+            req = req.header(header::RANGE, range.to_header());
         }
 
         <span class="kw">let </span>req = req
@@ -922,7 +909,7 @@
 
         <span class="kw">let </span>range = args.range();
         <span class="kw">if </span>!range.is_full() {
-            req = req.header(http::header::RANGE, range.to_header());
+            req = req.header(header::RANGE, range.to_header());
         }
         <span class="kw">let </span>body = GetDownloadAuthorizationRequest {
             bucket_id: <span class="self">self</span>.bucket_id.clone(),
@@ -1156,7 +1143,6 @@
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(start_after) = start_after {
-            <span class="kw">let </span>start_after = build_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, <span class="kw-2">&amp;</span>start_after);
             url.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;&amp;startFileName={}&quot;</span>,
                 percent_encode_path(<span class="kw-2">&amp;</span>start_after)
@@ -1298,18 +1284,6 @@
     <span class="doccomment">/// An authorization token to use with all calls, other than b2_authorize_account, that need an Authorization header. This authorization token is valid for at most 24 hours.
     /// So we should call b2_authorize_account every 24 hours.
     </span><span class="kw">pub </span>authorization_token: String,
-    <span class="kw">pub </span>api_info: ApiInfo,
-}
-
-<span class="attr">#[derive(Debug, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
-</span><span class="kw">pub struct </span>ApiInfo {
-    <span class="kw">pub </span>storage_api: StorageApi,
-}
-
-<span class="attr">#[derive(Debug, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
-</span><span class="kw">pub struct </span>StorageApi {
     <span class="kw">pub </span>api_url: String,
     <span class="kw">pub </span>download_url: String,
 }

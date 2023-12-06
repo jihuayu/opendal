@@ -136,6 +136,7 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -182,6 +183,7 @@
         <span class="number">304 </span>| <span class="number">412 </span>=&gt; (ErrorKind::ConditionNotMatch, <span class="bool-val">false</span>),
         <span class="comment">// Service b2 could return 403, show the authorization error
         </span><span class="number">401 </span>=&gt; (ErrorKind::PermissionDenied, <span class="bool-val">true</span>),
+        <span class="number">429 </span>=&gt; (ErrorKind::RateLimited, <span class="bool-val">true</span>),
         <span class="number">500 </span>| <span class="number">502 </span>| <span class="number">503 </span>| <span class="number">504 </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">true</span>),
         <span class="kw">_ </span>=&gt; (ErrorKind::Unexpected, <span class="bool-val">false</span>),
     };
