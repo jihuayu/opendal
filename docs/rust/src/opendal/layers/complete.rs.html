@@ -1037,41 +1037,6 @@
 <a href="#1037" id="1037">1037</a>
 <a href="#1038" id="1038">1038</a>
 <a href="#1039" id="1039">1039</a>
-<a href="#1040" id="1040">1040</a>
-<a href="#1041" id="1041">1041</a>
-<a href="#1042" id="1042">1042</a>
-<a href="#1043" id="1043">1043</a>
-<a href="#1044" id="1044">1044</a>
-<a href="#1045" id="1045">1045</a>
-<a href="#1046" id="1046">1046</a>
-<a href="#1047" id="1047">1047</a>
-<a href="#1048" id="1048">1048</a>
-<a href="#1049" id="1049">1049</a>
-<a href="#1050" id="1050">1050</a>
-<a href="#1051" id="1051">1051</a>
-<a href="#1052" id="1052">1052</a>
-<a href="#1053" id="1053">1053</a>
-<a href="#1054" id="1054">1054</a>
-<a href="#1055" id="1055">1055</a>
-<a href="#1056" id="1056">1056</a>
-<a href="#1057" id="1057">1057</a>
-<a href="#1058" id="1058">1058</a>
-<a href="#1059" id="1059">1059</a>
-<a href="#1060" id="1060">1060</a>
-<a href="#1061" id="1061">1061</a>
-<a href="#1062" id="1062">1062</a>
-<a href="#1063" id="1063">1063</a>
-<a href="#1064" id="1064">1064</a>
-<a href="#1065" id="1065">1065</a>
-<a href="#1066" id="1066">1066</a>
-<a href="#1067" id="1067">1067</a>
-<a href="#1068" id="1068">1068</a>
-<a href="#1069" id="1069">1069</a>
-<a href="#1070" id="1070">1070</a>
-<a href="#1071" id="1071">1071</a>
-<a href="#1072" id="1072">1072</a>
-<a href="#1073" id="1073">1073</a>
-<a href="#1074" id="1074">1074</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1103,7 +1068,6 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::FileReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::FlatLister;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::HierarchyLister;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::LazyReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::RangeReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamableReader;
@@ -1440,32 +1404,17 @@
 
         <span class="kw">let </span>recursive = args.recursive();
 
-        <span class="kw">match </span>(
-            recursive,
-            cap.list_with_recursive,
-            cap.list_without_recursive,
-        ) {
-            <span class="comment">// - If service can both list_with_recursive and list_without_recursive
-            // - If recursive is true while services can list_with_recursive
-            // - If recursive is false while services can list_without_recursive
-            </span>(<span class="kw">_</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>) | (<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="kw">_</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>, <span class="bool-val">true</span>) =&gt; {
+        <span class="kw">match </span>(recursive, cap.list_with_recursive) {
+            <span class="comment">// - If service can list_with_recursive
+            // - If recursive is false
+            </span>(<span class="kw">_</span>, <span class="bool-val">true</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.list(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>((rp, CompleteLister::AlreadyComplete(p)))
             }
-            <span class="comment">// If services can&#39;t list_with_recursive nor list_without_recursive.
-            //
-            // It should be a service level bug.
-            </span>(<span class="kw">_</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.new_unsupported_error(Operation::List)),
             <span class="comment">// If recursive is true but service can&#39;t list_with_recursive
-            </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; {
+            </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
                 <span class="kw">let </span>p = FlatLister::new(<span class="self">self</span>.inner.clone(), path);
                 <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedFlat(p)))
-            }
-            <span class="comment">// If recursive is false but service can&#39;t list_without_recursive
-            </span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.list(path, args.with_recursive(<span class="bool-val">true</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let </span>p = HierarchyLister::new(p, path);
-                <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedHierarchy(p)))
             }
         }
     }
@@ -1482,33 +1431,17 @@
 
         <span class="kw">let </span>recursive = args.recursive();
 
-        <span class="kw">match </span>(
-            recursive,
-            cap.list_with_recursive,
-            cap.list_without_recursive,
-        ) {
-            <span class="comment">// - If service can both list_with_recursive and list_without_recursive
-            // - If recursive is true while services can list_with_recursive
-            // - If recursive is false while services can list_without_recursive
-            </span>(<span class="kw">_</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>) | (<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="kw">_</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>, <span class="bool-val">true</span>) =&gt; {
+        <span class="kw">match </span>(recursive, cap.list_with_recursive) {
+            <span class="comment">// - If service can both list_with_recursive
+            // - If recursive is false
+            </span>(<span class="kw">_</span>, <span class="bool-val">true</span>) | (<span class="bool-val">false</span>, <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>(rp, p) = <span class="self">self</span>.inner.blocking_list(path, args)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>((rp, CompleteLister::AlreadyComplete(p)))
             }
-            <span class="comment">// If services can&#39;t list_with_recursive nor list_without_recursive.
-            //
-            // It should be a service level bug.
-            </span>(<span class="kw">_</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="prelude-val">Err</span>(<span class="self">self</span>.new_unsupported_error(Operation::List)),
             <span class="comment">// If recursive is true but service can&#39;t list_with_recursive
-            </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; {
+            </span>(<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
                 <span class="kw">let </span>p = FlatLister::new(<span class="self">self</span>.inner.clone(), path);
                 <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedFlat(p)))
-            }
-            <span class="comment">// If recursive is false but service can&#39;t list_without_recursive
-            </span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; {
-                <span class="kw">let </span>(<span class="kw">_</span>, p) = <span class="self">self</span>.inner.blocking_list(path, args.with_recursive(<span class="bool-val">true</span>))<span class="question-mark">?</span>;
-                <span class="kw">let </span>p: HierarchyLister&lt;&lt;A <span class="kw">as </span>Accessor&gt;::BlockingLister&gt; =
-                    HierarchyLister::new(p, path);
-                <span class="prelude-val">Ok</span>((RpList::default(), CompleteLister::NeedHierarchy(p)))
             }
         }
     }
@@ -1812,7 +1745,6 @@
 <span class="kw">pub enum </span>CompleteLister&lt;A: Accessor, P&gt; {
     AlreadyComplete(P),
     NeedFlat(FlatLister&lt;Arc&lt;A&gt;, P&gt;),
-    NeedHierarchy(HierarchyLister&lt;P&gt;),
 }
 
 <span class="attr">#[async_trait]
@@ -1827,7 +1759,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(p) =&gt; p.poll_next(cx),
             NeedFlat(p) =&gt; p.poll_next(cx),
-            NeedHierarchy(p) =&gt; p.poll_next(cx),
         }
     }
 }
@@ -1843,7 +1774,6 @@
         <span class="kw">match </span><span class="self">self </span>{
             AlreadyComplete(p) =&gt; p.next(),
             NeedFlat(p) =&gt; p.next(),
-            NeedHierarchy(p) =&gt; p.next(),
         }
     }
 }

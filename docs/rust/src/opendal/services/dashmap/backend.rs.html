@@ -141,6 +141,14 @@
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -159,7 +167,7 @@
 // under the License.
 
 </span><span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::{Debug, Formatter};
 
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>dashmap::DashMap;
@@ -205,9 +213,17 @@
 <span class="doccomment">/// Backend is used to serve `Accessor` support in dashmap.
 </span><span class="kw">pub type </span>DashmapBackend = typed_kv::Backend&lt;Adapter&gt;;
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>Adapter {
     inner: DashMap&lt;String, typed_kv::Value&gt;,
+}
+
+<span class="kw">impl </span>Debug <span class="kw">for </span>Adapter {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        f.debug_struct(<span class="string">&quot;DashmapAdapter&quot;</span>)
+            .field(<span class="string">&quot;size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.inner.len())
+            .finish_non_exhaustive()
+    }
 }
 
 <span class="attr">#[async_trait]
