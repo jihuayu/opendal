@@ -1224,6 +1224,18 @@
 <a href="#1224" id="1224">1224</a>
 <a href="#1225" id="1225">1225</a>
 <a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1517,7 +1529,19 @@
 
         <span class="comment">// Building pre-content.
         </span><span class="kw">for </span>(k, v) <span class="kw">in </span><span class="self">self</span>.headers.iter() {
-            bs.extend_from_slice(k.as_str().as_bytes());
+            <span class="comment">// Trick!
+            //
+            // Seafile could not recognize header names like `content-disposition`
+            // and requires to use `Content-Disposition`. So we hardcode the part
+            // headers name here.
+            </span><span class="kw">match </span>k.as_str() {
+                <span class="string">&quot;content-disposition&quot; </span>=&gt; {
+                    bs.extend_from_slice(<span class="string">&quot;Content-Disposition&quot;</span>.as_bytes());
+                }
+                <span class="kw">_ </span>=&gt; {
+                    bs.extend_from_slice(k.as_str().as_bytes());
+                }
+            }
             bs.extend_from_slice(<span class="string">b&quot;: &quot;</span>);
             bs.extend_from_slice(v.as_bytes());
             bs.extend_from_slice(<span class="string">b&quot;\r\n&quot;</span>);
@@ -1954,11 +1978,11 @@
         <span class="macro">assert_eq!</span>(size, bs.len() <span class="kw">as </span>u64);
 
         <span class="kw">let </span>expected = <span class="string">&quot;--lalala\r\n\
-             content-disposition: form-data; name=\&quot;foo\&quot;\r\n\
+             Content-Disposition: form-data; name=\&quot;foo\&quot;\r\n\
              \r\n\
              bar\r\n\
              --lalala\r\n\
-             content-disposition: form-data; name=\&quot;hello\&quot;\r\n\
+             Content-Disposition: form-data; name=\&quot;hello\&quot;\r\n\
              \r\n\
              world\r\n\
              --lalala--\r\n&quot;</span>;
@@ -1990,48 +2014,48 @@
         <span class="macro">assert_eq!</span>(size, bs.len() <span class="kw">as </span>u64);
 
         <span class="kw">let </span>expected = <span class="string">r#&quot;--9431149156168
-content-disposition: form-data; name=&quot;key&quot;
+Content-Disposition: form-data; name=&quot;key&quot;
 
 user/eric/MyPicture.jpg
 --9431149156168
-content-disposition: form-data; name=&quot;acl&quot;
+Content-Disposition: form-data; name=&quot;acl&quot;
 
 public-read
 --9431149156168
-content-disposition: form-data; name=&quot;success_action_redirect&quot;
+Content-Disposition: form-data; name=&quot;success_action_redirect&quot;
 
 https://awsexamplebucket1.s3.us-west-1.amazonaws.com/successful_upload.html
 --9431149156168
-content-disposition: form-data; name=&quot;content-type&quot;
+Content-Disposition: form-data; name=&quot;content-type&quot;
 
 image/jpeg
 --9431149156168
-content-disposition: form-data; name=&quot;x-amz-meta-uuid&quot;
+Content-Disposition: form-data; name=&quot;x-amz-meta-uuid&quot;
 
 14365123651274
 --9431149156168
-content-disposition: form-data; name=&quot;x-amz-meta-tag&quot;
+Content-Disposition: form-data; name=&quot;x-amz-meta-tag&quot;
 
 Some,Tag,For,Picture
 --9431149156168
-content-disposition: form-data; name=&quot;AWSAccessKeyId&quot;
+Content-Disposition: form-data; name=&quot;AWSAccessKeyId&quot;
 
 AKIAIOSFODNN7EXAMPLE
 --9431149156168
-content-disposition: form-data; name=&quot;Policy&quot;
+Content-Disposition: form-data; name=&quot;Policy&quot;
 
 eyAiZXhwaXJhdGlvbiI6ICIyMDA3LTEyLTAxVDEyOjAwOjAwLjAwMFoiLAogICJjb25kaXRpb25zIjogWwogICAgeyJidWNrZXQiOiAiam9obnNtaXRoIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRrZXkiLCAidXNlci9lcmljLyJdLAogICAgeyJhY2wiOiAicHVibGljLXJlYWQifSwKICAgIHsic3VjY2Vzc19hY3Rpb25fcmVkaXJlY3QiOiAiaHR0cDovL2pvaG5zbWl0aC5zMy5hbWF6b25hd3MuY29tL3N1Y2Nlc3NmdWxfdXBsb2FkLmh0bWwifSwKICAgIFsic3RhcnRzLXdpdGgiLCAiJENvbnRlbnQtVHlwZSIsICJpbWFnZS8iXSwKICAgIHsieC1hbXotbWV0YS11dWlkIjogIjE0MzY1MTIzNjUxMjc0In0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiR4LWFtei1tZXRhLXRhZyIsICIiXQogIF0KfQo=
 --9431149156168
-content-disposition: form-data; name=&quot;Signature&quot;
+Content-Disposition: form-data; name=&quot;Signature&quot;
 
 0RavWzkygo6QX9caELEqKi9kDbU=
 --9431149156168
-content-disposition: form-data; name=&quot;file&quot;
+Content-Disposition: form-data; name=&quot;file&quot;
 content-type: image/jpeg
 
 ...file content...
 --9431149156168
-content-disposition: form-data; name=&quot;submit&quot;
+Content-Disposition: form-data; name=&quot;submit&quot;
 
 Upload to Amazon S3
 --9431149156168--
