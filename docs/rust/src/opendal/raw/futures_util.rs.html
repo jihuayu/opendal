@@ -241,6 +241,14 @@
 <a href="#241" id="241">241</a>
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -264,6 +272,14 @@
 <span class="kw">use </span>std::future::Future;
 <span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::{Context, Poll};
+
+<span class="doccomment">/// BoxedFuture is the type alias of [`futures::future::BoxFuture`].
+///
+/// We will switch to [`futures::future::LocalBoxFuture`] on wasm32 target.
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="kw">pub type </span>BoxedFuture&lt;T&gt; = futures::future::BoxFuture&lt;<span class="lifetime">&#39;static</span>, T&gt;;
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+</span><span class="kw">pub type </span>BoxedFuture&lt;T&gt; = futures::future::LocalBoxFuture&lt;<span class="lifetime">&#39;static</span>, T&gt;;
 
 <span class="doccomment">/// CONCURRENT_LARGE_THRESHOLD is the threshold to determine whether to use
 /// [`FuturesOrdered`] or not.

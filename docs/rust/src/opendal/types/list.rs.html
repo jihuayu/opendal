@@ -305,7 +305,6 @@
 <a href="#305" id="305">305</a>
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -331,7 +330,6 @@
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>flagset::FlagSet;
-<span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>futures::Stream;
 <span class="kw">use </span>futures::StreamExt;
 
@@ -406,7 +404,7 @@
     <span class="doccomment">/// Stating is used to store the join handle of spawned task.
     ///
     /// TODO: Replace with static future type after rust supported.
-    </span>Stating(BoxFuture&lt;<span class="lifetime">&#39;static</span>, (String, <span class="prelude-ty">Result</span>&lt;Metadata&gt;)&gt;),
+    </span>Stating(BoxedFuture&lt;(String, <span class="prelude-ty">Result</span>&lt;Metadata&gt;)&gt;),
     <span class="doccomment">/// Known is used to store the entry that already contains the required metakey.
     </span>Known(<span class="prelude-ty">Option</span>&lt;(String, Metadata)&gt;),
 }
