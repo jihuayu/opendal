@@ -142,7 +142,6 @@
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
 <a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -168,7 +167,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="kw">use </span><span class="kw">super</span>::core::{parse_initiate_part, UpyunCore};
+<span class="kw">use </span><span class="kw">super</span>::core::constants::X_UPYUN_MULTI_UUID;
+<span class="kw">use </span><span class="kw">super</span>::core::UpyunCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 
 <span class="kw">pub type </span>UpyunWriters = oio::MultipartUploadWriter&lt;UpyunWriter&gt;;
@@ -216,7 +216,11 @@
 
         <span class="kw">match </span>status {
             StatusCode::NO_CONTENT =&gt; {
-                <span class="kw">let </span>id = parse_initiate_part(resp.headers())<span class="question-mark">?</span>;
+                <span class="kw">let </span>id =
+                    parse_header_to_str(resp.headers(), X_UPYUN_MULTI_UUID)<span class="question-mark">?</span>.ok_or(Error::new(
+                        ErrorKind::Unexpected,
+                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{} header is missing&quot;</span>, X_UPYUN_MULTI_UUID),
+                    ))<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Ok</span>(id.to_string())
             }
@@ -241,19 +245,13 @@
         <span class="kw">let </span>status = resp.status();
 
         <span class="kw">match </span>status {
-            StatusCode::NO_CONTENT =&gt; {
-                <span class="kw">let </span>etag = parse_etag(resp.headers())<span class="question-mark">?
-                    </span>.ok_or_else(|| {
-                        Error::new(
-                            ErrorKind::Unexpected,
-                            <span class="string">&quot;ETag not present in returning response&quot;</span>,
-                        )
-                    })<span class="question-mark">?
-                    </span>.to_string();
-
+            StatusCode::NO_CONTENT | StatusCode::CREATED =&gt; {
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
 
-                <span class="prelude-val">Ok</span>(oio::MultipartUploadPart { part_number, etag })
+                <span class="prelude-val">Ok</span>(oio::MultipartUploadPart {
+                    part_number,
+                    etag: <span class="string">&quot;&quot;</span>.to_string(),
+                })
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }

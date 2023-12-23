@@ -368,6 +368,22 @@
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -389,6 +405,7 @@
 <span class="kw">use </span>base64::Engine;
 <span class="kw">use </span>chrono::DateTime;
 <span class="kw">use </span>chrono::Utc;
+<span class="kw">use </span>http::header::AsHeaderName;
 <span class="kw">use </span>http::header::HeaderName;
 <span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
@@ -564,6 +581,21 @@
                 <span class="string">&quot;header value has to be valid utf-8 string&quot;</span>,
             )
             .with_operation(<span class="string">&quot;http_util::parse_content_disposition&quot;</span>)
+            .set_source(e)
+        })<span class="question-mark">?</span>)),
+    }
+}
+
+<span class="doccomment">/// Parse header value to string according to name.
+</span><span class="kw">pub fn </span>parse_header_to_str&lt;K: AsHeaderName&gt;(headers: <span class="kw-2">&amp;</span>HeaderMap, name: K) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
+    <span class="kw">match </span>headers.get(name) {
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+        <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(v.to_str().map_err(|e| {
+            Error::new(
+                ErrorKind::Unexpected,
+                <span class="string">&quot;header value has to be valid utf-8 string&quot;</span>,
+            )
+            .with_operation(<span class="string">&quot;http_util::parse_header_to_str&quot;</span>)
             .set_source(e)
         })<span class="question-mark">?</span>)),
     }
