@@ -301,8 +301,6 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -324,7 +322,6 @@
 <span class="kw">use </span>base64::Engine;
 <span class="kw">use </span>chrono::DateTime;
 <span class="kw">use </span>chrono::Utc;
-<span class="kw">use </span>http::header::AsHeaderName;
 <span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
@@ -333,8 +330,8 @@
 <span class="kw">use </span>http::header::ETAG;
 <span class="kw">use </span>http::header::LAST_MODIFIED;
 <span class="kw">use </span>http::header::LOCATION;
-<span class="kw">use </span>http::HeaderMap;
 <span class="kw">use </span>http::HeaderValue;
+<span class="kw">use </span>http::{HeaderMap, HeaderName};
 <span class="kw">use </span>md5::Digest;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -350,7 +347,6 @@
 /// The returned value maybe a relative path, like `/index.html`, `/robots.txt`, etc.
 </span><span class="kw">pub fn </span>parse_location(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
     parse_header_to_str(headers, LOCATION)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_location&quot;</span>))
 }
 
 <span class="doccomment">/// Parse cache control from header map.
@@ -361,82 +357,82 @@
 /// maybe `no-cache`, `max-age=3600`, etc.
 </span><span class="kw">pub fn </span>parse_cache_control(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
     parse_header_to_str(headers, CACHE_CONTROL)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_cache_control&quot;</span>))
 }
 
 <span class="doccomment">/// Parse content length from header map.
 </span><span class="kw">pub fn </span>parse_content_length(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
-    <span class="kw">let </span>v = parse_header_to_str(headers, CONTENT_LENGTH)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_content_length&quot;</span>))<span class="question-mark">?</span>;
-
-    <span class="kw">match </span>v {
-        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(v.parse::&lt;u64&gt;().map_err(|e| {
-            Error::new(ErrorKind::Unexpected, <span class="string">&quot;header value is not valid integer&quot;</span>)
-                .with_operation(<span class="string">&quot;http_util::parse_content_length&quot;</span>)
-                .set_source(e)
-        })<span class="question-mark">?</span>)),
-    }
+    parse_header_to_str(headers, CONTENT_LENGTH)<span class="question-mark">?
+        </span>.map(|v| {
+            v.parse::&lt;u64&gt;().map_err(|e| {
+                Error::new(ErrorKind::Unexpected, <span class="string">&quot;header value is not valid integer&quot;</span>).set_source(e)
+            })
+        })
+        .transpose()
 }
 
 <span class="doccomment">/// Parse content md5 from header map.
 </span><span class="kw">pub fn </span>parse_content_md5(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
     parse_header_to_str(headers, <span class="string">&quot;content-md5&quot;</span>)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_content_md5&quot;</span>))
 }
 
 <span class="doccomment">/// Parse content type from header map.
 </span><span class="kw">pub fn </span>parse_content_type(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
     parse_header_to_str(headers, CONTENT_TYPE)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_content_type&quot;</span>))
 }
 
 <span class="doccomment">/// Parse content range from header map.
 </span><span class="kw">pub fn </span>parse_content_range(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;BytesContentRange&gt;&gt; {
-    <span class="kw">let </span>v = parse_header_to_str(headers, CONTENT_RANGE)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_content_range&quot;</span>))<span class="question-mark">?</span>;
-
-    <span class="kw">match </span>v {
-        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(v.parse()<span class="question-mark">?</span>)),
-    }
+    parse_header_to_str(headers, CONTENT_RANGE)<span class="question-mark">?
+        </span>.map(|v| v.parse())
+        .transpose()
 }
 
 <span class="doccomment">/// Parse last modified from header map.
 </span><span class="kw">pub fn </span>parse_last_modified(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt;&gt; {
-    <span class="kw">let </span>v = parse_header_to_str(headers, LAST_MODIFIED)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_content_disposition&quot;</span>))<span class="question-mark">?</span>;
-
-    <span class="kw">match </span>v {
-        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(parse_datetime_from_rfc2822(v)<span class="question-mark">?</span>)),
-    }
+    parse_header_to_str(headers, LAST_MODIFIED)<span class="question-mark">?
+        </span>.map(parse_datetime_from_rfc2822)
+        .transpose()
 }
 
 <span class="doccomment">/// Parse etag from header map.
 </span><span class="kw">pub fn </span>parse_etag(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
-    parse_header_to_str(headers, ETAG).map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_etag&quot;</span>))
+    parse_header_to_str(headers, ETAG)
 }
 
 <span class="doccomment">/// Parse Content-Disposition for header map
 </span><span class="kw">pub fn </span>parse_content_disposition(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
     parse_header_to_str(headers, CONTENT_DISPOSITION)
-        .map_err(|e| e.with_operation(<span class="string">&quot;http_util::parse_content_disposition&quot;</span>))
 }
 
 <span class="doccomment">/// Parse header value to string according to name.
-</span><span class="kw">pub fn </span>parse_header_to_str&lt;K: AsHeaderName&gt;(headers: <span class="kw-2">&amp;</span>HeaderMap, name: K) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
-    <span class="kw">match </span>headers.get(name) {
-        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        <span class="prelude-val">Some</span>(v) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(v.to_str().map_err(|e| {
-            Error::new(
-                ErrorKind::Unexpected,
-                <span class="string">&quot;header value has to be valid utf-8 string&quot;</span>,
-            )
-            .with_operation(<span class="string">&quot;http_util::parse_header_to_str&quot;</span>)
-            .set_source(e)
-        })<span class="question-mark">?</span>)),
-    }
+</span><span class="attr">#[inline]
+</span><span class="kw">pub fn </span>parse_header_to_str&lt;K&gt;(headers: <span class="kw-2">&amp;</span>HeaderMap, name: K) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt;
+<span class="kw">where
+    </span>HeaderName: TryFrom&lt;K&gt;,
+{
+    <span class="kw">let </span>name = HeaderName::try_from(name).map_err(|<span class="kw">_</span>| {
+        Error::new(
+            ErrorKind::Unexpected,
+            <span class="string">&quot;header name must be valid http header name but not&quot;</span>,
+        )
+        .with_operation(<span class="string">&quot;http_util::parse_header_to_str&quot;</span>)
+    })<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = headers.get(name.clone()) {
+        v
+    } <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+    };
+
+    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(value.to_str().map_err(|e| {
+        Error::new(
+            ErrorKind::Unexpected,
+            <span class="string">&quot;header value must be valid utf-8 string but not&quot;</span>,
+        )
+        .with_operation(<span class="string">&quot;http_util::parse_header_to_str&quot;</span>)
+        .with_context(<span class="string">&quot;header_name&quot;</span>, name.as_str())
+        .set_source(e)
+    })<span class="question-mark">?</span>))
 }
 
 <span class="doccomment">/// parse_into_metadata will parse standards http headers into Metadata.
