@@ -599,6 +599,12 @@
 <a href="#599" id="599">599</a>
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -635,8 +641,8 @@
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">super</span>::lister::GcsLister;
 <span class="kw">use </span><span class="kw">super</span>::writer::GcsWriter;
+<span class="kw">use </span><span class="kw">super</span>::writer::GcsWriters;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::services::gcs::writer::GcsWriters;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">const </span>DEFAULT_GCS_ENDPOINT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;https://storage.googleapis.com&quot;</span>;
@@ -870,6 +876,11 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cred) = <span class="kw-2">&amp;</span><span class="self">self</span>.config.credential_path {
             cred_loader = cred_loader.with_path(cred);
         }
+        <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+        </span>{
+            cred_loader = cred_loader.with_disable_env();
+            cred_loader = cred_loader.with_disable_well_known_location();
+        }
 
         <span class="kw">let </span>scope = <span class="kw">if let </span><span class="prelude-val">Some</span>(scope) = <span class="kw-2">&amp;</span><span class="self">self</span>.config.scope {
             scope
@@ -914,7 +925,8 @@
     core: Arc&lt;GcsCore&gt;,
 }
 
-<span class="attr">#[async_trait]
+<span class="attr">#[cfg_attr(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), async_trait)]
+#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>GcsBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
     <span class="kw">type </span>BlockingReader = ();
