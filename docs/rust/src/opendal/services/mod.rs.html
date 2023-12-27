@@ -321,6 +321,8 @@
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
 <a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -445,6 +447,8 @@
 </span><span class="kw">mod </span>memcached;
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-memcached&quot;</span>)]
 </span><span class="kw">pub use </span>memcached::Memcached;
+<span class="attr">#[cfg(feature = <span class="string">&quot;services-memcached&quot;</span>)]
+</span><span class="kw">pub use </span>memcached::MemcachedConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;services-memory&quot;</span>)]
 </span><span class="kw">mod </span>memory;
