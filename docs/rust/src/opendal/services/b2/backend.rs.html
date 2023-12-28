@@ -540,6 +540,10 @@
 <a href="#539" id="539">539</a>
 <a href="#540" id="540">540</a>
 <a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -843,7 +847,11 @@
                 <span class="comment">// The max multipart size of b2 is 5 Gb.
                 //
                 // ref: &lt;https://www.backblaze.com/docs/cloud-storage-large-files&gt;
-                </span>write_multi_max_size: <span class="prelude-val">Some</span>(<span class="number">5 </span>* <span class="number">1024 </span>* <span class="number">1024 </span>* <span class="number">1024</span>),
+                </span>write_multi_max_size: <span class="kw">if </span><span class="macro">cfg!</span>(target_pointer_width = <span class="string">"64"</span>) {
+                    <span class="prelude-val">Some</span>(<span class="number">5 </span>* <span class="number">1024 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Some</span>(usize::MAX)
+                },
 
                 delete: <span class="bool-val">true</span>,
                 copy: <span class="bool-val">true</span>,
