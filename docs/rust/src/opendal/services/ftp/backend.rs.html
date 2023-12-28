@@ -545,6 +545,8 @@
 <a href="#544" id="544">544</a>
 <a href="#545" id="545">545</a>
 <a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -807,9 +809,11 @@
         conn.noop().<span class="kw">await
     </span>}
 
-    <span class="doccomment">/// Always allow reuse conn.
+    <span class="doccomment">/// Don't allow reuse conn.
+    ///
+    /// We need to investigate why reuse conn will cause error.
     </span><span class="kw">fn </span>has_broken(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Connection) -&gt; bool {
-        <span class="bool-val">false
+        <span class="bool-val">true
     </span>}
 }
 
