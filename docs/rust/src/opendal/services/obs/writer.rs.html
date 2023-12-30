@@ -240,7 +240,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>ObsWriters =
-    oio::TwoWaysWriter&lt;oio::MultipartUploadWriter&lt;ObsWriter&gt;, oio::AppendObjectWriter&lt;ObsWriter&gt;&gt;;
+    TwoWays&lt;oio::MultipartUploadWriter&lt;ObsWriter&gt;, oio::AppendObjectWriter&lt;ObsWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>ObsWriter {
     core: Arc&lt;ObsCore&gt;,

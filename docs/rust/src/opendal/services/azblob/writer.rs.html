@@ -169,7 +169,7 @@
 <span class="kw">const </span>X_MS_BLOB_TYPE: <span class="kw-2">&amp;</span>str = <span class="string">"x-ms-blob-type"</span>;
 
 <span class="kw">pub type </span>AzblobWriters =
-    oio::TwoWaysWriter&lt;oio::OneShotWriter&lt;AzblobWriter&gt;, oio::AppendObjectWriter&lt;AzblobWriter&gt;&gt;;
+    TwoWays&lt;oio::OneShotWriter&lt;AzblobWriter&gt;, oio::AppendObjectWriter&lt;AzblobWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>AzblobWriter {
     core: Arc&lt;AzblobCore&gt;,

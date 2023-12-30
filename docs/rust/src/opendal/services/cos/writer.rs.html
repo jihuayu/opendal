@@ -242,7 +242,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>CosWriters =
-    oio::TwoWaysWriter&lt;oio::MultipartUploadWriter&lt;CosWriter&gt;, oio::AppendObjectWriter&lt;CosWriter&gt;&gt;;
+    TwoWays&lt;oio::MultipartUploadWriter&lt;CosWriter&gt;, oio::AppendObjectWriter&lt;CosWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>CosWriter {
     core: Arc&lt;CosCore&gt;,

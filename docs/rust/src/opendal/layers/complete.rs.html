@@ -1023,8 +1023,6 @@
 <a href="#1022" id="1022">1022</a>
 <a href="#1023" id="1023">1023</a>
 <a href="#1024" id="1024">1024</a>
-<a href="#1025" id="1025">1025</a>
-<a href="#1026" id="1026">1026</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1060,7 +1058,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::PrefixLister;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::RangeReader;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::StreamableReader;
-<span class="kw">use </span><span class="kw">crate</span>::raw::oio::TwoWaysReader;
+<span class="kw">use </span><span class="kw">crate</span>::raw::TwoWays;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -1498,10 +1496,8 @@
     <span class="kw">type </span>Inner = A;
     <span class="kw">type </span>Reader = CompleteReader&lt;A, A::Reader&gt;;
     <span class="kw">type </span>BlockingReader = CompleteReader&lt;A, A::BlockingReader&gt;;
-    <span class="kw">type </span>Writer = oio::TwoWaysWriter&lt;
-        CompleteWriter&lt;A::Writer&gt;,
-        oio::ExactBufWriter&lt;CompleteWriter&lt;A::Writer&gt;&gt;,
-    &gt;;
+    <span class="kw">type </span>Writer =
+        TwoWays&lt;CompleteWriter&lt;A::Writer&gt;, oio::ExactBufWriter&lt;CompleteWriter&lt;A::Writer&gt;&gt;&gt;;
     <span class="kw">type </span>BlockingWriter = CompleteWriter&lt;A::BlockingWriter&gt;;
     <span class="kw">type </span>Lister = CompleteLister&lt;A, A::Lister&gt;;
     <span class="kw">type </span>BlockingLister = CompleteLister&lt;A, A::BlockingLister&gt;;
@@ -1567,8 +1563,8 @@
         <span class="kw">let </span>w = CompleteWriter::new(w);
 
         <span class="kw">let </span>w = <span class="kw">match </span>buffer_size {
-            <span class="prelude-val">None </span>=&gt; oio::TwoWaysWriter::One(w),
-            <span class="prelude-val">Some</span>(size) =&gt; oio::TwoWaysWriter::Two(oio::ExactBufWriter::new(w, size)),
+            <span class="prelude-val">None </span>=&gt; TwoWays::One(w),
+            <span class="prelude-val">Some</span>(size) =&gt; TwoWays::Two(oio::ExactBufWriter::new(w, size)),
         };
 
         <span class="prelude-val">Ok</span>((rp, w))
@@ -1703,7 +1699,7 @@
 }
 
 <span class="kw">pub type </span>CompleteReader&lt;A, R&gt; =
-    TwoWaysReader&lt;InnerCompleteReader&lt;A, R&gt;, BufferReader&lt;InnerCompleteReader&lt;A, R&gt;&gt;&gt;;
+    TwoWays&lt;InnerCompleteReader&lt;A, R&gt;, BufferReader&lt;InnerCompleteReader&lt;A, R&gt;&gt;&gt;;
 
 <span class="kw">type </span>InnerCompleteReader&lt;A, R&gt; = FourWaysReader&lt;
     LazyReader&lt;A, R&gt;,

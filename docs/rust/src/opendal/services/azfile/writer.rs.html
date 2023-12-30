@@ -139,7 +139,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>AzfileWriters =
-    oio::TwoWaysWriter&lt;oio::OneShotWriter&lt;AzfileWriter&gt;, oio::AppendObjectWriter&lt;AzfileWriter&gt;&gt;;
+    TwoWays&lt;oio::OneShotWriter&lt;AzfileWriter&gt;, oio::AppendObjectWriter&lt;AzfileWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>AzfileWriter {
     core: Arc&lt;AzfileCore&gt;,

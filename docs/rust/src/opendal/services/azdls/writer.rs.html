@@ -178,7 +178,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>AzdlsWriters =
-    oio::TwoWaysWriter&lt;oio::OneShotWriter&lt;AzdlsWriter&gt;, oio::AppendObjectWriter&lt;AzdlsWriter&gt;&gt;;
+    TwoWays&lt;oio::OneShotWriter&lt;AzdlsWriter&gt;, oio::AppendObjectWriter&lt;AzdlsWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>AzdlsWriter {
     core: Arc&lt;AzdlsCore&gt;,
