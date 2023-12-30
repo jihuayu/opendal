@@ -610,6 +610,21 @@
 <a href="#609" id="609">609</a>
 <a href="#610" id="610">610</a>
 <a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -919,6 +934,9 @@
     override_cache_control: <span class="prelude-ty">Option</span>&lt;String&gt;,
     override_content_disposition: <span class="prelude-ty">Option</span>&lt;String&gt;,
     version: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// The maximum buffer capability.
+    /// `None` stand for disable buffer.
+    </span>buffer: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl </span>OpRead {
@@ -1020,6 +1038,18 @@
     <span class="doccomment">/// Get version from option
     </span><span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
         <span class="self">self</span>.version.as_deref()
+    }
+
+    <span class="doccomment">/// Set the buffer capability.
+    </span><span class="kw">pub fn </span>with_buffer(<span class="kw-2">mut </span><span class="self">self</span>, buffer: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.buffer = <span class="prelude-val">Some</span>(buffer);
+
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Get buffer from option.
+    </span><span class="kw">pub fn </span>buffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="self">self</span>.buffer
     }
 }
 
