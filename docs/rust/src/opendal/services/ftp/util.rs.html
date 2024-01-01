@@ -123,6 +123,8 @@
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -154,6 +156,7 @@
 
 <span class="kw">use </span><span class="kw">super</span>::backend::Manager;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::services::ftp::err::parse_error;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Wrapper for ftp data stream and command stream.
@@ -200,7 +203,8 @@
                                     Status::ClosingDataConnection,
                                     Status::RequestedFileActionOk,
                                 ])
-                                .<span class="kw">await</span><span class="question-mark">?</span>;
+                                .<span class="kw">await
+                                </span>.map_err(parse_error)<span class="question-mark">?</span>;
 
                                 <span class="prelude-val">Ok</span>(())
                             };

@@ -64,6 +64,13 @@
 <a href="#62" id="62">62</a>
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -87,6 +94,7 @@
 <span class="kw">use </span><span class="kw">super</span>::backend::FtpBackend;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteBuf;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::services::ftp::err::parse_error;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>FtpWriters = oio::OneShotWriter&lt;FtpWriter&gt;;
@@ -119,12 +127,18 @@
         <span class="kw">let </span>bs = bs.bytes(size);
 
         <span class="kw">let </span><span class="kw-2">mut </span>ftp_stream = <span class="self">self</span>.backend.ftp_connect(Operation::Write).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>data_stream = ftp_stream.append_with_stream(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>data_stream = ftp_stream
+            .append_with_stream(<span class="kw-2">&amp;</span><span class="self">self</span>.path)
+            .<span class="kw">await
+            </span>.map_err(parse_error)<span class="question-mark">?</span>;
         data_stream.write_all(<span class="kw-2">&amp;</span>bs).<span class="kw">await</span>.map_err(|err| {
             Error::new(ErrorKind::Unexpected, <span class="string">"copy from ftp stream"</span>).set_source(err)
         })<span class="question-mark">?</span>;
 
-        ftp_stream.finalize_put_stream(data_stream).<span class="kw">await</span><span class="question-mark">?</span>;
+        ftp_stream
+            .finalize_put_stream(data_stream)
+            .<span class="kw">await
+            </span>.map_err(parse_error)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
