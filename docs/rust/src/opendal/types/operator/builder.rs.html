@@ -409,6 +409,8 @@
 <a href="#407" id="407">407</a>
 <a href="#408" id="408">408</a>
 <a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -570,6 +572,8 @@
             </span>Scheme::Alluxio =&gt; <span class="self">Self</span>::from_map::&lt;services::Alluxio&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">"services-upyun"</span>)]
             </span>Scheme::Upyun =&gt; <span class="self">Self</span>::from_map::&lt;services::Upyun&gt;(map)<span class="question-mark">?</span>.finish(),
+            <span class="attr">#[cfg(feature = <span class="string">"services-pcloud"</span>)]
+            </span>Scheme::Pcloud =&gt; <span class="self">Self</span>::from_map::&lt;services::Pcloud&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">"services-chainsafe"</span>)]
             </span>Scheme::Chainsafe =&gt; <span class="self">Self</span>::from_map::&lt;services::Chainsafe&gt;(map)<span class="question-mark">?</span>.finish(),
             <span class="attr">#[cfg(feature = <span class="string">"services-azblob"</span>)]
