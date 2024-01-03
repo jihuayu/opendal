@@ -202,8 +202,6 @@
 <a href="#200" id="200">200</a>
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -341,7 +339,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_get(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.db.get(path)<span class="question-mark">?</span>)
+        <span class="self">self</span>.db.get(path).map_err(parse_rocksdb_error)
     }
 
     <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -355,7 +353,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_set(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.db.put(path, value)<span class="question-mark">?</span>)
+        <span class="self">self</span>.db.put(path, value).map_err(parse_rocksdb_error)
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -368,7 +366,7 @@
     </span>}
 
     <span class="kw">fn </span>blocking_delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.db.delete(path)<span class="question-mark">?</span>)
+        <span class="self">self</span>.db.delete(path).map_err(parse_rocksdb_error)
     }
 
     <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
@@ -386,7 +384,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>res = Vec::default();
 
         <span class="kw">for </span>key <span class="kw">in </span>it {
-            <span class="kw">let </span>key = key<span class="question-mark">?</span>;
+            <span class="kw">let </span>key = key.map_err(parse_rocksdb_error)<span class="question-mark">?</span>;
             <span class="kw">let </span>key = String::from_utf8_lossy(<span class="kw-2">&amp;</span>key);
             <span class="comment">// FIXME: it's must a bug that rocksdb returns key that not start with path.
             </span><span class="kw">if </span>!key.starts_with(path) {
@@ -403,9 +401,7 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;rocksdb::Error&gt; <span class="kw">for </span>Error {
-    <span class="kw">fn </span>from(e: rocksdb::Error) -&gt; <span class="self">Self </span>{
-        Error::new(ErrorKind::Unexpected, <span class="string">"got rocksdb error"</span>).set_source(e)
-    }
+<span class="kw">fn </span>parse_rocksdb_error(e: rocksdb::Error) -&gt; Error {
+    Error::new(ErrorKind::Unexpected, <span class="string">"got rocksdb error"</span>).set_source(e)
 }
 </code></pre></div></section></main></body></html>
