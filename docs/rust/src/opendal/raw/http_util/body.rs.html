@@ -384,7 +384,7 @@
             Ordering::Equal =&gt; <span class="prelude-val">Ok</span>(()),
             Ordering::Less =&gt; <span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::ContentIncomplete,
-                <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"reader got too less data, expect: {expect}, actual: {actual}"</span>),
+                <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"reader got too little data, expect: {expect}, actual: {actual}"</span>),
             )
             .set_temporary()),
             Ordering::Greater =&gt; <span class="prelude-val">Err</span>(Error::new(
