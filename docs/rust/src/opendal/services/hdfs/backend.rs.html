@@ -585,6 +585,80 @@
 <a href="#583" id="583">583</a>
 <a href="#584" id="584">584</a>
 <a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -612,6 +686,7 @@
 <span class="kw">use </span>futures::AsyncWriteExt;
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>serde::Deserialize;
+<span class="kw">use </span>uuid::Uuid;
 
 <span class="kw">use </span><span class="kw">super</span>::lister::HdfsLister;
 <span class="kw">use </span><span class="kw">super</span>::writer::HdfsWriter;
@@ -635,6 +710,8 @@
     </span><span class="kw">pub </span>user: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="doccomment">/// enable the append capacity
     </span><span class="kw">pub </span>enable_append: bool,
+    <span class="doccomment">/// atomic_write_dir of this backend
+    </span><span class="kw">pub </span>atomic_write_dir: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>HdfsConfig {
@@ -720,6 +797,21 @@
         <span class="self">self</span>.config.enable_append = enable_append;
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Set temp dir for atomic write.
+    ///
+    /// # Notes
+    ///
+    /// - When append is enabled, we will not use atomic write
+    /// to avoid data loss and performance issue.
+    </span><span class="kw">pub fn </span>atomic_write_dir(<span class="kw-2">&amp;mut </span><span class="self">self</span>, dir: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.config.atomic_write_dir = <span class="kw">if </span>dir.is_empty() {
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
+            <span class="prelude-val">Some</span>(String::from(dir))
+        };
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Builder <span class="kw">for </span>HdfsBuilder {
@@ -768,19 +860,40 @@
             </span>}
         }
 
+        <span class="kw">let </span>atomic_write_dir = <span class="self">self</span>.config.atomic_write_dir.take();
+
+        <span class="comment">// If atomic write dir is not exist, we must create it.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(d) = <span class="kw-2">&amp;</span>atomic_write_dir {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = client.metadata(d) {
+                <span class="kw">if </span>e.kind() == io::ErrorKind::NotFound {
+                    client.create_dir(d).map_err(new_std_io_error)<span class="question-mark">?
+                </span>}
+            }
+        }
+
         <span class="macro">debug!</span>(<span class="string">"backend build finished: {:?}"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>);
         <span class="prelude-val">Ok</span>(HdfsBackend {
             root,
+            atomic_write_dir,
             client: Arc::new(client),
             enable_append: <span class="self">self</span>.config.enable_append,
         })
     }
 }
 
+<span class="attr">#[inline]
+</span><span class="kw">fn </span>tmp_file_of(path: <span class="kw-2">&amp;</span>str) -&gt; String {
+    <span class="kw">let </span>name = get_basename(path);
+    <span class="kw">let </span>uuid = Uuid::new_v4().to_string();
+
+    <span class="macro">format!</span>(<span class="string">"{name}.{uuid}"</span>)
+}
+
 <span class="doccomment">/// Backend for hdfs services.
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>HdfsBackend {
     root: String,
+    atomic_write_dir: <span class="prelude-ty">Option</span>&lt;String&gt;,
     client: Arc&lt;hdrs::Client&gt;,
     enable_append: bool,
 }
@@ -850,15 +963,28 @@
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+        <span class="kw">let </span>(target_path, tmp_path) = <span class="kw">if let </span><span class="prelude-val">Some</span>(atomic_write_dir) = <span class="kw-2">&amp;</span><span class="self">self</span>.atomic_write_dir {
+            <span class="kw">let </span>target_path = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+            <span class="kw">let </span>tmp_path = build_rooted_abs_path(atomic_write_dir, <span class="kw-2">&amp;</span>tmp_file_of(path));
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>p) {
+            <span class="comment">// If the target file exists, we should append to the end of it directly.
+            </span><span class="kw">if </span>op.append() &amp;&amp; <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>target_path).is_ok() {
+                (target_path, <span class="prelude-val">None</span>)
+            } <span class="kw">else </span>{
+                (target_path, <span class="prelude-val">Some</span>(tmp_path))
+            }
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+            (p, <span class="prelude-val">None</span>)
+        };
+
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>target_path) {
             <span class="comment">// Early return if other error happened.
             </span><span class="kw">if </span>err.kind() != io::ErrorKind::NotFound {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(new_std_io_error(err));
             }
 
-            <span class="kw">let </span>parent = get_parent(<span class="kw-2">&amp;</span>p);
+            <span class="kw">let </span>parent = get_parent(<span class="kw-2">&amp;</span>target_path);
 
             <span class="self">self</span>.client.create_dir(parent).map_err(new_std_io_error)<span class="question-mark">?</span>;
 
@@ -867,7 +993,7 @@
                 .open_file()
                 .create(<span class="bool-val">true</span>)
                 .write(<span class="bool-val">true</span>)
-                .async_open(<span class="kw-2">&amp;</span>p)
+                .async_open(<span class="kw-2">&amp;</span>target_path)
                 .<span class="kw">await
                 </span>.map_err(new_std_io_error)<span class="question-mark">?</span>;
             f.close().<span class="kw">await</span>.map_err(new_std_io_error)<span class="question-mark">?</span>;
@@ -882,11 +1008,14 @@
         }
 
         <span class="kw">let </span>f = open_options
-            .async_open(<span class="kw-2">&amp;</span>p)
+            .async_open(tmp_path.as_ref().unwrap_or(<span class="kw-2">&amp;</span>target_path))
             .<span class="kw">await
             </span>.map_err(new_std_io_error)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>((RpWrite::new(), HdfsWriter::new(f)))
+        <span class="prelude-val">Ok</span>((
+            RpWrite::new(),
+            HdfsWriter::new(target_path, tmp_path, f, Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.client)),
+        ))
     }
 
     <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
@@ -1025,15 +1154,29 @@
     }
 
     <span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, op: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
-        <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+        <span class="kw">let </span>(target_path, tmp_path) = <span class="kw">if let </span><span class="prelude-val">Some</span>(atomic_write_dir) = <span class="kw-2">&amp;</span><span class="self">self</span>.atomic_write_dir {
+            <span class="kw">let </span>target_path = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+            <span class="kw">let </span>tmp_path = build_rooted_abs_path(atomic_write_dir, <span class="kw-2">&amp;</span>tmp_file_of(path));
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>p) {
+            <span class="comment">// If the target file exists, we should append to the end of it directly.
+            </span><span class="kw">if </span>op.append() &amp;&amp; <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>target_path).is_ok() {
+                (target_path, <span class="prelude-val">None</span>)
+            } <span class="kw">else </span>{
+                (target_path, <span class="prelude-val">Some</span>(tmp_path))
+            }
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>p = build_rooted_abs_path(<span class="kw-2">&amp;</span><span class="self">self</span>.root, path);
+
+            (p, <span class="prelude-val">None</span>)
+        };
+
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.client.metadata(<span class="kw-2">&amp;</span>target_path) {
             <span class="comment">// Early return if other error happened.
             </span><span class="kw">if </span>err.kind() != io::ErrorKind::NotFound {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(new_std_io_error(err));
             }
 
-            <span class="kw">let </span>parent = get_parent(<span class="kw-2">&amp;</span>p);
+            <span class="kw">let </span>parent = get_parent(<span class="kw-2">&amp;</span>target_path);
 
             <span class="self">self</span>.client.create_dir(parent).map_err(new_std_io_error)<span class="question-mark">?</span>;
 
@@ -1041,7 +1184,7 @@
                 .open_file()
                 .create(<span class="bool-val">true</span>)
                 .write(<span class="bool-val">true</span>)
-                .open(<span class="kw-2">&amp;</span>p)
+                .open(<span class="kw-2">&amp;</span>target_path)
                 .map_err(new_std_io_error)<span class="question-mark">?</span>;
         }
 
@@ -1053,9 +1196,14 @@
             open_options.write(<span class="bool-val">true</span>);
         }
 
-        <span class="kw">let </span>f = open_options.open(<span class="kw-2">&amp;</span>p).map_err(new_std_io_error)<span class="question-mark">?</span>;
+        <span class="kw">let </span>f = open_options
+            .open(tmp_path.as_ref().unwrap_or(<span class="kw-2">&amp;</span>target_path))
+            .map_err(new_std_io_error)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>((RpWrite::new(), HdfsWriter::new(f)))
+        <span class="prelude-val">Ok</span>((
+            RpWrite::new(),
+            HdfsWriter::new(target_path, tmp_path, f, Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.client)),
+        ))
     }
 
     <span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
