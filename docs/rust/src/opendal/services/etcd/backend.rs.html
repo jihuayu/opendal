@@ -396,6 +396,14 @@
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -671,11 +679,15 @@
     <span class="kw">type </span>Error = Error;
 
     <span class="kw">async fn </span>connect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; std::result::Result&lt;<span class="self">Self</span>::Connection, <span class="self">Self</span>::Error&gt; {
-        <span class="prelude-val">Ok</span>(Client::connect(<span class="self">self</span>.endpoints.clone(), <span class="prelude-val">Some</span>(<span class="self">self</span>.options.clone())).<span class="kw">await</span><span class="question-mark">?</span>)
+        <span class="kw">let </span>conn = Client::connect(<span class="self">self</span>.endpoints.clone(), <span class="prelude-val">Some</span>(<span class="self">self</span>.options.clone()))
+            .<span class="kw">await
+            </span>.map_err(format_etcd_error)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(conn)
     }
 
     <span class="kw">async fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, conn: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Connection) -&gt; std::result::Result&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let _ </span>= conn.status().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let _ </span>= conn.status().<span class="kw">await</span>.map_err(format_etcd_error)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -745,7 +757,7 @@
 
     <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>.conn().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>resp = client.get(key, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = client.get(key, <span class="prelude-val">None</span>).<span class="kw">await</span>.map_err(format_etcd_error)<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(kv) = resp.kvs().first() {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(kv.value().to_vec()))
         } <span class="kw">else </span>{
@@ -755,20 +767,26 @@
 
     <span class="kw">async fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>.conn().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let _ </span>= client.put(key, value, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let _ </span>= client
+            .put(key, value, <span class="prelude-val">None</span>)
+            .<span class="kw">await
+            </span>.map_err(format_etcd_error)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>.conn().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let _ </span>= client.delete(key, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let _ </span>= client.delete(key, <span class="prelude-val">None</span>).<span class="kw">await</span>.map_err(format_etcd_error)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">async fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>client = <span class="self">self</span>.conn().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>get_options = <span class="prelude-val">Some</span>(GetOptions::new().with_prefix().with_keys_only());
-        <span class="kw">let </span>resp = client.get(path, get_options).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = client
+            .get(path, get_options)
+            .<span class="kw">await
+            </span>.map_err(format_etcd_error)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>res = Vec::default();
         <span class="kw">for </span>kv <span class="kw">in </span>resp.kvs() {
             <span class="kw">let </span>v = kv.key_str().map(String::from).map_err(|err| {
@@ -785,11 +803,9 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;EtcdError&gt; <span class="kw">for </span>Error {
-    <span class="kw">fn </span>from(e: EtcdError) -&gt; <span class="self">Self </span>{
-        Error::new(ErrorKind::Unexpected, e.to_string().as_str())
-            .set_source(e)
-            .set_temporary()
-    }
+<span class="kw">pub fn </span>format_etcd_error(e: EtcdError) -&gt; Error {
+    Error::new(ErrorKind::Unexpected, e.to_string().as_str())
+        .set_source(e)
+        .set_temporary()
 }
 </code></pre></div></section></main></body></html>
