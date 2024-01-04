@@ -303,6 +303,11 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -324,7 +329,6 @@
 <span class="kw">use </span>base64::Engine;
 <span class="kw">use </span>chrono::DateTime;
 <span class="kw">use </span>chrono::Utc;
-<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_RANGE;
@@ -332,6 +336,7 @@
 <span class="kw">use </span>http::header::ETAG;
 <span class="kw">use </span>http::header::LAST_MODIFIED;
 <span class="kw">use </span>http::header::LOCATION;
+<span class="kw">use </span>http::header::{CACHE_CONTROL, CONTENT_ENCODING};
 <span class="kw">use </span>http::HeaderValue;
 <span class="kw">use </span>http::{HeaderMap, HeaderName};
 <span class="kw">use </span>md5::Digest;
@@ -380,6 +385,11 @@
 <span class="doccomment">/// Parse content type from header map.
 </span><span class="kw">pub fn </span>parse_content_type(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
     parse_header_to_str(headers, CONTENT_TYPE)
+}
+
+<span class="doccomment">/// Parse content encoding from header map.
+</span><span class="kw">pub fn </span>parse_content_encoding(headers: <span class="kw-2">&amp;</span>HeaderMap) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
+    parse_header_to_str(headers, CONTENT_ENCODING)
 }
 
 <span class="doccomment">/// Parse content range from header map.
