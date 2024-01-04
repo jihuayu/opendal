@@ -35,10 +35,10 @@ features for every operation. All builtin layers could be found at <a href="laye
 <p>Let’s use <a href="layers/struct.LoggingLayer.html" title="struct opendal::layers::LoggingLayer"><code>layers::LoggingLayer</code></a> as an example; this layer adds logging to
 every operation that OpenDAL performs.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::services;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::layers::LoggingLayer;
+<span class="kw">use </span>opendal::services;
 <span class="kw">use </span>opendal::Operator;
 <span class="kw">use </span>opendal::Result;
-<span class="kw">use </span>opendal::layers::LoggingLayer;
 
 <span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -65,10 +65,10 @@ and blocking <a href="struct.BlockingOperator.html" title="struct opendal::Block
 <li><code>reader_with</code>: Create a reader with advanced options.</li>
 </ul>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::services;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>opendal::layers::LoggingLayer;
+<span class="kw">use </span>opendal::services;
 <span class="kw">use </span>opendal::Operator;
 <span class="kw">use </span>opendal::Result;
-<span class="kw">use </span>opendal::layers::LoggingLayer;
 
 <span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {

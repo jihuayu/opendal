@@ -143,7 +143,6 @@
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -166,12 +165,11 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>http::StatusCode;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
-
 <span class="kw">use </span><span class="kw">super</span>::core::constants::X_UPYUN_MULTI_UUID;
 <span class="kw">use </span><span class="kw">super</span>::core::UpyunCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>UpyunWriters = oio::MultipartUploadWriter&lt;UpyunWriter&gt;;
 

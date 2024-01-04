@@ -662,10 +662,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>ObsBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = ObsWriters;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = oio::PageLister&lt;ObsLister&gt;;
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -720,25 +720,19 @@
         am
     }
 
-    <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
-            PresignOperation::Stat(v) =&gt; <span class="self">self</span>.core.obs_head_object_request(path, v)<span class="question-mark">?</span>,
-            PresignOperation::Read(v) =&gt; <span class="self">self</span>.core.obs_get_object_request(path, v)<span class="question-mark">?</span>,
-            PresignOperation::Write(v) =&gt; {
-                <span class="self">self</span>.core
-                    .obs_put_object_request(path, <span class="prelude-val">None</span>, v, AsyncBody::Empty)<span class="question-mark">?
-            </span>}
-        };
-        <span class="self">self</span>.core.sign_query(<span class="kw-2">&amp;mut </span>req, args.expire()).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.obs_head_object(path, <span class="kw-2">&amp;</span>args).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="comment">// We don't need this request anymore, consume it directly.
-        </span><span class="kw">let </span>(parts, <span class="kw">_</span>) = req.into_parts();
+        <span class="kw">let </span>status = resp.status();
 
-        <span class="prelude-val">Ok</span>(RpPresign::new(PresignedRequest::new(
-            parts.method,
-            parts.uri,
-            parts.headers,
-        )))
+        <span class="comment">// The response is very similar to azblob.
+        </span><span class="kw">match </span>status {
+            StatusCode::OK =&gt; parse_into_metadata(path, resp.headers()).map(RpStat::new),
+            StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) =&gt; {
+                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
     }
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
@@ -775,35 +769,6 @@
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))
     }
 
-    <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.obs_copy_object(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(RpCopy::default())
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.obs_head_object(path, <span class="kw-2">&amp;</span>args).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="comment">// The response is very similar to azblob.
-        </span><span class="kw">match </span>status {
-            StatusCode::OK =&gt; parse_into_metadata(path, resp.headers()).map(RpStat::new),
-            StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) =&gt; {
-                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.core.obs_delete_object(path).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -820,6 +785,41 @@
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">let </span>l = ObsLister::new(<span class="self">self</span>.core.clone(), path, args.recursive(), args.limit());
         <span class="prelude-val">Ok</span>((RpList::default(), oio::PageLister::new(l)))
+    }
+
+    <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.obs_copy_object(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(RpCopy::default())
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="kw">match </span>args.operation() {
+            PresignOperation::Stat(v) =&gt; <span class="self">self</span>.core.obs_head_object_request(path, v)<span class="question-mark">?</span>,
+            PresignOperation::Read(v) =&gt; <span class="self">self</span>.core.obs_get_object_request(path, v)<span class="question-mark">?</span>,
+            PresignOperation::Write(v) =&gt; {
+                <span class="self">self</span>.core
+                    .obs_put_object_request(path, <span class="prelude-val">None</span>, v, AsyncBody::Empty)<span class="question-mark">?
+            </span>}
+        };
+        <span class="self">self</span>.core.sign_query(<span class="kw-2">&amp;mut </span>req, args.expire()).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="comment">// We don't need this request anymore, consume it directly.
+        </span><span class="kw">let </span>(parts, <span class="kw">_</span>) = req.into_parts();
+
+        <span class="prelude-val">Ok</span>(RpPresign::new(PresignedRequest::new(
+            parts.method,
+            parts.uri,
+            parts.headers,
+        )))
     }
 }
 </code></pre></div></section></main></body></html>

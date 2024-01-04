@@ -756,10 +756,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>GhacBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = GhacWriter;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = ();
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -781,6 +781,34 @@
                 ..Default::default()
             });
         am
+    }
+
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">let </span>req = <span class="self">self</span>.ghac_query(path).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>location = <span class="kw">if </span>resp.status() == StatusCode::OK {
+            <span class="kw">let </span>slc = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>query_resp: GhacQueryResponse =
+                serde_json::from_slice(<span class="kw-2">&amp;</span>slc).map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
+            query_resp.archive_location
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
+        };
+
+        <span class="kw">let </span>req = <span class="self">self</span>.ghac_head_location(<span class="kw-2">&amp;</span>location).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                <span class="kw">let </span>meta = parse_into_metadata(path, resp.headers())<span class="question-mark">?</span>;
+
+                <span class="prelude-val">Ok</span>(RpStat::new(meta))
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
     }
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
@@ -835,34 +863,6 @@
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), GhacWriter::new(<span class="self">self</span>.clone(), cache_id)))
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>req = <span class="self">self</span>.ghac_query(path).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>location = <span class="kw">if </span>resp.status() == StatusCode::OK {
-            <span class="kw">let </span>slc = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">let </span>query_resp: GhacQueryResponse =
-                serde_json::from_slice(<span class="kw-2">&amp;</span>slc).map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
-            query_resp.archive_location
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
-        };
-
-        <span class="kw">let </span>req = <span class="self">self</span>.ghac_head_location(<span class="kw-2">&amp;</span>location).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                <span class="kw">let </span>meta = parse_into_metadata(path, resp.headers())<span class="question-mark">?</span>;
-
-                <span class="prelude-val">Ok</span>(RpStat::new(meta))
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {

@@ -459,6 +459,10 @@
 <a href="#457" id="457">457</a>
 <a href="#458" id="458">458</a>
 <a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -476,15 +480,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::fmt::{Debug, Formatter};
+</span><span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::fmt::Formatter;
 
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>http::{Request, Response, StatusCode};
+<span class="kw">use </span>http::Request;
+<span class="kw">use </span>http::Response;
+<span class="kw">use </span>http::StatusCode;
 <span class="kw">use </span>serde::Deserialize;
 
-<span class="kw">use </span><span class="kw">super</span>::error::{parse_error, PcloudError};
+<span class="kw">use </span><span class="kw">super</span>::error::parse_error;
+<span class="kw">use </span><span class="kw">super</span>::error::PcloudError;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>PcloudCore {

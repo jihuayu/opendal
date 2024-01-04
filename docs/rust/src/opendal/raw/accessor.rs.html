@@ -559,8 +559,6 @@
 <a href="#557" id="557">557</a>
 <a href="#558" id="558">558</a>
 <a href="#559" id="559">559</a>
-<a href="#560" id="560">560</a>
-<a href="#561" id="561">561</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -619,20 +617,18 @@
 </span><span class="attr">#[cfg_attr(not(target_arch = <span class="string">"wasm32"</span>), async_trait)]
 #[cfg_attr(target_arch = <span class="string">"wasm32"</span>, async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>Accessor: Send + Sync + Debug + Unpin + <span class="lifetime">'static </span>{
-    <span class="doccomment">/// Reader is the associated reader the could return in `read` operation.
+    <span class="doccomment">/// Reader is the associated reader returned in `read` operation.
     </span><span class="kw">type </span>Reader: oio::Read;
-    <span class="doccomment">/// BlockingReader is the associated reader that could return in
-    /// `blocking_read` operation.
-    </span><span class="kw">type </span>BlockingReader: oio::BlockingRead;
-    <span class="doccomment">/// Writer is the associated writer the could return in `write` operation.
+    <span class="doccomment">/// Writer is the associated writer returned in `write` operation.
     </span><span class="kw">type </span>Writer: oio::Write;
-    <span class="doccomment">/// BlockingWriter is the associated writer the could return in
-    /// `blocking_write` operation.
-    </span><span class="kw">type </span>BlockingWriter: oio::BlockingWrite;
-    <span class="doccomment">/// Lister is the associated lister that return in `list` operation.
+    <span class="doccomment">/// Lister is the associated lister returned in `list` operation.
     </span><span class="kw">type </span>Lister: oio::List;
-    <span class="doccomment">/// BlockingLister is the associated lister that could return in
-    /// `blocking_list` operation.
+
+    <span class="doccomment">/// BlockingReader is the associated reader returned `blocking_read` operation.
+    </span><span class="kw">type </span>BlockingReader: oio::BlockingRead;
+    <span class="doccomment">/// BlockingWriter is the associated writer returned `blocking_write` operation.
+    </span><span class="kw">type </span>BlockingWriter: oio::BlockingWrite;
+    <span class="doccomment">/// BlockingLister is the associated lister returned `blocking_list` operation.
     </span><span class="kw">type </span>BlockingLister: oio::BlockingList;
 
     <span class="doccomment">/// Invoke the `info` operation to get metadata of accessor.
@@ -657,6 +653,24 @@
     /// - Input path MUST match with EntryMode, DON'T NEED to check mode.
     /// - Create on existing dir SHOULD succeed.
     </span><span class="kw">async fn </span>create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">"operation is not supported"</span>,
+        ))
+    }
+
+    <span class="doccomment">/// Invoke the `stat` operation on the specified path.
+    ///
+    /// Require [`Capability::stat`]
+    ///
+    /// # Behavior
+    ///
+    /// - `stat` empty path means stat backend's root path.
+    /// - `stat` a path endswith "/" means stating a dir.
+    /// - `mode` and `content_length` must be set.
+    </span><span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
 
         <span class="prelude-val">Err</span>(Error::new(
@@ -700,54 +714,6 @@
         ))
     }
 
-    <span class="doccomment">/// Invoke the `copy` operation on the specified `from` path and `to` path.
-    ///
-    /// Require [Capability::copy]
-    ///
-    /// # Behaviour
-    ///
-    /// - `from` and `to` MUST be file path, DON'T NEED to check mode.
-    /// - Copy on existing file SHOULD succeed.
-    /// - Copy on existing file SHOULD overwrite and truncate.
-    </span><span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
-
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">"operation is not supported"</span>,
-        ))
-    }
-
-    <span class="doccomment">/// Invoke the `rename` operation on the specified `from` path and `to` path.
-    ///
-    /// Require [Capability::rename]
-    </span><span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
-
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">"operation is not supported"</span>,
-        ))
-    }
-
-    <span class="doccomment">/// Invoke the `stat` operation on the specified path.
-    ///
-    /// Require [`Capability::stat`]
-    ///
-    /// # Behavior
-    ///
-    /// - `stat` empty path means stat backend's root path.
-    /// - `stat` a path endswith "/" means stating a dir.
-    /// - `mode` and `content_length` must be set.
-    </span><span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
-
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">"operation is not supported"</span>,
-        ))
-    }
-
     <span class="doccomment">/// Invoke the `delete` operation on the specified path.
     ///
     /// Require [`Capability::delete`]
@@ -775,6 +741,36 @@
     /// - List non-exist dir should return Empty.
     </span><span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">"operation is not supported"</span>,
+        ))
+    }
+
+    <span class="doccomment">/// Invoke the `copy` operation on the specified `from` path and `to` path.
+    ///
+    /// Require [Capability::copy]
+    ///
+    /// # Behaviour
+    ///
+    /// - `from` and `to` MUST be file path, DON'T NEED to check mode.
+    /// - Copy on existing file SHOULD succeed.
+    /// - Copy on existing file SHOULD overwrite and truncate.
+    </span><span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">"operation is not supported"</span>,
+        ))
+    }
+
+    <span class="doccomment">/// Invoke the `rename` operation on the specified `from` path and `to` path.
+    ///
+    /// Require [Capability::rename]
+    </span><span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
 
         <span class="prelude-val">Err</span>(Error::new(
             ErrorKind::Unsupported,
@@ -824,6 +820,20 @@
         ))
     }
 
+    <span class="doccomment">/// Invoke the `blocking_stat` operation on the specified path.
+    ///
+    /// This operation is the blocking version of [`Accessor::stat`]
+    ///
+    /// Require [`Capability::stat`] and [`Capability::blocking`]
+    </span><span class="kw">fn </span>blocking_stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">"operation is not supported"</span>,
+        ))
+    }
+
     <span class="doccomment">/// Invoke the `blocking_read` operation on the specified path.
     ///
     /// This operation is the blocking version of [`Accessor::read`]
@@ -844,48 +854,6 @@
     ///
     /// Require [`Capability::write`] and [`Capability::blocking`]
     </span><span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
-
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">"operation is not supported"</span>,
-        ))
-    }
-
-    <span class="doccomment">/// Invoke the `blocking_copy` operation on the specified `from` path and `to` path.
-    ///
-    /// This operation is the blocking version of [`Accessor::copy`]
-    ///
-    /// Require [`Capability::copy`] and [`Capability::blocking`]
-    </span><span class="kw">fn </span>blocking_copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
-
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">"operation is not supported"</span>,
-        ))
-    }
-
-    <span class="doccomment">/// Invoke the `blocking_rename` operation on the specified `from` path and `to` path.
-    ///
-    /// This operation is the blocking version of [`Accessor::rename`]
-    ///
-    /// Require [`Capability::rename`] and [`Capability::blocking`]
-    </span><span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
-
-        <span class="prelude-val">Err</span>(Error::new(
-            ErrorKind::Unsupported,
-            <span class="string">"operation is not supported"</span>,
-        ))
-    }
-
-    <span class="doccomment">/// Invoke the `blocking_stat` operation on the specified path.
-    ///
-    /// This operation is the blocking version of [`Accessor::stat`]
-    ///
-    /// Require [`Capability::stat`] and [`Capability::blocking`]
-    </span><span class="kw">fn </span>blocking_stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
         <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>) = (path, args);
 
         <span class="prelude-val">Err</span>(Error::new(
@@ -925,6 +893,34 @@
             <span class="string">"operation is not supported"</span>,
         ))
     }
+
+    <span class="doccomment">/// Invoke the `blocking_copy` operation on the specified `from` path and `to` path.
+    ///
+    /// This operation is the blocking version of [`Accessor::copy`]
+    ///
+    /// Require [`Capability::copy`] and [`Capability::blocking`]
+    </span><span class="kw">fn </span>blocking_copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">"operation is not supported"</span>,
+        ))
+    }
+
+    <span class="doccomment">/// Invoke the `blocking_rename` operation on the specified `from` path and `to` path.
+    ///
+    /// This operation is the blocking version of [`Accessor::rename`]
+    ///
+    /// Require [`Capability::rename`] and [`Capability::blocking`]
+    </span><span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) = (from, to, args);
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::Unsupported,
+            <span class="string">"operation is not supported"</span>,
+        ))
+    }
 }
 
 <span class="doccomment">/// Dummy implementation of accessor.
@@ -932,10 +928,10 @@
 #[cfg_attr(target_arch = <span class="string">"wasm32"</span>, async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>() {
     <span class="kw">type </span>Reader = ();
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = ();
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = ();
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -955,10 +951,10 @@
 #[cfg_attr(target_arch = <span class="string">"wasm32"</span>, async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl</span>&lt;T: Accessor + <span class="question-mark">?</span>Sized&gt; Accessor <span class="kw">for </span>Arc&lt;T&gt; {
     <span class="kw">type </span>Reader = T::Reader;
-    <span class="kw">type </span>BlockingReader = T::BlockingReader;
     <span class="kw">type </span>Writer = T::Writer;
-    <span class="kw">type </span>BlockingWriter = T::BlockingWriter;
     <span class="kw">type </span>Lister = T::Lister;
+    <span class="kw">type </span>BlockingReader = T::BlockingReader;
+    <span class="kw">type </span>BlockingWriter = T::BlockingWriter;
     <span class="kw">type </span>BlockingLister = T::BlockingLister;
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -969,65 +965,65 @@
         <span class="self">self</span>.as_ref().create_dir(path, args).<span class="kw">await
     </span>}
 
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="self">self</span>.as_ref().stat(path, args).<span class="kw">await
+    </span>}
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="self">self</span>.as_ref().read(path, args).<span class="kw">await
     </span>}
+
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="self">self</span>.as_ref().write(path, args).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="self">self</span>.as_ref().copy(from, to, args).<span class="kw">await
-    </span>}
-
-    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="self">self</span>.as_ref().rename(from, to, args).<span class="kw">await
-    </span>}
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="self">self</span>.as_ref().stat(path, args).<span class="kw">await
-    </span>}
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="self">self</span>.as_ref().delete(path, args).<span class="kw">await
     </span>}
+
     <span class="kw">async fn </span>list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::Lister)&gt; {
         <span class="self">self</span>.as_ref().list(path, args).<span class="kw">await
     </span>}
-
-    <span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {
-        <span class="self">self</span>.as_ref().batch(args).<span class="kw">await
+    <span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="self">self</span>.as_ref().copy(from, to, args).<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="self">self</span>.as_ref().rename(from, to, args).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>presign(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpPresign) -&gt; <span class="prelude-ty">Result</span>&lt;RpPresign&gt; {
         <span class="self">self</span>.as_ref().presign(path, args).<span class="kw">await
     </span>}
 
+    <span class="kw">async fn </span>batch(<span class="kw-2">&amp;</span><span class="self">self</span>, args: OpBatch) -&gt; <span class="prelude-ty">Result</span>&lt;RpBatch&gt; {
+        <span class="self">self</span>.as_ref().batch(args).<span class="kw">await
+    </span>}
+
     <span class="kw">fn </span>blocking_create_dir(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpCreateDir) -&gt; <span class="prelude-ty">Result</span>&lt;RpCreateDir&gt; {
         <span class="self">self</span>.as_ref().blocking_create_dir(path, args)
+    }
+    <span class="kw">fn </span>blocking_stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="self">self</span>.as_ref().blocking_stat(path, args)
     }
     <span class="kw">fn </span>blocking_read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::BlockingReader)&gt; {
         <span class="self">self</span>.as_ref().blocking_read(path, args)
     }
+
     <span class="kw">fn </span>blocking_write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::BlockingWriter)&gt; {
         <span class="self">self</span>.as_ref().blocking_write(path, args)
     }
 
-    <span class="kw">fn </span>blocking_copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="self">self</span>.as_ref().blocking_copy(from, to, args)
-    }
-
-    <span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="self">self</span>.as_ref().blocking_rename(from, to, args)
-    }
-
-    <span class="kw">fn </span>blocking_stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="self">self</span>.as_ref().blocking_stat(path, args)
-    }
     <span class="kw">fn </span>blocking_delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="self">self</span>.as_ref().blocking_delete(path, args)
     }
+
     <span class="kw">fn </span>blocking_list(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpList) -&gt; <span class="prelude-ty">Result</span>&lt;(RpList, <span class="self">Self</span>::BlockingLister)&gt; {
         <span class="self">self</span>.as_ref().blocking_list(path, args)
+    }
+    <span class="kw">fn </span>blocking_copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="self">self</span>.as_ref().blocking_copy(from, to, args)
+    }
+    <span class="kw">fn </span>blocking_rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="self">self</span>.as_ref().blocking_rename(from, to, args)
     }
 }
 

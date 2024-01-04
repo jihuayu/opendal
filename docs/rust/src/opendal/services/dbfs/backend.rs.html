@@ -446,10 +446,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>DbfsBackend {
     <span class="kw">type </span>Reader = DbfsReader;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;DbfsWriter&gt;;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = oio::PageLister&lt;DbfsLister&gt;;
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -484,35 +484,6 @@
             StatusCode::CREATED | StatusCode::OK =&gt; {
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(RpCreateDir::default())
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
-    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
-        <span class="kw">let </span>op = DbfsReader::new(<span class="self">self</span>.core.clone(), args, path.to_string());
-
-        <span class="prelude-val">Ok</span>((RpRead::new(), op))
-    }
-
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
-        <span class="prelude-val">Ok</span>((
-            RpWrite::default(),
-            oio::OneShotWriter::new(DbfsWriter::new(<span class="self">self</span>.core.clone(), args, path.to_string())),
-        ))
-    }
-
-    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="self">self</span>.core.dbfs_ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.dbfs_rename(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(RpRename::default())
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
@@ -553,6 +524,19 @@
         }
     }
 
+    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
+        <span class="kw">let </span>op = DbfsReader::new(<span class="self">self</span>.core.clone(), args, path.to_string());
+
+        <span class="prelude-val">Ok</span>((RpRead::new(), op))
+    }
+
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
+        <span class="prelude-val">Ok</span>((
+            RpWrite::default(),
+            oio::OneShotWriter::new(DbfsWriter::new(<span class="self">self</span>.core.clone(), args, path.to_string())),
+        ))
+    }
+
     <span class="doccomment">/// NOTE: Server will return 200 even if the path doesn't exist.
     </span><span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.core.dbfs_delete(path).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -569,6 +553,22 @@
         <span class="kw">let </span>l = DbfsLister::new(<span class="self">self</span>.core.clone(), path.to_string());
 
         <span class="prelude-val">Ok</span>((RpList::default(), oio::PageLister::new(l)))
+    }
+
+    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="self">self</span>.core.dbfs_ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.dbfs_rename(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(RpRename::default())
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
     }
 }
 

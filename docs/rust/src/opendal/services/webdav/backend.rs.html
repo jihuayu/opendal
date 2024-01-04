@@ -906,10 +906,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>WebdavBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;WebdavWriter&gt;;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = <span class="prelude-ty">Option</span>&lt;oio::PageLister&lt;WebdavLister&gt;&gt;;
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -948,6 +948,36 @@
         <span class="prelude-val">Ok</span>(RpCreateDir::default())
     }
 
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>header_map = HeaderMap::new();
+        <span class="comment">// not include children
+        </span>header_map.insert(<span class="string">"Depth"</span>, <span class="string">"0"</span>.parse().unwrap());
+        header_map.insert(header::ACCEPT, <span class="string">"application/xml"</span>.parse().unwrap());
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_propfind(path, <span class="prelude-val">Some</span>(header_map)).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">if </span>!status.is_success() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
+        }
+
+        <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>result: Multistatus =
+            quick_xml::de::from_reader(bs.reader()).map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
+        <span class="kw">let </span>item = result
+            .response
+            .first()
+            .ok_or_else(|| {
+                Error::new(
+                    ErrorKind::Unexpected,
+                    <span class="string">"Failed getting item stat: bad response"</span>,
+                )
+            })<span class="question-mark">?
+            </span>.parse_into_metadata()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(RpStat::new(item))
+    }
+
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.webdav_get(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>status = resp.status();
@@ -977,74 +1007,6 @@
             RpWrite::default(),
             oio::OneShotWriter::new(WebdavWriter::new(<span class="self">self</span>.clone(), args, p)),
         ))
-    }
-
-    <span class="doccomment">/// # Notes
-    ///
-    /// There is a strange dead lock issues when copying a non-exist file, so we will check
-    /// if the source exists first.
-    ///
-    /// For example: &lt;https://github.com/apache/incubator-opendal/pull/2809&gt;
-    </span><span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.stat(from, OpStat::default()).<span class="kw">await </span>{
-            <span class="kw">if </span>err.kind() == ErrorKind::NotFound {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(err);
-            }
-        }
-
-        <span class="self">self</span>.ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_copy(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::CREATED | StatusCode::NO_CONTENT =&gt; <span class="prelude-val">Ok</span>(RpCopy::default()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
-    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
-        <span class="self">self</span>.ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_move(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::CREATED | StatusCode::NO_CONTENT =&gt; <span class="prelude-val">Ok</span>(RpRename::default()),
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>header_map = HeaderMap::new();
-        <span class="comment">// not include children
-        </span>header_map.insert(<span class="string">"Depth"</span>, <span class="string">"0"</span>.parse().unwrap());
-        header_map.insert(header::ACCEPT, <span class="string">"application/xml"</span>.parse().unwrap());
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_propfind(path, <span class="prelude-val">Some</span>(header_map)).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">if </span>!status.is_success() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
-        }
-
-        <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>result: Multistatus =
-            quick_xml::de::from_reader(bs.reader()).map_err(new_xml_deserialize_error)<span class="question-mark">?</span>;
-        <span class="kw">let </span>item = result
-            .response
-            .first()
-            .ok_or_else(|| {
-                Error::new(
-                    ErrorKind::Unexpected,
-                    <span class="string">"Failed getting item stat: bad response"</span>,
-                )
-            })<span class="question-mark">?
-            </span>.parse_into_metadata()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(RpStat::new(item))
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {
@@ -1083,6 +1045,44 @@
                 <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">Some</span>(oio::PageLister::new(l))))
             }
             StatusCode::NOT_FOUND <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) =&gt; <span class="prelude-val">Ok</span>((RpList::default(), <span class="prelude-val">None</span>)),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="doccomment">/// # Notes
+    ///
+    /// There is a strange dead lock issues when copying a non-exist file, so we will check
+    /// if the source exists first.
+    ///
+    /// For example: &lt;https://github.com/apache/incubator-opendal/pull/2809&gt;
+    </span><span class="kw">async fn </span>copy(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpCopy) -&gt; <span class="prelude-ty">Result</span>&lt;RpCopy&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.stat(from, OpStat::default()).<span class="kw">await </span>{
+            <span class="kw">if </span>err.kind() == ErrorKind::NotFound {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(err);
+            }
+        }
+
+        <span class="self">self</span>.ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_copy(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::CREATED | StatusCode::NO_CONTENT =&gt; <span class="prelude-val">Ok</span>(RpCopy::default()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
+    <span class="kw">async fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, from: <span class="kw-2">&amp;</span>str, to: <span class="kw-2">&amp;</span>str, _args: OpRename) -&gt; <span class="prelude-ty">Result</span>&lt;RpRename&gt; {
+        <span class="self">self</span>.ensure_parent_path(to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.webdav_move(from, to).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::CREATED | StatusCode::NO_CONTENT =&gt; <span class="prelude-val">Ok</span>(RpRename::default()),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }

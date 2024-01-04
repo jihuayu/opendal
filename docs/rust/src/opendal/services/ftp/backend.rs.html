@@ -560,8 +560,6 @@
 <a href="#558" id="558">558</a>
 <a href="#559" id="559">559</a>
 <a href="#560" id="560">560</a>
-<a href="#561" id="561">561</a>
-<a href="#562" id="562">562</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -595,14 +593,12 @@
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>suppaftp::list::File;
-
 <span class="kw">use </span>suppaftp::types::FileType;
 <span class="kw">use </span>suppaftp::types::Response;
 <span class="kw">use </span>suppaftp::AsyncRustlsConnector;
 <span class="kw">use </span>suppaftp::AsyncRustlsFtpStream;
 <span class="kw">use </span>suppaftp::FtpError;
 <span class="kw">use </span>suppaftp::ImplAsyncFtpStream;
-
 <span class="kw">use </span>suppaftp::Status;
 <span class="kw">use </span>tokio::sync::OnceCell;
 
@@ -853,10 +849,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>FtpBackend {
     <span class="kw">type </span>Reader = FtpReader;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = FtpWriters;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = FtpLister;
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -905,6 +901,24 @@
         }
 
         <span class="kw">return </span><span class="prelude-val">Ok</span>(RpCreateDir::default());
+    }
+
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">let </span>file = <span class="self">self</span>.ftp_stat(path).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>mode = <span class="kw">if </span>file.is_file() {
+            EntryMode::FILE
+        } <span class="kw">else if </span>file.is_directory() {
+            EntryMode::DIR
+        } <span class="kw">else </span>{
+            EntryMode::Unknown
+        };
+
+        <span class="kw">let </span><span class="kw-2">mut </span>meta = Metadata::new(mode);
+        meta.set_content_length(file.size() <span class="kw">as </span>u64);
+        meta.set_last_modified(file.modified().into());
+
+        <span class="prelude-val">Ok</span>(RpStat::new(meta))
     }
 
     <span class="doccomment">/// TODO: migrate to FileReader maybe?
@@ -980,24 +994,6 @@
         <span class="kw">let </span>w = oio::OneShotWriter::new(w);
 
         <span class="prelude-val">Ok</span>((RpWrite::new(), w))
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>file = <span class="self">self</span>.ftp_stat(path).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>mode = <span class="kw">if </span>file.is_file() {
-            EntryMode::FILE
-        } <span class="kw">else if </span>file.is_directory() {
-            EntryMode::DIR
-        } <span class="kw">else </span>{
-            EntryMode::Unknown
-        };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>meta = Metadata::new(mode);
-        meta.set_content_length(file.size() <span class="kw">as </span>u64);
-        meta.set_last_modified(file.modified().into());
-
-        <span class="prelude-val">Ok</span>(RpStat::new(meta))
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {

@@ -101,6 +101,7 @@
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -122,7 +123,8 @@
 
 <span class="kw">use </span>async_trait::async_trait;
 
-<span class="kw">use </span><span class="kw">super</span>::core::{ListObjectsResponse, UpyunCore};
+<span class="kw">use </span><span class="kw">super</span>::core::ListObjectsResponse;
+<span class="kw">use </span><span class="kw">super</span>::core::UpyunCore;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::Entry;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;

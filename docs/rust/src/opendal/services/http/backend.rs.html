@@ -776,10 +776,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>HttpBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = ();
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = ();
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -803,6 +803,27 @@
         ma
     }
 
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="comment">// Stat root always returns a DIR.
+        </span><span class="kw">if </span>path == <span class="string">"/" </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
+        }
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.http_head(path, <span class="kw-2">&amp;</span>args).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; parse_into_metadata(path, resp.headers()).map(RpStat::new),
+            <span class="comment">// HTTP Server like nginx could return FORBIDDEN if auto-index
+            // is not enabled, we should ignore them.
+            </span>StatusCode::NOT_FOUND | StatusCode::FORBIDDEN <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) =&gt; {
+                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.http_get(path, <span class="kw-2">&amp;</span>args).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -820,27 +841,6 @@
             StatusCode::RANGE_NOT_SATISFIABLE =&gt; {
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>((RpRead::new().with_size(<span class="prelude-val">Some</span>(<span class="number">0</span>)), IncomingAsyncBody::empty()))
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="comment">// Stat root always returns a DIR.
-        </span><span class="kw">if </span>path == <span class="string">"/" </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
-        }
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.http_head(path, <span class="kw-2">&amp;</span>args).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; parse_into_metadata(path, resp.headers()).map(RpStat::new),
-            <span class="comment">// HTTP Server like nginx could return FORBIDDEN if auto-index
-            // is not enabled, we should ignore them.
-            </span>StatusCode::NOT_FOUND | StatusCode::FORBIDDEN <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) =&gt; {
-                <span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)))
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }

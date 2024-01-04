@@ -308,6 +308,8 @@
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -329,16 +331,18 @@
 <span class="kw">use </span>base64::Engine;
 <span class="kw">use </span>chrono::DateTime;
 <span class="kw">use </span>chrono::Utc;
+<span class="kw">use </span>http::header::CACHE_CONTROL;
 <span class="kw">use </span>http::header::CONTENT_DISPOSITION;
+<span class="kw">use </span>http::header::CONTENT_ENCODING;
 <span class="kw">use </span>http::header::CONTENT_LENGTH;
 <span class="kw">use </span>http::header::CONTENT_RANGE;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::header::ETAG;
 <span class="kw">use </span>http::header::LAST_MODIFIED;
 <span class="kw">use </span>http::header::LOCATION;
-<span class="kw">use </span>http::header::{CACHE_CONTROL, CONTENT_ENCODING};
+<span class="kw">use </span>http::HeaderMap;
+<span class="kw">use </span>http::HeaderName;
 <span class="kw">use </span>http::HeaderValue;
-<span class="kw">use </span>http::{HeaderMap, HeaderName};
 <span class="kw">use </span>md5::Digest;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;

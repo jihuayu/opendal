@@ -264,10 +264,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>DropboxBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;DropboxWriter&gt;;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = ();
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -325,6 +325,44 @@
         <span class="prelude-val">Ok</span>(res)
     }
 
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.dropbox_get_metadata(path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                <span class="kw">let </span>bytes = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>decoded_response = serde_json::from_slice::&lt;DropboxMetadataResponse&gt;(<span class="kw-2">&amp;</span>bytes)
+                    .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
+                <span class="kw">let </span>entry_mode: EntryMode = <span class="kw">match </span>decoded_response.tag.as_str() {
+                    <span class="string">"file" </span>=&gt; EntryMode::FILE,
+                    <span class="string">"folder" </span>=&gt; EntryMode::DIR,
+                    <span class="kw">_ </span>=&gt; EntryMode::Unknown,
+                };
+
+                <span class="kw">let </span><span class="kw-2">mut </span>metadata = Metadata::new(entry_mode);
+                <span class="comment">// Only set last_modified and size if entry_mode is FILE, because Dropbox API
+                // returns last_modified and size only for files.
+                // FYI: https://www.dropbox.com/developers/documentation/http/documentation#files-get_metadata
+                </span><span class="kw">if </span>entry_mode == EntryMode::FILE {
+                    <span class="kw">let </span>date_utc_last_modified =
+                        parse_datetime_from_rfc3339(<span class="kw-2">&amp;</span>decoded_response.client_modified)<span class="question-mark">?</span>;
+                    metadata.set_last_modified(date_utc_last_modified);
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = decoded_response.size {
+                        metadata.set_content_length(size);
+                    } <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                            ErrorKind::Unexpected,
+                            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"no size found for file {}"</span>, path),
+                        ));
+                    }
+                }
+                <span class="prelude-val">Ok</span>(RpStat::new(metadata))
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.core.dropbox_get(path, args).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>status = resp.status();
@@ -363,44 +401,6 @@
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(err),
                 }
             }
-        }
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.dropbox_get_metadata(path).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>status = resp.status();
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                <span class="kw">let </span>bytes = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let </span>decoded_response = serde_json::from_slice::&lt;DropboxMetadataResponse&gt;(<span class="kw-2">&amp;</span>bytes)
-                    .map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
-                <span class="kw">let </span>entry_mode: EntryMode = <span class="kw">match </span>decoded_response.tag.as_str() {
-                    <span class="string">"file" </span>=&gt; EntryMode::FILE,
-                    <span class="string">"folder" </span>=&gt; EntryMode::DIR,
-                    <span class="kw">_ </span>=&gt; EntryMode::Unknown,
-                };
-
-                <span class="kw">let </span><span class="kw-2">mut </span>metadata = Metadata::new(entry_mode);
-                <span class="comment">// Only set last_modified and size if entry_mode is FILE, because Dropbox API
-                // returns last_modified and size only for files.
-                // FYI: https://www.dropbox.com/developers/documentation/http/documentation#files-get_metadata
-                </span><span class="kw">if </span>entry_mode == EntryMode::FILE {
-                    <span class="kw">let </span>date_utc_last_modified =
-                        parse_datetime_from_rfc3339(<span class="kw-2">&amp;</span>decoded_response.client_modified)<span class="question-mark">?</span>;
-                    metadata.set_last_modified(date_utc_last_modified);
-
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = decoded_response.size {
-                        metadata.set_content_length(size);
-                    } <span class="kw">else </span>{
-                        <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
-                            ErrorKind::Unexpected,
-                            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"no size found for file {}"</span>, path),
-                        ));
-                    }
-                }
-                <span class="prelude-val">Ok</span>(RpStat::new(metadata))
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
 

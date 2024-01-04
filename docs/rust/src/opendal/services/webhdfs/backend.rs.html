@@ -954,10 +954,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>WebhdfsBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-    <span class="kw">type </span>BlockingReader = ();
     <span class="kw">type </span>Writer = oio::OneShotWriter&lt;WebhdfsWriter&gt;;
-    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>Lister = oio::PageLister&lt;WebhdfsLister&gt;;
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -1019,6 +1019,38 @@
         }
     }
 
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="comment">// if root exists and is a directory, stat will be ok
+        </span><span class="self">self</span>.root_checker
+            .get_or_try_init(|| <span class="kw">async </span>{ <span class="self">self</span>.check_root().<span class="kw">await </span>})
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>resp = <span class="self">self</span>.webhdfs_get_file_status(path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK =&gt; {
+                <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+
+                <span class="kw">let </span>file_status = serde_json::from_slice::&lt;FileStatusWrapper&gt;(<span class="kw-2">&amp;</span>bs)
+                    .map_err(new_json_deserialize_error)<span class="question-mark">?
+                    </span>.file_status;
+
+                <span class="kw">let </span>meta = <span class="kw">match </span>file_status.ty {
+                    FileStatusType::Directory =&gt; Metadata::new(EntryMode::DIR),
+                    FileStatusType::File =&gt; Metadata::new(EntryMode::FILE)
+                        .with_content_length(file_status.length)
+                        .with_last_modified(parse_datetime_from_from_timestamp_millis(
+                            file_status.modification_time,
+                        )<span class="question-mark">?</span>),
+                };
+
+                <span class="prelude-val">Ok</span>(RpStat::new(meta))
+            }
+
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
+    }
+
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>range = args.range();
         <span class="kw">let </span>resp = <span class="self">self</span>.webhdfs_read_file(path, range).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1055,38 +1087,6 @@
             RpWrite::default(),
             oio::OneShotWriter::new(WebhdfsWriter::new(<span class="self">self</span>.clone(), args, path.to_string())),
         ))
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="comment">// if root exists and is a directory, stat will be ok
-        </span><span class="self">self</span>.root_checker
-            .get_or_try_init(|| <span class="kw">async </span>{ <span class="self">self</span>.check_root().<span class="kw">await </span>})
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>resp = <span class="self">self</span>.webhdfs_get_file_status(path).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>status = resp.status();
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
-
-                <span class="kw">let </span>file_status = serde_json::from_slice::&lt;FileStatusWrapper&gt;(<span class="kw-2">&amp;</span>bs)
-                    .map_err(new_json_deserialize_error)<span class="question-mark">?
-                    </span>.file_status;
-
-                <span class="kw">let </span>meta = <span class="kw">match </span>file_status.ty {
-                    FileStatusType::Directory =&gt; Metadata::new(EntryMode::DIR),
-                    FileStatusType::File =&gt; Metadata::new(EntryMode::FILE)
-                        .with_content_length(file_status.length)
-                        .with_last_modified(parse_datetime_from_from_timestamp_millis(
-                            file_status.modification_time,
-                        )<span class="question-mark">?</span>),
-                };
-
-                <span class="prelude-val">Ok</span>(RpStat::new(meta))
-            }
-
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
     }
 
     <span class="kw">async fn </span>delete(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpDelete) -&gt; <span class="prelude-ty">Result</span>&lt;RpDelete&gt; {

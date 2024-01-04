@@ -341,10 +341,6 @@
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
 <a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -362,14 +358,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>http::StatusCode;
-<span class="kw">use </span>log::debug;
-<span class="kw">use </span>serde::Deserialize;
-<span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>http::StatusCode;
+<span class="kw">use </span>log::debug;
+<span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>tokio::sync::RwLock;
 
 <span class="kw">use </span><span class="kw">super</span>::core::parse_dir_detail;
@@ -603,15 +600,10 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl </span>Accessor <span class="kw">for </span>SeafileBackend {
     <span class="kw">type </span>Reader = IncomingAsyncBody;
-
-    <span class="kw">type </span>BlockingReader = ();
-
     <span class="kw">type </span>Writer = SeafileWriters;
-
-    <span class="kw">type </span>BlockingWriter = ();
-
     <span class="kw">type </span>Lister = oio::PageLister&lt;SeafileLister&gt;;
-
+    <span class="kw">type </span>BlockingReader = ();
+    <span class="kw">type </span>BlockingWriter = ();
     <span class="kw">type </span>BlockingLister = ();
 
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AccessorInfo {
@@ -637,6 +629,23 @@
         am
     }
 
+    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, _args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+        <span class="kw">if </span>path == <span class="string">"/" </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
+        }
+
+        <span class="kw">let </span>metadata = <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) {
+            <span class="kw">let </span>dir_detail = <span class="self">self</span>.core.dir_detail(path).<span class="kw">await</span><span class="question-mark">?</span>;
+            parse_dir_detail(dir_detail)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>file_detail = <span class="self">self</span>.core.file_detail(path).<span class="kw">await</span><span class="question-mark">?</span>;
+
+            parse_file_detail(file_detail)
+        };
+
+        metadata.map(RpStat::new)
+    }
+
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, _args: OpRead) -&gt; <span class="prelude-ty">Result</span>&lt;(RpRead, <span class="self">Self</span>::Reader)&gt; {
         <span class="kw">let </span>resp = <span class="self">self</span>.core.download_file(path).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -653,23 +662,6 @@
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
-    }
-
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, _args: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
-        <span class="kw">if </span>path == <span class="string">"/" </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(RpStat::new(Metadata::new(EntryMode::DIR)));
-        }
-
-        <span class="kw">let </span>metadata = <span class="kw">if </span>path.ends_with(<span class="string">'/'</span>) {
-            <span class="kw">let </span>dir_detail = <span class="self">self</span>.core.dir_detail(path).<span class="kw">await</span><span class="question-mark">?</span>;
-            parse_dir_detail(dir_detail)
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>file_detail = <span class="self">self</span>.core.file_detail(path).<span class="kw">await</span><span class="question-mark">?</span>;
-
-            parse_file_detail(file_detail)
-        };
-
-        metadata.map(RpStat::new)
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {

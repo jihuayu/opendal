@@ -202,6 +202,7 @@
 <a href="#200" id="200">200</a>
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -219,13 +220,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>rocksdb::DB;
-<span class="kw">use </span>serde::Deserialize;
-<span class="kw">use </span>std::collections::HashMap;
+</span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>rocksdb::DB;
+<span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>tokio::task;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;

@@ -269,6 +269,7 @@
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -289,15 +290,16 @@
 </span><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use </span><span class="kw">super</span>::ascii;
-<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
-<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bb8::RunError;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>tokio::net::TcpStream;
 <span class="kw">use </span>tokio::sync::OnceCell;
+
+<span class="kw">use </span><span class="kw">super</span>::ascii;
+<span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
+<span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
+<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Config for MemCached services support
 </span><span class="attr">#[derive(Default, Deserialize, Clone)]
