@@ -299,6 +299,22 @@
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
 <a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -325,31 +341,55 @@
 <span class="kw">use </span>mongodb::bson::Document;
 <span class="kw">use </span>mongodb::options::ClientOptions;
 <span class="kw">use </span>mongodb::options::UpdateOptions;
+<span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>tokio::sync::OnceCell;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::adapters::kv;
+<span class="kw">use </span><span class="kw">crate</span>::raw::ConfigDeserializer;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">"docs.md"</span>)]
-#[derive(Default)]
-</span><span class="kw">pub struct </span>MongodbBuilder {
-    connection_string: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    database: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    collection: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    root: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    key_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    value_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<span class="doccomment">/// Config for Mongodb service support.
+</span><span class="attr">#[derive(Default, Deserialize)]
+#[serde(default)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>MongodbConfig {
+    <span class="doccomment">/// connection string of this backend
+    </span><span class="kw">pub </span>connection_string: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// database of this backend
+    </span><span class="kw">pub </span>database: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// collection of this backend
+    </span><span class="kw">pub </span>collection: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// root of this backend
+    </span><span class="kw">pub </span>root: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// key field of this backend
+    </span><span class="kw">pub </span>key_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// value field of this backend
+    </span><span class="kw">pub </span>value_field: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
-<span class="kw">impl </span>Debug <span class="kw">for </span>MongodbBuilder {
+<span class="kw">impl </span>Debug <span class="kw">for </span>MongodbConfig {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
-        f.debug_struct(<span class="string">"MongoDbBuilder"</span>)
+        f.debug_struct(<span class="string">"MongodbConfig"</span>)
             .field(<span class="string">"connection_string"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.connection_string)
             .field(<span class="string">"database"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.database)
             .field(<span class="string">"collection"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.collection)
             .field(<span class="string">"root"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root)
             .field(<span class="string">"key_field"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.key_field)
             .field(<span class="string">"value_field"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.value_field)
+            .finish()
+    }
+}
+
+<span class="attr">#[doc = <span class="macro">include_str!</span>(<span class="string">"docs.md"</span>)]
+#[derive(Default)]
+</span><span class="kw">pub struct </span>MongodbBuilder {
+    config: MongodbConfig,
+}
+
+<span class="kw">impl </span>Debug <span class="kw">for </span>MongodbBuilder {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        f.debug_struct(<span class="string">"MongodbBuilder"</span>)
+            .field(<span class="string">"config"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config)
             .finish()
     }
 }
@@ -377,7 +417,7 @@
     /// For more information, please refer to [MongoDB Connection String URI Format](https://docs.mongodb.com/manual/reference/connection-string/).
     </span><span class="kw">pub fn </span>connection_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!v.is_empty() {
-            <span class="self">self</span>.connection_string = <span class="prelude-val">Some</span>(v.to_string());
+            <span class="self">self</span>.config.connection_string = <span class="prelude-val">Some</span>(v.to_string());
         }
         <span class="self">self
     </span>}
@@ -386,7 +426,7 @@
     /// default: "/"
     </span><span class="kw">pub fn </span>root(<span class="kw-2">&amp;mut </span><span class="self">self</span>, root: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!root.is_empty() {
-            <span class="self">self</span>.root = <span class="prelude-val">Some</span>(root.to_owned());
+            <span class="self">self</span>.config.root = <span class="prelude-val">Some</span>(root.to_owned());
         }
         <span class="self">self
     </span>}
@@ -394,7 +434,7 @@
     <span class="doccomment">/// Set the database name of the MongoDB service to read/write.
     </span><span class="kw">pub fn </span>database(<span class="kw-2">&amp;mut </span><span class="self">self</span>, database: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!database.is_empty() {
-            <span class="self">self</span>.database = <span class="prelude-val">Some</span>(database.to_string());
+            <span class="self">self</span>.config.database = <span class="prelude-val">Some</span>(database.to_string());
         }
         <span class="self">self
     </span>}
@@ -402,7 +442,7 @@
     <span class="doccomment">/// Set the collection name of the MongoDB service to read/write.
     </span><span class="kw">pub fn </span>collection(<span class="kw-2">&amp;mut </span><span class="self">self</span>, collection: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!collection.is_empty() {
-            <span class="self">self</span>.collection = <span class="prelude-val">Some</span>(collection.to_string());
+            <span class="self">self</span>.config.collection = <span class="prelude-val">Some</span>(collection.to_string());
         }
         <span class="self">self
     </span>}
@@ -412,7 +452,7 @@
     /// Default to `key` if not specified.
     </span><span class="kw">pub fn </span>key_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key_field: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!key_field.is_empty() {
-            <span class="self">self</span>.key_field = <span class="prelude-val">Some</span>(key_field.to_string());
+            <span class="self">self</span>.config.key_field = <span class="prelude-val">Some</span>(key_field.to_string());
         }
         <span class="self">self
     </span>}
@@ -422,7 +462,7 @@
     /// Default to `value` if not specified.
     </span><span class="kw">pub fn </span>value_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value_field: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!value_field.is_empty() {
-            <span class="self">self</span>.value_field = <span class="prelude-val">Some</span>(value_field.to_string());
+            <span class="self">self</span>.config.value_field = <span class="prelude-val">Some</span>(value_field.to_string());
         }
         <span class="self">self
     </span>}
@@ -434,21 +474,13 @@
     <span class="kw">type </span>Accessor = MongodbBackend;
 
     <span class="kw">fn </span>from_map(map: std::collections::HashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">Self</span>::default();
-
-        map.get(<span class="string">"connection_string"</span>)
-            .map(|v| builder.connection_string(v));
-        map.get(<span class="string">"database"</span>).map(|v| builder.database(v));
-        map.get(<span class="string">"collection"</span>).map(|v| builder.collection(v));
-        map.get(<span class="string">"root"</span>).map(|v| builder.root(v));
-        map.get(<span class="string">"key_field"</span>).map(|v| builder.key_field(v));
-        map.get(<span class="string">"value_field"</span>).map(|v| builder.value_field(v));
-
-        builder
+        <span class="kw">let </span>config = MongodbConfig::deserialize(ConfigDeserializer::new(map))
+            .expect(<span class="string">"config deserialize must succeed"</span>);
+        MongodbBuilder { config }
     }
 
     <span class="kw">fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Accessor&gt; {
-        <span class="kw">let </span>conn = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.connection_string.clone() {
+        <span class="kw">let </span>conn = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.config.connection_string.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v.clone(),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -457,14 +489,14 @@
                 )
             }
         };
-        <span class="kw">let </span>database = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.database.clone() {
+        <span class="kw">let </span>database = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.config.database.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v.clone(),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(ErrorKind::InvalidInput, <span class="string">"database is required"</span>)
                     .with_context(<span class="string">"service"</span>, Scheme::Mongodb))
             }
         };
-        <span class="kw">let </span>collection = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.collection.clone() {
+        <span class="kw">let </span>collection = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.config.collection.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v.clone(),
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -473,11 +505,11 @@
                 )
             }
         };
-        <span class="kw">let </span>key_field = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.key_field.clone() {
+        <span class="kw">let </span>key_field = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.config.key_field.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v.clone(),
             <span class="prelude-val">None </span>=&gt; <span class="string">"key"</span>.to_string(),
         };
-        <span class="kw">let </span>value_field = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.value_field.clone() {
+        <span class="kw">let </span>value_field = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.config.value_field.clone() {
             <span class="prelude-val">Some</span>(v) =&gt; v.clone(),
             <span class="prelude-val">None </span>=&gt; <span class="string">"value"</span>.to_string(),
         };

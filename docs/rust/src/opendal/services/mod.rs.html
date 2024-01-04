@@ -347,6 +347,8 @@
 <a href="#345" id="345">345</a>
 <a href="#346" id="346">346</a>
 <a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -642,6 +644,8 @@
 </span><span class="kw">mod </span>mongodb;
 <span class="attr">#[cfg(feature = <span class="string">"services-mongodb"</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::mongodb::Mongodb;
+<span class="attr">#[cfg(feature = <span class="string">"services-mongodb"</span>)]
+</span><span class="kw">pub use </span><span class="self">self</span>::mongodb::MongodbConfig;
 
 <span class="attr">#[cfg(feature = <span class="string">"services-dbfs"</span>)]
 </span><span class="kw">mod </span>dbfs;
