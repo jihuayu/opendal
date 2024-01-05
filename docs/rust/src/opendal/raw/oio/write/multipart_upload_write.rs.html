@@ -334,6 +334,25 @@
 <a href="#332" id="332">332</a>
 <a href="#333" id="333">333</a>
 <a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -351,12 +370,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::sync::Arc;
+</span><span class="kw">use </span>std::pin::Pin;
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::Future;
+<span class="kw">use </span>futures::FutureExt;
+<span class="kw">use </span>futures::StreamExt;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
@@ -439,43 +462,75 @@
     </span><span class="kw">pub </span>etag: String,
 }
 
+<span class="kw">struct </span>WritePartFuture(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;MultipartUploadPart&gt;&gt;);
+
+<span class="doccomment">/// # Safety
+///
+/// wasm32 is a special target that we only have one event-loop for this WritePartFuture.
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>WritePartFuture {}
+
+<span class="doccomment">/// # Safety
+///
+/// We will only take `&amp;mut Self` reference for WritePartFuture.
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>WritePartFuture {}
+
+<span class="kw">impl </span>Future <span class="kw">for </span>WritePartFuture {
+    <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;MultipartUploadPart&gt;;
+    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
+        <span class="self">self</span>.get_mut().<span class="number">0</span>.poll_unpin(cx)
+    }
+}
+
 <span class="doccomment">/// MultipartUploadWriter will implements [`Write`] based on multipart
 /// uploads.
 </span><span class="kw">pub struct </span>MultipartUploadWriter&lt;W: MultipartUploadWrite&gt; {
-    state: State&lt;W&gt;,
+    state: State,
+    w: Arc&lt;W&gt;,
 
-    cache: <span class="prelude-ty">Option</span>&lt;oio::ChunkedBytes&gt;,
     upload_id: <span class="prelude-ty">Option</span>&lt;Arc&lt;String&gt;&gt;,
     parts: Vec&lt;MultipartUploadPart&gt;,
+    cache: <span class="prelude-ty">Option</span>&lt;oio::ChunkedBytes&gt;,
+    futures: ConcurrentFutures&lt;WritePartFuture&gt;,
+    next_part_number: usize,
 }
 
-<span class="kw">enum </span>State&lt;W&gt; {
-    Idle(<span class="prelude-ty">Option</span>&lt;W&gt;),
-    Init(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;String&gt;)&gt;),
-    Write(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;MultipartUploadPart&gt;)&gt;),
-    Close(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;()&gt;)&gt;),
-    Abort(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;()&gt;)&gt;),
+<span class="kw">enum </span>State {
+    Idle,
+    Init(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;String&gt;&gt;),
+    Close(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt;),
+    Abort(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt;),
 }
 
 <span class="doccomment">/// # Safety
 ///
 /// wasm32 is a special target that we only have one event-loop for this state.
-</span><span class="kw">unsafe impl</span>&lt;S: MultipartUploadWrite&gt; Send <span class="kw">for </span>State&lt;S&gt; {}
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>State {}
 <span class="doccomment">/// # Safety
 ///
 /// We will only take `&amp;mut Self` reference for State.
-</span><span class="kw">unsafe impl</span>&lt;S: MultipartUploadWrite&gt; Sync <span class="kw">for </span>State&lt;S&gt; {}
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>State {}
 
 <span class="kw">impl</span>&lt;W: MultipartUploadWrite&gt; MultipartUploadWriter&lt;W&gt; {
     <span class="doccomment">/// Create a new MultipartUploadWriter.
-    </span><span class="kw">pub fn </span>new(inner: W) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(inner: W, concurrent: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            state: State::Idle(<span class="prelude-val">Some</span>(inner)),
+            state: State::Idle,
 
-            cache: <span class="prelude-val">None</span>,
+            w: Arc::new(inner),
             upload_id: <span class="prelude-val">None</span>,
             parts: Vec::new(),
+            cache: <span class="prelude-val">None</span>,
+            futures: ConcurrentFutures::new(<span class="number">1</span>.max(concurrent)),
+            next_part_number: <span class="number">0</span>,
         }
+    }
+
+    <span class="kw">fn </span>fill_cache(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; usize {
+        <span class="kw">let </span>size = bs.remaining();
+        <span class="kw">let </span>bs = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
+        <span class="macro">assert!</span>(<span class="self">self</span>.cache.is_none());
+        <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(bs);
+        size
     }
 }
 
@@ -486,60 +541,48 @@
     <span class="kw">fn </span>poll_write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>oio::WriteBuf) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-                State::Idle(w) =&gt; {
+                State::Idle =&gt; {
                     <span class="kw">match </span><span class="self">self</span>.upload_id.as_ref() {
                         <span class="prelude-val">Some</span>(upload_id) =&gt; {
                             <span class="kw">let </span>upload_id = upload_id.clone();
-                            <span class="kw">let </span>part_number = <span class="self">self</span>.parts.len();
-
-                            <span class="kw">let </span>bs = <span class="self">self</span>.cache.clone().expect(<span class="string">"cache must be valid"</span>).clone();
-                            <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
-                            <span class="self">self</span>.state = State::Write(Box::pin(<span class="kw">async move </span>{
-                                <span class="kw">let </span>size = bs.len();
-                                <span class="kw">let </span>part = w
-                                    .write_part(
+                            <span class="kw">if </span><span class="self">self</span>.futures.has_remaining() {
+                                <span class="kw">let </span>cache = <span class="self">self</span>.cache.take().expect(<span class="string">"pending write must exist"</span>);
+                                <span class="kw">let </span>part_number = <span class="self">self</span>.next_part_number;
+                                <span class="self">self</span>.next_part_number += <span class="number">1</span>;
+                                <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                                <span class="kw">let </span>size = cache.len();
+                                <span class="self">self</span>.futures.push(WritePartFuture(Box::pin(<span class="kw">async move </span>{
+                                    w.write_part(
                                         <span class="kw-2">&amp;</span>upload_id,
                                         part_number,
                                         size <span class="kw">as </span>u64,
-                                        AsyncBody::ChunkedBytes(bs),
+                                        AsyncBody::ChunkedBytes(cache),
                                     )
-                                    .<span class="kw">await</span>;
-
-                                (w, part)
-                            }));
+                                    .<span class="kw">await
+                                </span>})));
+                                <span class="kw">let </span>size = <span class="self">self</span>.fill_cache(bs);
+                                <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
+                            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(part) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                                <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
+                            }
                         }
                         <span class="prelude-val">None </span>=&gt; {
                             <span class="comment">// Fill cache with the first write.
                             </span><span class="kw">if </span><span class="self">self</span>.cache.is_none() {
-                                <span class="kw">let </span>size = bs.remaining();
-                                <span class="kw">let </span>cb = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
-                                <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(cb);
+                                <span class="kw">let </span>size = <span class="self">self</span>.fill_cache(bs);
                                 <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                             }
 
-                            <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
-                            <span class="self">self</span>.state = State::Init(Box::pin(<span class="kw">async move </span>{
-                                <span class="kw">let </span>upload_id = w.initiate_part().<span class="kw">await</span>;
-                                (w, upload_id)
-                            }));
+                            <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                            <span class="self">self</span>.state =
+                                State::Init(Box::pin(<span class="kw">async move </span>{ w.initiate_part().<span class="kw">await </span>}));
                         }
                     }
                 }
                 State::Init(fut) =&gt; {
-                    <span class="kw">let </span>(w, upload_id) = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="kw">let </span>upload_id = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
+                    <span class="self">self</span>.state = State::Idle;
                     <span class="self">self</span>.upload_id = <span class="prelude-val">Some</span>(Arc::new(upload_id<span class="question-mark">?</span>));
-                }
-                State::Write(fut) =&gt; {
-                    <span class="kw">let </span>(w, part) = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
-                    <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
-
-                    <span class="comment">// Replace the cache when last write succeeded
-                    </span><span class="kw">let </span>size = bs.remaining();
-                    <span class="kw">let </span>cb = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
-                    <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(cb);
-                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                 }
                 State::Close(<span class="kw">_</span>) =&gt; {
                     <span class="macro">unreachable!</span>(
@@ -558,73 +601,71 @@
     <span class="kw">fn </span>poll_close(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-                State::Idle(w) =&gt; {
-                    <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
+                State::Idle =&gt; {
                     <span class="kw">match </span><span class="self">self</span>.upload_id.clone() {
                         <span class="prelude-val">Some</span>(upload_id) =&gt; {
-                            <span class="kw">let </span>parts = <span class="self">self</span>.parts.clone();
-                            <span class="kw">match </span><span class="self">self</span>.cache.clone() {
-                                <span class="prelude-val">Some</span>(bs) =&gt; {
-                                    <span class="kw">let </span>upload_id = upload_id.clone();
-                                    <span class="self">self</span>.state = State::Write(Box::pin(<span class="kw">async move </span>{
-                                        <span class="kw">let </span>size = bs.len();
-                                        <span class="kw">let </span>part = w
-                                            .write_part(
+                            <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                            <span class="kw">if </span><span class="self">self</span>.futures.is_empty() &amp;&amp; <span class="self">self</span>.cache.is_none() {
+                                <span class="kw">let </span>upload_id = upload_id.clone();
+                                <span class="kw">let </span>parts = <span class="self">self</span>.parts.clone();
+                                <span class="self">self</span>.state = State::Close(Box::pin(<span class="kw">async move </span>{
+                                    w.complete_part(<span class="kw-2">&amp;</span>upload_id, <span class="kw-2">&amp;</span>parts).<span class="kw">await
+                                </span>}));
+                            } <span class="kw">else </span>{
+                                <span class="kw">if </span><span class="self">self</span>.futures.has_remaining() {
+                                    <span class="kw">if let </span><span class="prelude-val">Some</span>(cache) = <span class="self">self</span>.cache.take() {
+                                        <span class="kw">let </span>upload_id = upload_id.clone();
+                                        <span class="kw">let </span>part_number = <span class="self">self</span>.next_part_number;
+                                        <span class="self">self</span>.next_part_number += <span class="number">1</span>;
+                                        <span class="kw">let </span>size = cache.len();
+                                        <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                                        <span class="self">self</span>.futures.push(WritePartFuture(Box::pin(<span class="kw">async move </span>{
+                                            w.write_part(
                                                 <span class="kw-2">&amp;</span>upload_id,
-                                                parts.len(),
+                                                part_number,
                                                 size <span class="kw">as </span>u64,
-                                                AsyncBody::ChunkedBytes(bs),
+                                                AsyncBody::ChunkedBytes(cache),
                                             )
-                                            .<span class="kw">await</span>;
-                                        (w, part)
-                                    }));
+                                            .<span class="kw">await
+                                        </span>})));
+                                    }
                                 }
-                                <span class="prelude-val">None </span>=&gt; {
-                                    <span class="self">self</span>.state = State::Close(Box::pin(<span class="kw">async move </span>{
-                                        <span class="kw">let </span>res = w.complete_part(<span class="kw-2">&amp;</span>upload_id, <span class="kw-2">&amp;</span>parts).<span class="kw">await</span>;
-                                        (w, res)
-                                    }));
+                                <span class="kw">while let </span><span class="prelude-val">Some</span>(part) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                                    <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
                                 }
                             }
                         }
-                        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span><span class="self">self</span>.cache.clone() {
-                            <span class="prelude-val">Some</span>(bs) =&gt; {
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.cache {
+                            <span class="prelude-val">Some</span>(cache) =&gt; {
+                                <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                                <span class="kw">let </span>bs = cache.clone();
                                 <span class="self">self</span>.state = State::Close(Box::pin(<span class="kw">async move </span>{
                                     <span class="kw">let </span>size = bs.len();
-                                    <span class="kw">let </span>res = w
-                                        .write_once(size <span class="kw">as </span>u64, AsyncBody::ChunkedBytes(bs))
-                                        .<span class="kw">await</span>;
-                                    (w, res)
-                                }));
+                                    w.write_once(size <span class="kw">as </span>u64, AsyncBody::ChunkedBytes(bs)).<span class="kw">await
+                                </span>}));
                             }
                             <span class="prelude-val">None </span>=&gt; {
+                                <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
                                 <span class="comment">// Call write_once if there is no data in cache and no upload_id.
                                 </span><span class="self">self</span>.state = State::Close(Box::pin(<span class="kw">async move </span>{
-                                    <span class="kw">let </span>res = w.write_once(<span class="number">0</span>, AsyncBody::Empty).<span class="kw">await</span>;
-                                    (w, res)
-                                }));
+                                    w.write_once(<span class="number">0</span>, AsyncBody::Empty).<span class="kw">await
+                                </span>}));
                             }
                         },
                     }
                 }
                 State::Close(fut) =&gt; {
-                    <span class="kw">let </span>(w, res) = <span class="macro">futures::ready!</span>(fut.as_mut().poll(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="kw">let </span>res = <span class="macro">futures::ready!</span>(fut.as_mut().poll(cx));
+                    <span class="self">self</span>.state = State::Idle;
                     <span class="comment">// We should check res first before clean up cache.
                     </span>res<span class="question-mark">?</span>;
-
                     <span class="self">self</span>.cache = <span class="prelude-val">None</span>;
+
                     <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(()));
                 }
                 State::Init(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(
                     <span class="string">"MultipartUploadWriter must not go into State::Init during poll_close"
                 </span>),
-                State::Write(fut) =&gt; {
-                    <span class="kw">let </span>(w, part) = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
-                    <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
-                    <span class="self">self</span>.cache = <span class="prelude-val">None</span>;
-                }
                 State::Abort(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(
                     <span class="string">"MultipartUploadWriter must not go into State::Abort during poll_close"
                 </span>),
@@ -635,31 +676,28 @@
     <span class="kw">fn </span>poll_abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-                State::Idle(w) =&gt; {
-                    <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
+                State::Idle =&gt; {
+                    <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
                     <span class="kw">match </span><span class="self">self</span>.upload_id.clone() {
                         <span class="prelude-val">Some</span>(upload_id) =&gt; {
-                            <span class="self">self</span>.state = State::Abort(Box::pin(<span class="kw">async move </span>{
-                                <span class="kw">let </span>res = w.abort_part(<span class="kw-2">&amp;</span>upload_id).<span class="kw">await</span>;
-                                (w, res)
-                            }));
+                            <span class="self">self</span>.futures.clear();
+                            <span class="self">self</span>.state =
+                                State::Abort(Box::pin(
+                                    <span class="kw">async move </span>{ w.abort_part(<span class="kw-2">&amp;</span>upload_id).<span class="kw">await </span>},
+                                ));
                         }
                         <span class="prelude-val">None </span>=&gt; {
-                            <span class="self">self</span>.cache = <span class="prelude-val">None</span>;
                             <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(()));
                         }
                     }
                 }
                 State::Abort(fut) =&gt; {
-                    <span class="kw">let </span>(w, res) = <span class="macro">futures::ready!</span>(fut.as_mut().poll(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="kw">let </span>res = <span class="macro">futures::ready!</span>(fut.as_mut().poll(cx));
+                    <span class="self">self</span>.state = State::Idle;
                     <span class="kw">return </span>Poll::Ready(res);
                 }
                 State::Init(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(
                     <span class="string">"MultipartUploadWriter must not go into State::Init during poll_abort"
-                </span>),
-                State::Write(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(
-                    <span class="string">"MultipartUploadWriter must not go into State::Write during poll_abort"
                 </span>),
                 State::Close(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(
                     <span class="string">"MultipartUploadWriter must not go into State::Close during poll_abort"

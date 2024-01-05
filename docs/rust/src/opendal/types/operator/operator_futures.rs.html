@@ -695,6 +695,18 @@
 <a href="#693" id="693">693</a>
 <a href="#694" id="694">694</a>
 <a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1175,6 +1187,12 @@
             </span>.map_args(|(args, bs)| (args.with_cache_control(v), bs));
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Set the maximum concurrent write task amount.
+    </span><span class="kw">pub fn </span>concurrent(<span class="kw-2">mut </span><span class="self">self</span>, v: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|(args, bs)| (args.with_buffer(v), bs));
+        <span class="self">self
+    </span>}
 }
 
 <span class="kw">impl </span>Future <span class="kw">for </span>FutureWrite {
@@ -1238,6 +1256,12 @@
     <span class="doccomment">/// Set the content type of option
     </span><span class="kw">pub fn </span>cache_control(<span class="kw-2">mut </span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_cache_control(v));
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set the maximum concurrent write task amount.
+    </span><span class="kw">pub fn </span>concurrent(<span class="kw-2">mut </span><span class="self">self</span>, v: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.<span class="number">0 </span>= <span class="self">self</span>.<span class="number">0</span>.map_args(|args| args.with_concurrent(v));
         <span class="self">self
     </span>}
 }

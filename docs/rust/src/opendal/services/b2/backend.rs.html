@@ -540,6 +540,7 @@
 <a href="#538" id="538">538</a>
 <a href="#539" id="539">539</a>
 <a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -918,9 +919,10 @@
     }
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
+        <span class="kw">let </span>concurrent = args.concurrent();
         <span class="kw">let </span>writer = B2Writer::new(<span class="self">self</span>.core.clone(), path, args);
 
-        <span class="kw">let </span>w = oio::MultipartUploadWriter::new(writer);
+        <span class="kw">let </span>w = oio::MultipartUploadWriter::new(writer, concurrent);
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))
     }

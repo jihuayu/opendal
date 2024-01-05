@@ -763,7 +763,7 @@
         <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
             ObsWriters::Two(oio::AppendObjectWriter::new(writer))
         } <span class="kw">else </span>{
-            ObsWriters::One(oio::MultipartUploadWriter::new(writer))
+            ObsWriters::One(oio::MultipartUploadWriter::new(writer, args.concurrent()))
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))

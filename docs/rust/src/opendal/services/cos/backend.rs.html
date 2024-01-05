@@ -743,7 +743,7 @@
         <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
             CosWriters::Two(oio::AppendObjectWriter::new(writer))
         } <span class="kw">else </span>{
-            CosWriters::One(oio::MultipartUploadWriter::new(writer))
+            CosWriters::One(oio::MultipartUploadWriter::new(writer, args.concurrent()))
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))
