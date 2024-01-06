@@ -297,6 +297,16 @@
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -314,12 +324,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-</span><span class="kw">use </span>std::task::ready;
+</span><span class="kw">use </span>std::pin::Pin;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::task::ready;
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::Future;
 <span class="kw">use </span>futures::FutureExt;
+<span class="kw">use </span>futures::StreamExt;
 
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteBuf;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -363,7 +377,7 @@
     </span><span class="kw">async fn </span>write_range(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         location: <span class="kw-2">&amp;</span>str,
-        written: u64,
+        offset: u64,
         size: u64,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
@@ -372,7 +386,7 @@
     </span><span class="kw">async fn </span>complete_range(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         location: <span class="kw-2">&amp;</span>str,
-        written: u64,
+        offset: u64,
         size: u64,
         body: AsyncBody,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
@@ -381,43 +395,73 @@
     </span><span class="kw">async fn </span>abort_range(<span class="kw-2">&amp;</span><span class="self">self</span>, location: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
+<span class="kw">struct </span>WriteRangeFuture(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;u64&gt;&gt;);
+
+<span class="doccomment">/// # Safety
+///
+/// wasm32 is a special target that we only have one event-loop for this WriteRangeFuture.
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>WriteRangeFuture {}
+
+<span class="doccomment">/// # Safety
+///
+/// We will only take `&amp;mut Self` reference for WriteRangeFuture.
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>WriteRangeFuture {}
+
+<span class="kw">impl </span>Future <span class="kw">for </span>WriteRangeFuture {
+    <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;u64&gt;;
+    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
+        <span class="self">self</span>.get_mut().<span class="number">0</span>.poll_unpin(cx)
+    }
+}
+
 <span class="doccomment">/// RangeWriter will implements [`Write`] based on range write.
 </span><span class="kw">pub struct </span>RangeWriter&lt;W: RangeWrite&gt; {
     location: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    written: u64,
+    next_offset: u64,
     buffer: <span class="prelude-ty">Option</span>&lt;oio::ChunkedBytes&gt;,
+    futures: ConcurrentFutures&lt;WriteRangeFuture&gt;,
 
-    state: State&lt;W&gt;,
+    w: Arc&lt;W&gt;,
+    state: State,
 }
 
-<span class="kw">enum </span>State&lt;W&gt; {
-    Idle(<span class="prelude-ty">Option</span>&lt;W&gt;),
-    Init(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;String&gt;)&gt;),
-    Write(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;u64&gt;)&gt;),
-    Complete(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;()&gt;)&gt;),
-    Abort(BoxedFuture&lt;(W, <span class="prelude-ty">Result</span>&lt;()&gt;)&gt;),
+<span class="kw">enum </span>State {
+    Idle,
+    Init(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;String&gt;&gt;),
+    Complete(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt;),
+    Abort(BoxedFuture&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt;),
 }
 
 <span class="doccomment">/// # Safety
 ///
 /// wasm32 is a special target that we only have one event-loop for this state.
-</span><span class="kw">unsafe impl</span>&lt;S: RangeWrite&gt; Send <span class="kw">for </span>State&lt;S&gt; {}
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>State {}
 
 <span class="doccomment">/// # Safety
 ///
 /// We will only take `&amp;mut Self` reference for State.
-</span><span class="kw">unsafe impl</span>&lt;W: RangeWrite&gt; Sync <span class="kw">for </span>State&lt;W&gt; {}
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>State {}
 
 <span class="kw">impl</span>&lt;W: RangeWrite&gt; RangeWriter&lt;W&gt; {
     <span class="doccomment">/// Create a new MultipartUploadWriter.
-    </span><span class="kw">pub fn </span>new(inner: W) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(inner: W, concurrent: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            state: State::Idle(<span class="prelude-val">Some</span>(inner)),
+            state: State::Idle,
+            w: Arc::new(inner),
 
+            futures: ConcurrentFutures::new(<span class="number">1</span>.max(concurrent)),
             buffer: <span class="prelude-val">None</span>,
             location: <span class="prelude-val">None</span>,
-            written: <span class="number">0</span>,
+            next_offset: <span class="number">0</span>,
         }
+    }
+
+    <span class="kw">fn </span>fill_cache(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WriteBuf) -&gt; usize {
+        <span class="kw">let </span>size = bs.remaining();
+        <span class="kw">let </span>bs = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
+        <span class="macro">assert!</span>(<span class="self">self</span>.buffer.is_none());
+        <span class="self">self</span>.buffer = <span class="prelude-val">Some</span>(bs);
+        size
     }
 }
 
@@ -425,60 +469,48 @@
     <span class="kw">fn </span>poll_write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WriteBuf) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-                State::Idle(w) =&gt; {
+                State::Idle =&gt; {
                     <span class="kw">match </span><span class="self">self</span>.location.clone() {
                         <span class="prelude-val">Some</span>(location) =&gt; {
-                            <span class="kw">let </span>written = <span class="self">self</span>.written;
-
-                            <span class="kw">let </span>buffer = <span class="self">self</span>.buffer.clone().expect(<span class="string">"cache must be valid"</span>).clone();
-                            <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
-                            <span class="self">self</span>.state = State::Write(Box::pin(<span class="kw">async move </span>{
-                                <span class="kw">let </span>size = buffer.len() <span class="kw">as </span>u64;
-                                <span class="kw">let </span>res = w
-                                    .write_range(
+                            <span class="kw">if </span><span class="self">self</span>.futures.has_remaining() {
+                                <span class="kw">let </span>cache = <span class="self">self</span>.buffer.take().expect(<span class="string">"cache must be valid"</span>);
+                                <span class="kw">let </span>size = cache.len() <span class="kw">as </span>u64;
+                                <span class="kw">let </span>offset = <span class="self">self</span>.next_offset;
+                                <span class="self">self</span>.next_offset += size;
+                                <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                                <span class="self">self</span>.futures.push(WriteRangeFuture(Box::pin(<span class="kw">async move </span>{
+                                    w.write_range(
                                         <span class="kw-2">&amp;</span>location,
-                                        written,
+                                        offset,
                                         size,
-                                        AsyncBody::ChunkedBytes(buffer),
+                                        AsyncBody::ChunkedBytes(cache),
                                     )
-                                    .<span class="kw">await</span>;
-
-                                (w, res.map(|<span class="kw">_</span>| size))
-                            }));
+                                    .<span class="kw">await
+                                    </span>.map(|<span class="kw">_</span>| size)
+                                })));
+                                <span class="kw">let </span>size = <span class="self">self</span>.fill_cache(bs);
+                                <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
+                            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(size) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                                <span class="self">self</span>.next_offset += size<span class="question-mark">?</span>;
+                            }
                         }
                         <span class="prelude-val">None </span>=&gt; {
                             <span class="comment">// Fill cache with the first write.
                             </span><span class="kw">if </span><span class="self">self</span>.buffer.is_none() {
-                                <span class="kw">let </span>size = bs.remaining();
-                                <span class="kw">let </span>cb = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
-                                <span class="self">self</span>.buffer = <span class="prelude-val">Some</span>(cb);
+                                <span class="kw">let </span>size = <span class="self">self</span>.fill_cache(bs);
                                 <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                             }
 
-                            <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
-                            <span class="self">self</span>.state = State::Init(Box::pin(<span class="kw">async move </span>{
-                                <span class="kw">let </span>location = w.initiate_range().<span class="kw">await</span>;
-                                (w, location)
-                            }));
+                            <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                            <span class="self">self</span>.state =
+                                State::Init(Box::pin(<span class="kw">async move </span>{ w.initiate_range().<span class="kw">await </span>}));
                         }
                     }
                 }
                 State::Init(fut) =&gt; {
-                    <span class="kw">let </span>(w, res) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="kw">let </span>res = <span class="macro">ready!</span>(fut.poll_unpin(cx));
+                    <span class="self">self</span>.state = State::Idle;
                     <span class="self">self</span>.location = <span class="prelude-val">Some</span>(res<span class="question-mark">?</span>);
-                }
-                State::Write(fut) =&gt; {
-                    <span class="kw">let </span>(w, size) = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
-                    <span class="comment">// Update the written.
-                    </span><span class="self">self</span>.written += size<span class="question-mark">?</span>;
-
-                    <span class="comment">// Replace the cache when last write succeeded
-                    </span><span class="kw">let </span>size = bs.remaining();
-                    <span class="kw">let </span>cb = oio::ChunkedBytes::from_vec(bs.vectored_bytes(size));
-                    <span class="self">self</span>.buffer = <span class="prelude-val">Some</span>(cb);
-                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                 }
                 State::Complete(<span class="kw">_</span>) =&gt; {
                     <span class="macro">unreachable!</span>(<span class="string">"RangeWriter must not go into State::Complete during poll_write"</span>)
@@ -493,24 +525,27 @@
     <span class="kw">fn </span>poll_close(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-                State::Idle(w) =&gt; {
-                    <span class="kw">let </span>w = w.take().expect(<span class="string">"writer must be valid"</span>);
+                State::Idle =&gt; {
+                    <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
                     <span class="kw">match </span><span class="self">self</span>.location.clone() {
                         <span class="prelude-val">Some</span>(location) =&gt; {
-                            <span class="kw">let </span>written = <span class="self">self</span>.written;
-                            <span class="kw">match </span><span class="self">self</span>.buffer.clone() {
+                            <span class="kw">if </span>!<span class="self">self</span>.futures.is_empty() {
+                                <span class="kw">while let </span><span class="prelude-val">Some</span>(size) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                                    <span class="self">self</span>.next_offset += size<span class="question-mark">?</span>;
+                                }
+                            }
+                            <span class="kw">match </span><span class="self">self</span>.buffer.take() {
                                 <span class="prelude-val">Some</span>(bs) =&gt; {
+                                    <span class="kw">let </span>offset = <span class="self">self</span>.next_offset;
                                     <span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
-                                        <span class="kw">let </span>res = w
-                                            .complete_range(
-                                                <span class="kw-2">&amp;</span>location,
-                                                written,
-                                                bs.len() <span class="kw">as </span>u64,
-                                                AsyncBody::ChunkedBytes(bs),
-                                            )
-                                            .<span class="kw">await</span>;
-                                        (w, res)
-                                    }));
+                                        w.complete_range(
+                                            <span class="kw-2">&amp;</span>location,
+                                            offset,
+                                            bs.len() <span class="kw">as </span>u64,
+                                            AsyncBody::ChunkedBytes(bs),
+                                        )
+                                        .<span class="kw">await
+                                    </span>}));
                                 }
                                 <span class="prelude-val">None </span>=&gt; {
                                     <span class="macro">unreachable!</span>(<span class="string">"It's must be bug that RangeWrite is in State::Idle with no cache but has location"</span>)
@@ -521,18 +556,14 @@
                             <span class="prelude-val">Some</span>(bs) =&gt; {
                                 <span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
                                     <span class="kw">let </span>size = bs.len();
-                                    <span class="kw">let </span>res = w
-                                        .write_once(size <span class="kw">as </span>u64, AsyncBody::ChunkedBytes(bs))
-                                        .<span class="kw">await</span>;
-                                    (w, res)
-                                }));
+                                    w.write_once(size <span class="kw">as </span>u64, AsyncBody::ChunkedBytes(bs)).<span class="kw">await
+                                </span>}));
                             }
                             <span class="prelude-val">None </span>=&gt; {
                                 <span class="comment">// Call write_once if there is no data in buffer and no location.
                                 </span><span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
-                                    <span class="kw">let </span>res = w.write_once(<span class="number">0</span>, AsyncBody::Empty).<span class="kw">await</span>;
-                                    (w, res)
-                                }));
+                                    w.write_once(<span class="number">0</span>, AsyncBody::Empty).<span class="kw">await
+                                </span>}));
                             }
                         },
                     }
@@ -540,12 +571,9 @@
                 State::Init(<span class="kw">_</span>) =&gt; {
                     <span class="macro">unreachable!</span>(<span class="string">"RangeWriter must not go into State::Init during poll_close"</span>)
                 }
-                State::Write(<span class="kw">_</span>) =&gt; {
-                    <span class="macro">unreachable!</span>(<span class="string">"RangeWriter must not go into State::Write during poll_close"</span>)
-                }
                 State::Complete(fut) =&gt; {
-                    <span class="kw">let </span>(w, res) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="kw">let </span>res = <span class="macro">ready!</span>(fut.poll_unpin(cx));
+                    <span class="self">self</span>.state = State::Idle;
                     <span class="kw">return </span>Poll::Ready(res);
                 }
                 State::Abort(<span class="kw">_</span>) =&gt; {
@@ -558,32 +586,24 @@
     <span class="kw">fn </span>poll_abort(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.state {
-                State::Idle(w) =&gt; {
-                    <span class="kw">let </span>w = w.take().unwrap();
-                    <span class="kw">match </span><span class="self">self</span>.location.clone() {
-                        <span class="prelude-val">Some</span>(location) =&gt; {
-                            <span class="kw">let </span>fut = <span class="kw">async move </span>{
-                                <span class="kw">let </span>res = w.abort_range(<span class="kw-2">&amp;</span>location).<span class="kw">await</span>;
-
-                                (w, res)
-                            };
-                            <span class="self">self</span>.state = State::Abort(Box::pin(fut));
-                        }
-                        <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(())),
+                State::Idle =&gt; <span class="kw">match </span><span class="self">self</span>.location.clone() {
+                    <span class="prelude-val">Some</span>(location) =&gt; {
+                        <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                        <span class="self">self</span>.futures.clear();
+                        <span class="self">self</span>.state =
+                            State::Abort(Box::pin(<span class="kw">async move </span>{ w.abort_range(<span class="kw-2">&amp;</span>location).<span class="kw">await </span>}));
                     }
-                }
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(())),
+                },
                 State::Init(<span class="kw">_</span>) =&gt; {
                     <span class="macro">unreachable!</span>(<span class="string">"RangeWriter must not go into State::Init during poll_close"</span>)
-                }
-                State::Write(<span class="kw">_</span>) =&gt; {
-                    <span class="macro">unreachable!</span>(<span class="string">"RangeWriter must not go into State::Write during poll_close"</span>)
                 }
                 State::Complete(<span class="kw">_</span>) =&gt; {
                     <span class="macro">unreachable!</span>(<span class="string">"RangeWriter must not go into State::Complete during poll_close"</span>)
                 }
                 State::Abort(fut) =&gt; {
-                    <span class="kw">let </span>(w, res) = <span class="macro">ready!</span>(fut.poll_unpin(cx));
-                    <span class="self">self</span>.state = State::Idle(<span class="prelude-val">Some</span>(w));
+                    <span class="kw">let </span>res = <span class="macro">ready!</span>(fut.poll_unpin(cx));
+                    <span class="self">self</span>.state = State::Idle;
                     <span class="comment">// We should check res first before clean up cache.
                     </span>res<span class="question-mark">?</span>;
 
