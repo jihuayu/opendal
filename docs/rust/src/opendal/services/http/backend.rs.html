@@ -642,9 +642,9 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// set password for http backend
+    <span class="doccomment">/// set username for http backend
     ///
-    /// default: no password
+    /// default: no username
     </span><span class="kw">pub fn </span>username(<span class="kw-2">&amp;mut </span><span class="self">self</span>, username: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">if </span>!username.is_empty() {
             <span class="self">self</span>.config.username = <span class="prelude-val">Some</span>(username.to_owned());
