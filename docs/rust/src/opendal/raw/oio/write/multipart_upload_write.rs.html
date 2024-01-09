@@ -353,6 +353,14 @@
 <a href="#351" id="351">351</a>
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -488,6 +496,7 @@
     w: Arc&lt;W&gt;,
 
     upload_id: <span class="prelude-ty">Option</span>&lt;Arc&lt;String&gt;&gt;,
+    concurrent: usize,
     parts: Vec&lt;MultipartUploadPart&gt;,
     cache: <span class="prelude-ty">Option</span>&lt;oio::ChunkedBytes&gt;,
     futures: ConcurrentFutures&lt;WritePartFuture&gt;,
@@ -518,6 +527,7 @@
 
             w: Arc::new(inner),
             upload_id: <span class="prelude-val">None</span>,
+            concurrent,
             parts: Vec::new(),
             cache: <span class="prelude-val">None</span>,
             futures: ConcurrentFutures::new(<span class="number">1</span>.max(concurrent)),
@@ -630,7 +640,13 @@
                                         </span>})));
                                     }
                                 }
-                                <span class="kw">while let </span><span class="prelude-val">Some</span>(part) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                                <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>part) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx))
+                                {
+                                    <span class="comment">// Don't retry close if concurrent write failed.
+                                    // TODO: Remove this after &lt;https://github.com/apache/incubator-opendal/issues/3956&gt; addressed.
+                                    </span><span class="kw">if </span><span class="self">self</span>.concurrent &gt; <span class="number">1 </span>{
+                                        part = part.map_err(|err| err.set_permanent());
+                                    }
                                     <span class="self">self</span>.parts.push(part<span class="question-mark">?</span>);
                                 }
                             }

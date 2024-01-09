@@ -306,6 +306,15 @@
 <a href="#304" id="304">304</a>
 <a href="#305" id="305">305</a>
 <a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -419,6 +428,7 @@
     next_offset: u64,
     buffer: <span class="prelude-ty">Option</span>&lt;oio::ChunkedBytes&gt;,
     futures: ConcurrentFutures&lt;WriteRangeFuture&gt;,
+    concurrent: usize,
 
     w: Arc&lt;W&gt;,
     state: State,
@@ -452,6 +462,7 @@
             buffer: <span class="prelude-val">None</span>,
             location: <span class="prelude-val">None</span>,
             next_offset: <span class="number">0</span>,
+            concurrent,
         }
     }
 
@@ -528,7 +539,14 @@
                     <span class="kw">match </span><span class="self">self</span>.location.clone() {
                         <span class="prelude-val">Some</span>(location) =&gt; {
                             <span class="kw">if </span>!<span class="self">self</span>.futures.is_empty() {
-                                <span class="kw">while let </span><span class="prelude-val">Some</span>(result) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                                <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>result) =
+                                    <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx))
+                                {
+                                    <span class="comment">// Don't retry close if concurrent write failed.
+                                    // TODO: Remove this after &lt;https://github.com/apache/incubator-opendal/issues/3956&gt; addressed.
+                                    </span><span class="kw">if </span><span class="self">self</span>.concurrent &gt; <span class="number">1 </span>{
+                                        result = result.map_err(|err| err.set_permanent());
+                                    }
                                     result<span class="question-mark">?</span>;
                                 }
                             }
