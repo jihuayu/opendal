@@ -275,6 +275,7 @@
 <a href="#273" id="273">273</a>
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -447,8 +448,8 @@
                         </span>})));
                         <span class="kw">let </span>size = <span class="self">self</span>.fill_cache(bs);
                         <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
-                    } <span class="kw">else </span>{
-                        <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx));
+                    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(res) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                        res<span class="question-mark">?</span>;
                     }
                 }
                 State::Close(<span class="kw">_</span>) =&gt; {
@@ -486,8 +487,7 @@
                                 </span>}));
                             }
                         }
-                    }
-                    <span class="kw">if </span><span class="self">self</span>.futures.is_empty() &amp;&amp; <span class="self">self</span>.cache.is_none() {
+                    } <span class="kw">else if </span><span class="self">self</span>.futures.is_empty() &amp;&amp; <span class="self">self</span>.cache.is_none() {
                         <span class="self">self</span>.state =
                             State::Close(Box::pin(
                                 <span class="kw">async move </span>{ w.complete_block(block_ids).<span class="kw">await </span>},
@@ -509,7 +509,9 @@
                                 </span>})));
                             }
                         }
-                        <span class="kw">while </span><span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)).is_some() {}
+                        <span class="kw">while let </span><span class="prelude-val">Some</span>(res) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
+                            res<span class="question-mark">?</span>;
+                        }
                     }
                 }
                 State::Close(fut) =&gt; {
