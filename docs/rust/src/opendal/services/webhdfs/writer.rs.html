@@ -210,6 +210,7 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -229,6 +230,7 @@
 
 </span><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>http::StatusCode;
+<span class="kw">use </span>uuid::Uuid;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::WebhdfsBackend;
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
@@ -271,7 +273,7 @@
         }
     }
 
-    <span class="kw">async fn </span>write_block(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, block_id: String, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>write_block(<span class="kw-2">&amp;</span><span class="self">self</span>, block_id: Uuid, size: u64, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>atomic_write_dir) = <span class="self">self</span>.backend.atomic_write_dir <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::Unsupported,
@@ -300,7 +302,7 @@
         }
     }
 
-    <span class="kw">async fn </span>complete_block(<span class="kw-2">&amp;</span><span class="self">self</span>, block_ids: Vec&lt;String&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>complete_block(<span class="kw-2">&amp;</span><span class="self">self</span>, block_ids: Vec&lt;Uuid&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>atomic_write_dir) = <span class="self">self</span>.backend.atomic_write_dir <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 ErrorKind::Unsupported,
@@ -350,9 +352,9 @@
         }
     }
 
-    <span class="kw">async fn </span>abort_block(<span class="kw-2">&amp;</span><span class="self">self</span>, block_ids: Vec&lt;String&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>abort_block(<span class="kw-2">&amp;</span><span class="self">self</span>, block_ids: Vec&lt;Uuid&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">for </span>block_id <span class="kw">in </span>block_ids {
-            <span class="kw">let </span>resp = <span class="self">self</span>.backend.webhdfs_delete(<span class="kw-2">&amp;</span>block_id).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>resp = <span class="self">self</span>.backend.webhdfs_delete(<span class="kw-2">&amp;</span>block_id.to_string()).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">match </span>resp.status() {
                 StatusCode::OK =&gt; {
                     resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;

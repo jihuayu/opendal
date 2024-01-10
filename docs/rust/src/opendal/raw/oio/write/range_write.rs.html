@@ -476,8 +476,6 @@
 <a href="#474" id="474">474</a>
 <a href="#475" id="475">475</a>
 <a href="#476" id="476">476</a>
-<a href="#477" id="477">477</a>
-<a href="#478" id="478">478</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -771,20 +769,18 @@
                                 }
                             }
                         }
-                        <span class="prelude-val">None </span>=&gt; <span class="kw">match </span><span class="self">self</span>.buffer.clone() {
-                            <span class="prelude-val">Some</span>(bs) =&gt; {
-                                <span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
-                                    <span class="kw">let </span>size = bs.len();
-                                    w.write_once(size <span class="kw">as </span>u64, AsyncBody::ChunkedBytes(bs)).<span class="kw">await
-                                </span>}));
-                            }
-                            <span class="prelude-val">None </span>=&gt; {
-                                <span class="comment">// Call write_once if there is no data in buffer and no location.
-                                </span><span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
-                                    w.write_once(<span class="number">0</span>, AsyncBody::Empty).<span class="kw">await
-                                </span>}));
-                            }
-                        },
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
+                            <span class="kw">let </span>(size, body) = <span class="kw">match </span><span class="self">self</span>.buffer.clone() {
+                                <span class="prelude-val">Some</span>(cache) =&gt; (cache.len(), AsyncBody::ChunkedBytes(cache)),
+                                <span class="prelude-val">None </span>=&gt; (<span class="number">0</span>, AsyncBody::Empty),
+                            };
+                            <span class="comment">// Call write_once if there is no data in buffer and no location.
+
+                            </span><span class="self">self</span>.state = State::Complete(Box::pin(<span class="kw">async move </span>{
+                                w.write_once(size <span class="kw">as </span>u64, body).<span class="kw">await
+                            </span>}));
+                        }
                     }
                 }
                 State::Init(<span class="kw">_</span>) =&gt; {
