@@ -2410,7 +2410,7 @@
         <span class="kw">let </span>concurrent = args.concurrent();
         <span class="kw">let </span>writer = S3Writer::new(<span class="self">self</span>.core.clone(), path, args);
 
-        <span class="kw">let </span>w = oio::MultipartUploadWriter::new(writer, concurrent);
+        <span class="kw">let </span>w = oio::MultipartWriter::new(writer, concurrent);
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))
     }

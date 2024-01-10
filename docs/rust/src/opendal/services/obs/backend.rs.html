@@ -761,9 +761,9 @@
         <span class="kw">let </span>writer = ObsWriter::new(<span class="self">self</span>.core.clone(), path, args.clone());
 
         <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
-            ObsWriters::Two(oio::AppendObjectWriter::new(writer))
+            ObsWriters::Two(oio::AppendWriter::new(writer))
         } <span class="kw">else </span>{
-            ObsWriters::One(oio::MultipartUploadWriter::new(writer, args.concurrent()))
+            ObsWriters::One(oio::MultipartWriter::new(writer, args.concurrent()))
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))

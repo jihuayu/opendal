@@ -1117,9 +1117,9 @@
         <span class="kw">let </span>writer = OssWriter::new(<span class="self">self</span>.core.clone(), path, args.clone());
 
         <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
-            OssWriters::Two(oio::AppendObjectWriter::new(writer))
+            OssWriters::Two(oio::AppendWriter::new(writer))
         } <span class="kw">else </span>{
-            OssWriters::One(oio::MultipartUploadWriter::new(writer, args.concurrent()))
+            OssWriters::One(oio::MultipartWriter::new(writer, args.concurrent()))
         };
 
         <span class="prelude-val">Ok</span>((RpWrite::default(), w))

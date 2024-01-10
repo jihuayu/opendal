@@ -210,11 +210,6 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -242,8 +237,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-<span class="kw">pub type </span>CosWriters =
-    TwoWays&lt;oio::MultipartUploadWriter&lt;CosWriter&gt;, oio::AppendObjectWriter&lt;CosWriter&gt;&gt;;
+<span class="kw">pub type </span>CosWriters = TwoWays&lt;oio::MultipartWriter&lt;CosWriter&gt;, oio::AppendWriter&lt;CosWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>CosWriter {
     core: Arc&lt;CosCore&gt;,
@@ -263,7 +257,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::MultipartUploadWrite <span class="kw">for </span>CosWriter {
+</span><span class="kw">impl </span>oio::MultipartWrite <span class="kw">for </span>CosWriter {
     <span class="kw">async fn </span>write_once(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, body: AsyncBody) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>req = <span class="self">self
             </span>.core
@@ -312,7 +306,7 @@
         part_number: usize,
         size: u64,
         body: AsyncBody,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;oio::MultipartUploadPart&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;oio::MultipartPart&gt; {
         <span class="comment">// COS requires part number must between [1..=10000]
         </span><span class="kw">let </span>part_number = part_number + <span class="number">1</span>;
 
@@ -336,17 +330,13 @@
 
                 resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
 
-                <span class="prelude-val">Ok</span>(oio::MultipartUploadPart { part_number, etag })
+                <span class="prelude-val">Ok</span>(oio::MultipartPart { part_number, etag })
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
         }
     }
 
-    <span class="kw">async fn </span>complete_part(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        upload_id: <span class="kw-2">&amp;</span>str,
-        parts: <span class="kw-2">&amp;</span>[oio::MultipartUploadPart],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>complete_part(<span class="kw-2">&amp;</span><span class="self">self</span>, upload_id: <span class="kw-2">&amp;</span>str, parts: <span class="kw-2">&amp;</span>[oio::MultipartPart]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>parts = parts
             .iter()
             .map(|p| CompleteMultipartUploadRequestPart {
@@ -390,7 +380,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::AppendObjectWrite <span class="kw">for </span>CosWriter {
+</span><span class="kw">impl </span>oio::AppendWrite <span class="kw">for </span>CosWriter {
     <span class="kw">async fn </span>offset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core

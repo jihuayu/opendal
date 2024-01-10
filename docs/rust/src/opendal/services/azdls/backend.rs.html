@@ -851,7 +851,7 @@
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, args: OpWrite) -&gt; <span class="prelude-ty">Result</span>&lt;(RpWrite, <span class="self">Self</span>::Writer)&gt; {
         <span class="kw">let </span>w = AzdlsWriter::new(<span class="self">self</span>.core.clone(), args.clone(), path.to_string());
         <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
-            AzdlsWriters::Two(oio::AppendObjectWriter::new(w))
+            AzdlsWriters::Two(oio::AppendWriter::new(w))
         } <span class="kw">else </span>{
             AzdlsWriters::One(oio::OneShotWriter::new(w))
         };

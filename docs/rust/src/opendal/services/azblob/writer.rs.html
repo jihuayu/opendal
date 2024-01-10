@@ -139,7 +139,6 @@
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -169,8 +168,7 @@
 
 <span class="kw">const </span>X_MS_BLOB_TYPE: <span class="kw-2">&amp;</span>str = <span class="string">"x-ms-blob-type"</span>;
 
-<span class="kw">pub type </span>AzblobWriters =
-    TwoWays&lt;oio::OneShotWriter&lt;AzblobWriter&gt;, oio::AppendObjectWriter&lt;AzblobWriter&gt;&gt;;
+<span class="kw">pub type </span>AzblobWriters = TwoWays&lt;oio::OneShotWriter&lt;AzblobWriter&gt;, oio::AppendWriter&lt;AzblobWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>AzblobWriter {
     core: Arc&lt;AzblobCore&gt;,
@@ -215,7 +213,7 @@
 
 <span class="attr">#[cfg_attr(not(target_arch = <span class="string">"wasm32"</span>), async_trait)]
 #[cfg_attr(target_arch = <span class="string">"wasm32"</span>, async_trait(<span class="question-mark">?</span>Send))]
-</span><span class="kw">impl </span>oio::AppendObjectWrite <span class="kw">for </span>AzblobWriter {
+</span><span class="kw">impl </span>oio::AppendWrite <span class="kw">for </span>AzblobWriter {
     <span class="kw">async fn </span>offset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="kw">let </span>resp = <span class="self">self
             </span>.core

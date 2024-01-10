@@ -165,10 +165,6 @@
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -194,7 +190,6 @@
 
 <span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>bytes::BytesMut;
-<span class="kw">use </span>pin_project::pin_project;
 
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -276,9 +271,7 @@
     }
 }
 
-<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-</span><span class="attr">#[pin_project(!Unpin)]
-</span><span class="kw">pub struct </span>NextFuture&lt;<span class="lifetime">'a</span>, T: Stream + Unpin + <span class="question-mark">?</span>Sized&gt; {
+<span class="kw">pub struct </span>NextFuture&lt;<span class="lifetime">'a</span>, T: Stream + Unpin + <span class="question-mark">?</span>Sized&gt; {
     inner: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>T,
 }
 
@@ -288,9 +281,8 @@
 {
     <span class="kw">type </span>Output = <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Bytes&gt;&gt;;
 
-    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Bytes&gt;&gt;&gt; {
-        <span class="kw">let </span>this = <span class="self">self</span>.project();
-        Pin::new(this.inner).poll_next(cx)
+    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Bytes&gt;&gt;&gt; {
+        <span class="self">self</span>.inner.poll_next(cx)
     }
 }
 

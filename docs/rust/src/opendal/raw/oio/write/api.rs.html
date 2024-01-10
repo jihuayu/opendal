@@ -239,14 +239,6 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -271,8 +263,6 @@
 <span class="kw">use </span>std::task::Context;
 <span class="kw">use </span>std::task::Poll;
 
-<span class="kw">use </span>pin_project::pin_project;
-
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
@@ -282,10 +272,11 @@
 </span><span class="kw">pub enum </span>WriteOperation {
     <span class="doccomment">/// Operation for [`Write::write`]
     </span>Write,
-    <span class="doccomment">/// Operation for [`Write::abort`]
-    </span>Abort,
     <span class="doccomment">/// Operation for [`Write::close`]
     </span>Close,
+    <span class="doccomment">/// Operation for [`Write::abort`]
+    </span>Abort,
+
     <span class="doccomment">/// Operation for [`BlockingWrite::write`]
     </span>BlockingWrite,
     <span class="doccomment">/// Operation for [`BlockingWrite::close`]
@@ -311,8 +302,9 @@
 
         <span class="kw">match </span>v {
             Write =&gt; <span class="string">"Writer::write"</span>,
-            Abort =&gt; <span class="string">"Writer::abort"</span>,
             Close =&gt; <span class="string">"Writer::close"</span>,
+            Abort =&gt; <span class="string">"Writer::abort"</span>,
+
             BlockingWrite =&gt; <span class="string">"BlockingWriter::write"</span>,
             BlockingClose =&gt; <span class="string">"BlockingWriter::close"</span>,
         }
@@ -400,9 +392,7 @@
     }
 }
 
-<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-</span><span class="attr">#[pin_project(!Unpin)]
-</span><span class="kw">pub struct </span>WriteFuture&lt;<span class="lifetime">'a</span>, W: Write + Unpin + <span class="question-mark">?</span>Sized&gt; {
+<span class="kw">pub struct </span>WriteFuture&lt;<span class="lifetime">'a</span>, W: Write + Unpin + <span class="question-mark">?</span>Sized&gt; {
     writer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>W,
     buf: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>oio::WriteBuf,
 }
@@ -414,14 +404,12 @@
     <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;usize&gt;;
 
     <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;usize&gt;&gt; {
-        <span class="kw">let </span>this = <span class="self">self</span>.project();
-        Pin::new(this.writer).poll_write(cx, <span class="kw-2">*</span>this.buf)
+        <span class="kw">let </span>this = <span class="self">self</span>.get_mut();
+        this.writer.poll_write(cx, this.buf)
     }
 }
 
-<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-</span><span class="attr">#[pin_project(!Unpin)]
-</span><span class="kw">pub struct </span>AbortFuture&lt;<span class="lifetime">'a</span>, W: Write + Unpin + <span class="question-mark">?</span>Sized&gt; {
+<span class="kw">pub struct </span>AbortFuture&lt;<span class="lifetime">'a</span>, W: Write + Unpin + <span class="question-mark">?</span>Sized&gt; {
     writer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>W,
 }
 
@@ -431,15 +419,12 @@
 {
     <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
-        <span class="kw">let </span>this = <span class="self">self</span>.project();
-        Pin::new(this.writer).poll_abort(cx)
+    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
+        <span class="self">self</span>.writer.poll_abort(cx)
     }
 }
 
-<span class="doccomment">/// Make this future `!Unpin` for compatibility with async trait methods.
-</span><span class="attr">#[pin_project(!Unpin)]
-</span><span class="kw">pub struct </span>CloseFuture&lt;<span class="lifetime">'a</span>, W: Write + Unpin + <span class="question-mark">?</span>Sized&gt; {
+<span class="kw">pub struct </span>CloseFuture&lt;<span class="lifetime">'a</span>, W: Write + Unpin + <span class="question-mark">?</span>Sized&gt; {
     writer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>W,
 }
 
@@ -449,9 +434,8 @@
 {
     <span class="kw">type </span>Output = <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
-        <span class="kw">let </span>this = <span class="self">self</span>.project();
-        Pin::new(this.writer).poll_close(cx)
+    <span class="kw">fn </span>poll(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;()&gt;&gt; {
+        <span class="self">self</span>.writer.poll_close(cx)
     }
 }
 

@@ -470,6 +470,14 @@
 <a href="#468" id="468">468</a>
 <a href="#469" id="469">469</a>
 <a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -523,6 +531,14 @@
 /// - Services impl `RangeWrite`
 /// - `RangeWriter` impl `Write`
 /// - Expose `RangeWriter` as `Accessor::Writer`
+///
+/// # Requirements
+///
+/// Services that implement `RangeWrite` must fulfill the following requirements:
+///
+/// - Must be a http service that could accept `AsyncBody`.
+/// - Need initialization before writing.
+/// - Writing data based on range: `offset`, `size`.
 </span><span class="attr">#[cfg_attr(not(target_arch = <span class="string">"wasm32"</span>), async_trait)]
 #[cfg_attr(target_arch = <span class="string">"wasm32"</span>, async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>RangeWrite: Send + Sync + Unpin + <span class="lifetime">'static </span>{
@@ -633,7 +649,7 @@
 </span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>State {}
 
 <span class="kw">impl</span>&lt;W: RangeWrite&gt; RangeWriter&lt;W&gt; {
-    <span class="doccomment">/// Create a new MultipartUploadWriter.
+    <span class="doccomment">/// Create a new MultipartWriter.
     </span><span class="kw">pub fn </span>new(inner: W, concurrent: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             state: State::Idle,

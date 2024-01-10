@@ -236,7 +236,7 @@
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub type </span>WebhdfsWriters =
-    TwoWays&lt;oio::BlockWriter&lt;WebhdfsWriter&gt;, oio::AppendObjectWriter&lt;WebhdfsWriter&gt;&gt;;
+    TwoWays&lt;oio::BlockWriter&lt;WebhdfsWriter&gt;, oio::AppendWriter&lt;WebhdfsWriter&gt;&gt;;
 
 <span class="kw">pub struct </span>WebhdfsWriter {
     backend: WebhdfsBackend,
@@ -365,7 +365,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>oio::AppendObjectWrite <span class="kw">for </span>WebhdfsWriter {
+</span><span class="kw">impl </span>oio::AppendWrite <span class="kw">for </span>WebhdfsWriter {
     <span class="kw">async fn </span>offset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }

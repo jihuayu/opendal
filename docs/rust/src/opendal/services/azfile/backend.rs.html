@@ -795,7 +795,7 @@
         <span class="self">self</span>.core.ensure_parent_dir_exists(path).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>w = AzfileWriter::new(<span class="self">self</span>.core.clone(), args.clone(), path.to_string());
         <span class="kw">let </span>w = <span class="kw">if </span>args.append() {
-            AzfileWriters::Two(oio::AppendObjectWriter::new(w))
+            AzfileWriters::Two(oio::AppendWriter::new(w))
         } <span class="kw">else </span>{
             AzfileWriters::One(oio::OneShotWriter::new(w))
         };

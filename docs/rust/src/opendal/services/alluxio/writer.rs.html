@@ -151,8 +151,6 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -256,9 +254,7 @@
                     <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(part<span class="question-mark">?</span>));
                 }
                 State::Close(<span class="kw">_</span>) =&gt; {
-                    <span class="macro">unreachable!</span>(
-                        <span class="string">"MultipartUploadWriter must not go into State::Close during poll_write"
-                    </span>)
+                    <span class="macro">unreachable!</span>(<span class="string">"MultipartWriter must not go into State::Close during poll_write"</span>)
                 }
             }
         }

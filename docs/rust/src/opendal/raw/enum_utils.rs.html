@@ -370,8 +370,8 @@
 //! ```txt
 //! impl Accessor for OssBackend {
 //!     type Writer = raw::TwoWays&lt;
-//!         oio::MultipartUploadWriter&lt;OssWriter&gt;,
-//!         oio::AppendObjectWriter&lt;OssWriter&gt;,
+//!         oio::MultipartWriter&lt;OssWriter&gt;,
+//!         oio::AppendWriter&lt;OssWriter&gt;,
 //!     &gt;;
 //! }
 //! ```
