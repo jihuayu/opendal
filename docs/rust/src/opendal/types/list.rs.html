@@ -307,6 +307,7 @@
 <a href="#305" id="305">305</a>
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -466,14 +467,15 @@
                     Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(oe))) =&gt; {
                         <span class="kw">let </span>(path, metadata) = oe.into_entry().into_parts();
                         <span class="kw">if </span>metadata.contains_metakey(<span class="self">self</span>.required_metakey) {
-                            <span class="self">self</span>.tasks.push(StatTask::Known(<span class="prelude-val">Some</span>((path, metadata))));
+                            <span class="self">self</span>.tasks
+                                .push_back(StatTask::Known(<span class="prelude-val">Some</span>((path, metadata))));
                         } <span class="kw">else </span>{
                             <span class="kw">let </span>acc = <span class="self">self</span>.acc.clone();
                             <span class="kw">let </span>fut = <span class="kw">async move </span>{
                                 <span class="kw">let </span>res = acc.stat(<span class="kw-2">&amp;</span>path, OpStat::default()).<span class="kw">await</span>;
                                 (path, res.map(|rp| rp.into_metadata()))
                             };
-                            <span class="self">self</span>.tasks.push(StatTask::Stating(Box::pin(fut)));
+                            <span class="self">self</span>.tasks.push_back(StatTask::Stating(Box::pin(fut)));
                         }
                     }
                     Poll::Ready(<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)) =&gt; {

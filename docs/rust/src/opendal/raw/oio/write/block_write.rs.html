@@ -276,6 +276,8 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -442,10 +444,11 @@
                         <span class="self">self</span>.block_ids.push(block_id.clone());
                         <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
                         <span class="kw">let </span>size = cache.len();
-                        <span class="self">self</span>.futures.push(WriteBlockFuture(Box::pin(<span class="kw">async move </span>{
-                            w.write_block(size <span class="kw">as </span>u64, block_id, AsyncBody::ChunkedBytes(cache))
-                                .<span class="kw">await
-                        </span>})));
+                        <span class="self">self</span>.futures
+                            .push_back(WriteBlockFuture(Box::pin(<span class="kw">async move </span>{
+                                w.write_block(size <span class="kw">as </span>u64, block_id, AsyncBody::ChunkedBytes(cache))
+                                    .<span class="kw">await
+                            </span>})));
                         <span class="kw">let </span>size = <span class="self">self</span>.fill_cache(bs);
                         <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Ok</span>(size));
                     } <span class="kw">else if let </span><span class="prelude-val">Some</span>(res) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {
@@ -499,14 +502,15 @@
                                 <span class="self">self</span>.block_ids.push(block_id.clone());
                                 <span class="kw">let </span>size = cache.len();
                                 <span class="kw">let </span>w = <span class="self">self</span>.w.clone();
-                                <span class="self">self</span>.futures.push(WriteBlockFuture(Box::pin(<span class="kw">async move </span>{
-                                    w.write_block(
-                                        size <span class="kw">as </span>u64,
-                                        block_id,
-                                        AsyncBody::ChunkedBytes(cache),
-                                    )
-                                    .<span class="kw">await
-                                </span>})));
+                                <span class="self">self</span>.futures
+                                    .push_back(WriteBlockFuture(Box::pin(<span class="kw">async move </span>{
+                                        w.write_block(
+                                            size <span class="kw">as </span>u64,
+                                            block_id,
+                                            AsyncBody::ChunkedBytes(cache),
+                                        )
+                                        .<span class="kw">await
+                                    </span>})));
                             }
                         }
                         <span class="kw">while let </span><span class="prelude-val">Some</span>(res) = <span class="macro">ready!</span>(<span class="self">self</span>.futures.poll_next_unpin(cx)) {

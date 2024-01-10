@@ -265,6 +265,22 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -401,8 +417,8 @@
         <span class="self">self</span>.remaining() &gt; <span class="number">0
     </span>}
 
-    <span class="doccomment">/// Push new future into the queue.
-    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) {
+    <span class="doccomment">/// Push new future into the end of queue.
+    </span><span class="kw">pub fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.has_remaining(),
             <span class="string">"concurrent futures must have remaining space"
@@ -414,6 +430,22 @@
             }
             Tasks::Small(v) =&gt; v.push_back(TaskResult::Polling(f)),
             Tasks::Large(v) =&gt; v.push_back(f),
+        }
+    }
+
+    <span class="doccomment">/// Push new future into the start of queue, this task will be exactly the next to poll.
+    </span><span class="kw">pub fn </span>push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) {
+        <span class="macro">debug_assert!</span>(
+            <span class="self">self</span>.has_remaining(),
+            <span class="string">"concurrent futures must have remaining space"
+        </span>);
+
+        <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.tasks {
+            Tasks::Once(fut) =&gt; {
+                <span class="kw-2">*</span>fut = <span class="prelude-val">Some</span>(f);
+            }
+            Tasks::Small(v) =&gt; v.push_front(TaskResult::Polling(f)),
+            Tasks::Large(v) =&gt; v.push_front(f),
         }
     }
 }
@@ -497,7 +529,7 @@
                     idx
                 };
                 <span class="self">self</span>.idx += <span class="number">1</span>;
-                <span class="self">self</span>.tasks.push(Box::pin(fut));
+                <span class="self">self</span>.tasks.push_back(Box::pin(fut));
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="macro">ready!</span>(<span class="self">self</span>.tasks.poll_next_unpin(cx)) {
