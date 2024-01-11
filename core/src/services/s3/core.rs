@@ -30,6 +30,7 @@ use http::header::CONTENT_TYPE;
 use http::header::HOST;
 use http::header::IF_MATCH;
 use http::header::IF_NONE_MATCH;
+use http::HeaderMap;
 use http::HeaderValue;
 use http::Request;
 use http::Response;
@@ -63,6 +64,9 @@ mod constants {
     pub const X_AMZ_COPY_SOURCE_SERVER_SIDE_ENCRYPTION_CUSTOMER_KEY_MD5: &str =
         "x-amz-copy-source-server-side-encryption-customer-key-md5";
 
+    pub const X_AMZ_VERSION_ID: &str = "x-amz-version-id";
+    pub const QUERY_VERSION_ID: &str = "versionId";
+
     pub const RESPONSE_CONTENT_DISPOSITION: &str = "response-content-disposition";
     pub const RESPONSE_CONTENT_TYPE: &str = "response-content-type";
     pub const RESPONSE_CACHE_CONTROL: &str = "response-cache-control";
@@ -80,6 +84,8 @@ pub struct S3Core {
     pub default_storage_class: Option<HeaderValue>,
     pub allow_anonymous: bool,
     pub disable_stat_with_override: bool,
+
+    pub enable_version: bool,
 
     pub signer: AwsV4Signer,
     pub loader: Box<dyn AwsCredentialLoad>,
@@ -261,6 +267,13 @@ impl S3Core {
                 percent_encode_path(override_cache_control)
             ))
         }
+
+        if self.enable_version {
+            if let Some(version) = args.version() {
+                query_args.push(format!("{}={}", constants::QUERY_VERSION_ID, version))
+            }
+        }
+
         if !query_args.is_empty() {
             url.push_str(&format!("?{}", query_args.join("&")));
         }
@@ -313,6 +326,13 @@ impl S3Core {
                 percent_encode_path(override_cache_control)
             ))
         }
+
+        if self.enable_version {
+            if let Some(version) = args.version() {
+                query_args.push(format!("{}={}", constants::QUERY_VERSION_ID, version))
+            }
+        }
+
         if !query_args.is_empty() {
             url.push_str(&format!("?{}", query_args.join("&")));
         }
@@ -409,10 +429,20 @@ impl S3Core {
         self.send(req).await
     }
 
-    pub async fn s3_delete_object(&self, path: &str) -> Result<Response<IncomingAsyncBody>> {
+    pub async fn s3_delete_object(
+        &self,
+        path: &str,
+        args: &OpDelete,
+    ) -> Result<Response<IncomingAsyncBody>> {
         let p = build_abs_path(&self.root, path);
 
-        let url = format!("{}/{}", self.endpoint, percent_encode_path(&p));
+        let mut url = format!("{}/{}", self.endpoint, percent_encode_path(&p));
+
+        if self.enable_version {
+            if let Some(version) = args.version() {
+                url = format!("{url}?versionId={version}");
+            }
+        }
 
         let mut req = Request::delete(&url)
             .body(AsyncBody::Empty)
@@ -694,6 +724,16 @@ impl S3Core {
         self.sign(&mut req).await?;
 
         self.send(req).await
+    }
+
+    pub(super) fn parse_metadata(&self, path: &str, headers: &HeaderMap) -> Result<Metadata> {
+        let mut metadata = parse_into_metadata(path, headers)?;
+
+        if let Some(version) = parse_header_to_str(headers, constants::X_AMZ_VERSION_ID)? {
+            metadata.set_version(version);
+        }
+
+        Ok(metadata)
     }
 }
 
