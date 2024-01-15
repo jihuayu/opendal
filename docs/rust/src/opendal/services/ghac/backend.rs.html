@@ -527,6 +527,16 @@
 <a href="#525" id="525">525</a>
 <a href="#526" id="526">526</a>
 <a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -555,9 +565,9 @@
 <span class="kw">use </span>http::header::CONTENT_RANGE;
 <span class="kw">use </span>http::header::CONTENT_TYPE;
 <span class="kw">use </span>http::header::USER_AGENT;
-<span class="kw">use </span>http::Request;
 <span class="kw">use </span>http::Response;
 <span class="kw">use </span>http::StatusCode;
+<span class="kw">use </span>http::{header, Request};
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>serde::Serialize;
@@ -783,7 +793,12 @@
         am
     }
 
-    <span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
+    <span class="doccomment">/// Some self-hosted GHES instances are backed by AWS S3 services which only returns
+    /// signed url with `GET` method. So we will use `GET` with empty range to simulate
+    /// `HEAD` instead.
+    ///
+    /// In this way, we can support both self-hosted GHES and `github.com`.
+    </span><span class="kw">async fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: OpStat) -&gt; <span class="prelude-ty">Result</span>&lt;RpStat&gt; {
         <span class="kw">let </span>req = <span class="self">self</span>.ghac_query(path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -797,14 +812,25 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
         };
 
-        <span class="kw">let </span>req = <span class="self">self</span>.ghac_head_location(<span class="kw-2">&amp;</span>location).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>req = Request::get(location)
+            .header(header::RANGE, <span class="string">"bytes=0-0"</span>)
+            .body(AsyncBody::Empty)
+            .map_err(new_request_build_error)<span class="question-mark">?</span>;
         <span class="kw">let </span>resp = <span class="self">self</span>.client.send(req).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>status = resp.status();
         <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                <span class="kw">let </span>meta = parse_into_metadata(path, resp.headers())<span class="question-mark">?</span>;
+            StatusCode::OK | StatusCode::PARTIAL_CONTENT | StatusCode::RANGE_NOT_SATISFIABLE =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>meta = parse_into_metadata(path, resp.headers())<span class="question-mark">?</span>;
+                <span class="comment">// Correct content length via returning content range.
+                </span>meta.set_content_length(
+                    meta.content_range()
+                        .expect(<span class="string">"content range must be valid"</span>)
+                        .size()
+                        .expect(<span class="string">"content range must contains size"</span>),
+                );
 
+                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(RpStat::new(meta))
             }
             <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
@@ -929,12 +955,6 @@
         }
 
         req.body(AsyncBody::Empty).map_err(new_request_build_error)
-    }
-
-    <span class="kw">async fn </span>ghac_head_location(<span class="kw-2">&amp;</span><span class="self">self</span>, location: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
-        Request::head(location)
-            .body(AsyncBody::Empty)
-            .map_err(new_request_build_error)
     }
 
     <span class="kw">async fn </span>ghac_reserve(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Request&lt;AsyncBody&gt;&gt; {
