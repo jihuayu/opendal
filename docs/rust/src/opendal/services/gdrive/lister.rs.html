@@ -98,6 +98,10 @@
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -141,7 +145,7 @@
 #[cfg_attr(target_arch = <span class="string">"wasm32"</span>, async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>oio::PageList <span class="kw">for </span>GdriveLister {
     <span class="kw">async fn </span>next_page(<span class="kw-2">&amp;</span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>oio::PageContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>file_id = <span class="self">self</span>.core.get_file_id_by_path(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>file_id = <span class="self">self</span>.core.path_cache.get(<span class="kw-2">&amp;</span><span class="self">self</span>.path).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>file_id = <span class="kw">match </span>file_id {
             <span class="prelude-val">Some</span>(file_id) =&gt; file_id,
@@ -178,18 +182,22 @@
 
         <span class="kw">for </span><span class="kw-2">mut </span>file <span class="kw">in </span>decoded_response.files {
             <span class="kw">let </span>file_type = <span class="kw">if </span>file.mime_type.as_str() == <span class="string">"application/vnd.google-apps.folder" </span>{
-                file.name = <span class="macro">format!</span>(<span class="string">"{}/"</span>, file.name);
+                <span class="kw">if </span>!file.name.ends_with(<span class="string">'/'</span>) {
+                    file.name += <span class="string">"/"</span>;
+                }
                 EntryMode::DIR
             } <span class="kw">else </span>{
                 EntryMode::FILE
             };
 
             <span class="kw">let </span>root = <span class="kw-2">&amp;</span><span class="self">self</span>.core.root;
-            <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, build_rooted_abs_path(root, <span class="kw-2">&amp;</span><span class="self">self</span>.path), file.name);
+            <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">"{}{}"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.path, file.name);
             <span class="kw">let </span>normalized_path = build_rel_path(root, <span class="kw-2">&amp;</span>path);
 
-            <span class="kw">let </span>entry = oio::Entry::new(<span class="kw-2">&amp;</span>normalized_path, Metadata::new(file_type));
+            <span class="comment">// Update path cache with list result.
+            </span><span class="self">self</span>.core.path_cache.insert(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>file.id).<span class="kw">await</span>;
 
+            <span class="kw">let </span>entry = oio::Entry::new(<span class="kw-2">&amp;</span>normalized_path, Metadata::new(file_type));
             ctx.entries.push_back(entry);
         }
 

@@ -360,7 +360,7 @@
                 </span>err.is_builder() ||
                 <span class="comment">// Error returned by RedirectPolicy.
                 //
-                // We don't set this by hand, just don't allow retry.
+                // Don't retry error if we redirect too many.
                 </span>err.is_redirect() ||
                 <span class="comment">// We never use `Response::error_for_status`, just don't allow retry.
                 //

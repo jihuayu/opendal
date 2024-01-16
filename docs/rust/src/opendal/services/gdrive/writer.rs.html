@@ -82,28 +82,6 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -124,10 +102,9 @@
 </span><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bytes::Bytes;
 <span class="kw">use </span>http::StatusCode;
 
-<span class="kw">use </span><span class="kw">super</span>::core::GdriveCore;
+<span class="kw">use </span><span class="kw">super</span>::core::{GdriveCore, GdriveFile};
 <span class="kw">use </span><span class="kw">super</span>::error::parse_error;
 <span class="kw">use </span><span class="kw">crate</span>::raw::oio::WriteBuf;
 <span class="kw">use </span><span class="kw">crate</span>::raw::<span class="kw-2">*</span>;
@@ -150,47 +127,6 @@
             file_id,
         }
     }
-
-    <span class="doccomment">/// Write a single chunk of data to the object.
-    ///
-    /// This is used for small objects.
-    /// And should overwrite the object if it already exists.
-    </span><span class="kw">pub async fn </span>write_create(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, body: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>resp = <span class="self">self
-            </span>.core
-            .gdrive_upload_simple_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, size, body)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::OK | StatusCode::CREATED =&gt; {
-                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(())
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
-
-    <span class="kw">pub async fn </span>write_overwrite(<span class="kw-2">&amp;</span><span class="self">self</span>, size: u64, body: Bytes) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>file_id = <span class="self">self</span>.file_id.as_ref().ok_or_else(|| {
-            Error::new(ErrorKind::Unexpected, <span class="string">"file_id is required for overwrite"</span>)
-        })<span class="question-mark">?</span>;
-        <span class="kw">let </span>resp = <span class="self">self
-            </span>.core
-            .gdrive_upload_overwrite_simple_request(file_id, size, body)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>status = resp.status();
-
-        <span class="kw">match </span>status {
-            StatusCode::OK =&gt; {
-                resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(())
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
-        }
-    }
 }
 
 <span class="attr">#[cfg_attr(not(target_arch = <span class="string">"wasm32"</span>), async_trait)]
@@ -199,13 +135,33 @@
     <span class="kw">async fn </span>write_once(<span class="kw-2">&amp;</span><span class="self">self</span>, bs: <span class="kw-2">&amp;</span><span class="kw">dyn </span>WriteBuf) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>bs = bs.bytes(bs.remaining());
         <span class="kw">let </span>size = bs.len();
-        <span class="kw">if </span><span class="self">self</span>.file_id.is_none() {
-            <span class="self">self</span>.write_create(size <span class="kw">as </span>u64, bs).<span class="kw">await</span><span class="question-mark">?</span>;
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.write_overwrite(size <span class="kw">as </span>u64, bs).<span class="kw">await</span><span class="question-mark">?</span>;
-        }
 
-        <span class="prelude-val">Ok</span>(())
+        <span class="kw">let </span>resp = <span class="kw">if let </span><span class="prelude-val">Some</span>(file_id) = <span class="kw-2">&amp;</span><span class="self">self</span>.file_id {
+            <span class="self">self</span>.core
+                .gdrive_upload_overwrite_simple_request(file_id, size <span class="kw">as </span>u64, bs)
+                .<span class="kw">await
+        </span>} <span class="kw">else </span>{
+            <span class="self">self</span>.core
+                .gdrive_upload_simple_request(<span class="kw-2">&amp;</span><span class="self">self</span>.path, size <span class="kw">as </span>u64, bs)
+                .<span class="kw">await
+        </span>}<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>status = resp.status();
+        <span class="kw">match </span>status {
+            StatusCode::OK | StatusCode::CREATED =&gt; {
+                <span class="comment">// If we don't have the file id before, let's update the cache to avoid re-fetching.
+                </span><span class="kw">if </span><span class="self">self</span>.file_id.is_none() {
+                    <span class="kw">let </span>bs = resp.into_body().bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">let </span>file: GdriveFile =
+                        serde_json::from_slice(<span class="kw-2">&amp;</span>bs).map_err(new_json_deserialize_error)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.core.path_cache.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.path, <span class="kw-2">&amp;</span>file.id).<span class="kw">await</span>;
+                } <span class="kw">else </span>{
+                    resp.into_body().consume().<span class="kw">await</span><span class="question-mark">?</span>;
+                }
+                <span class="prelude-val">Ok</span>(())
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>),
+        }
     }
 }
 </code></pre></div></section></main></body></html>
