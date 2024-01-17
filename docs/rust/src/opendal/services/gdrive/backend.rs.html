@@ -411,9 +411,9 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(RpDelete::default());
         };
 
-        <span class="kw">let </span>resp = <span class="self">self</span>.core.gdrive_delete(<span class="kw-2">&amp;</span>file_id).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>resp = <span class="self">self</span>.core.gdrive_trash(<span class="kw-2">&amp;</span>file_id).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>status = resp.status();
-        <span class="kw">if </span>status != StatusCode::NO_CONTENT &amp;&amp; status != StatusCode::NOT_FOUND {
+        <span class="kw">if </span>status != StatusCode::OK {
             <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
         }
 
@@ -446,9 +446,9 @@
 
         <span class="comment">// copy will overwrite `to`, delete it if exist
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.core.path_cache.get(<span class="kw-2">&amp;</span>to_path).<span class="kw">await</span><span class="question-mark">? </span>{
-            <span class="kw">let </span>resp = <span class="self">self</span>.core.gdrive_delete(<span class="kw-2">&amp;</span>id).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>resp = <span class="self">self</span>.core.gdrive_trash(<span class="kw-2">&amp;</span>id).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let </span>status = resp.status();
-            <span class="kw">if </span>status != StatusCode::NO_CONTENT &amp;&amp; status != StatusCode::NOT_FOUND {
+            <span class="kw">if </span>status != StatusCode::OK {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
             }
 
@@ -486,9 +486,9 @@
 
         <span class="comment">// rename will overwrite `to`, delete it if exist
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.core.path_cache.get(<span class="kw-2">&amp;</span>target).<span class="kw">await</span><span class="question-mark">? </span>{
-            <span class="kw">let </span>resp = <span class="self">self</span>.core.gdrive_delete(<span class="kw-2">&amp;</span>id).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>resp = <span class="self">self</span>.core.gdrive_trash(<span class="kw-2">&amp;</span>id).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let </span>status = resp.status();
-            <span class="kw">if </span>status != StatusCode::NO_CONTENT &amp;&amp; status != StatusCode::NOT_FOUND {
+            <span class="kw">if </span>status != StatusCode::OK {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(parse_error(resp).<span class="kw">await</span><span class="question-mark">?</span>);
             }
 

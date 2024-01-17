@@ -201,6 +201,30 @@
 <a href="#199" id="199">199</a>
 <a href="#200" id="200">200</a>
 <a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -226,41 +250,63 @@
 <span class="kw">use </span>chrono::DateTime;
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>log::debug;
+<span class="kw">use </span>serde::Deserialize;
 <span class="kw">use </span>tokio::sync::Mutex;
 
 <span class="kw">use </span><span class="kw">super</span>::backend::GdriveBackend;
-<span class="kw">use </span><span class="kw">crate</span>::raw::HttpClient;
 <span class="kw">use </span><span class="kw">crate</span>::raw::{normalize_root, PathCacher};
+<span class="kw">use </span><span class="kw">crate</span>::raw::{ConfigDeserializer, HttpClient};
 <span class="kw">use </span><span class="kw">crate</span>::services::gdrive::core::GdriveSigner;
 <span class="kw">use </span><span class="kw">crate</span>::services::gdrive::core::{GdriveCore, GdrivePathQuery};
 <span class="kw">use </span><span class="kw">crate</span>::Scheme;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
+<span class="doccomment">/// [GoogleDrive](https://drive.google.com/) configuration.
+</span><span class="attr">#[derive(Default, Deserialize)]
+#[serde(default)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>GdriveConfig {
+    <span class="doccomment">/// The root for gdrive
+    </span><span class="kw">pub </span>root: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// Access token for gdrive.
+    </span><span class="kw">pub </span>access_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// Refresh token for gdrive.
+    </span><span class="kw">pub </span>refresh_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// Client id for gdrive.
+    </span><span class="kw">pub </span>client_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="doccomment">/// Client secret for gdrive.
+    </span><span class="kw">pub </span>client_secret: <span class="prelude-ty">Option</span>&lt;String&gt;,
+}
+
+<span class="kw">impl </span>Debug <span class="kw">for </span>GdriveConfig {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        f.debug_struct(<span class="string">"GdriveConfig"</span>)
+            .field(<span class="string">"root"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root)
+            .finish_non_exhaustive()
+    }
+}
+
 <span class="doccomment">/// [GoogleDrive](https://drive.google.com/) backend support.
 </span><span class="attr">#[derive(Default)]
 #[doc = <span class="macro">include_str!</span>(<span class="string">"docs.md"</span>)]
 </span><span class="kw">pub struct </span>GdriveBuilder {
-    root: <span class="prelude-ty">Option</span>&lt;String&gt;,
-
-    access_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
-
-    refresh_token: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    client_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    client_secret: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    config: GdriveConfig,
 
     http_client: <span class="prelude-ty">Option</span>&lt;HttpClient&gt;,
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>GdriveBuilder {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
-        f.debug_struct(<span class="string">"Backend"</span>).field(<span class="string">"root"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.root).finish()
+        f.debug_struct(<span class="string">"Backend"</span>)
+            .field(<span class="string">"config"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config)
+            .finish()
     }
 }
 
 <span class="kw">impl </span>GdriveBuilder {
     <span class="doccomment">/// Set root path of GoogleDrive folder.
     </span><span class="kw">pub fn </span>root(<span class="kw-2">&amp;mut </span><span class="self">self</span>, root: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.root = <span class="prelude-val">Some</span>(root.to_string());
+        <span class="self">self</span>.config.root = <span class="prelude-val">Some</span>(root.to_string());
         <span class="self">self
     </span>}
 
@@ -275,7 +321,7 @@
     /// - If you want to use the access token for a long time,
     /// you can use the refresh token to get a new access token.
     </span><span class="kw">pub fn </span>access_token(<span class="kw-2">&amp;mut </span><span class="self">self</span>, access_token: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.access_token = <span class="prelude-val">Some</span>(access_token.to_string());
+        <span class="self">self</span>.config.access_token = <span class="prelude-val">Some</span>(access_token.to_string());
         <span class="self">self
     </span>}
 
@@ -285,7 +331,7 @@
     ///
     /// OpenDAL will use this refresh token to get a new access token when the old one is expired.
     </span><span class="kw">pub fn </span>refresh_token(<span class="kw-2">&amp;mut </span><span class="self">self</span>, refresh_token: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.refresh_token = <span class="prelude-val">Some</span>(refresh_token.to_string());
+        <span class="self">self</span>.config.refresh_token = <span class="prelude-val">Some</span>(refresh_token.to_string());
         <span class="self">self
     </span>}
 
@@ -293,7 +339,7 @@
     ///
     /// This is required for OAuth 2.0 Flow to refresh the access token.
     </span><span class="kw">pub fn </span>client_id(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client_id: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.client_id = <span class="prelude-val">Some</span>(client_id.to_string());
+        <span class="self">self</span>.config.client_id = <span class="prelude-val">Some</span>(client_id.to_string());
         <span class="self">self
     </span>}
 
@@ -301,7 +347,7 @@
     ///
     /// This is required for OAuth 2.0 Flow with refresh the access token.
     </span><span class="kw">pub fn </span>client_secret(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client_secret: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
-        <span class="self">self</span>.client_secret = <span class="prelude-val">Some</span>(client_secret.to_string());
+        <span class="self">self</span>.config.client_secret = <span class="prelude-val">Some</span>(client_secret.to_string());
         <span class="self">self
     </span>}
 
@@ -323,19 +369,18 @@
     <span class="kw">type </span>Accessor = GdriveBackend;
 
     <span class="kw">fn </span>from_map(map: HashMap&lt;String, String&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">Self</span>::default();
+        <span class="kw">let </span>config = GdriveConfig::deserialize(ConfigDeserializer::new(map))
+            .expect(<span class="string">"config deserialize must succeed"</span>);
 
-        map.get(<span class="string">"root"</span>).map(|v| builder.root(v));
-        map.get(<span class="string">"access_token"</span>).map(|v| builder.access_token(v));
-        map.get(<span class="string">"refresh_token"</span>).map(|v| builder.refresh_token(v));
-        map.get(<span class="string">"client_id"</span>).map(|v| builder.client_id(v));
-        map.get(<span class="string">"client_secret"</span>).map(|v| builder.client_secret(v));
+        <span class="self">Self </span>{
+            config,
 
-        builder
+            http_client: <span class="prelude-val">None</span>,
+        }
     }
 
     <span class="kw">fn </span>build(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Accessor&gt; {
-        <span class="kw">let </span>root = normalize_root(<span class="kw-2">&amp;</span><span class="self">self</span>.root.take().unwrap_or_default());
+        <span class="kw">let </span>root = normalize_root(<span class="kw-2">&amp;</span><span class="self">self</span>.config.root.take().unwrap_or_default());
         <span class="macro">debug!</span>(<span class="string">"backend use root {}"</span>, root);
 
         <span class="kw">let </span>client = <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = <span class="self">self</span>.http_client.take() {
@@ -348,21 +393,24 @@
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>signer = GdriveSigner::new(client.clone());
-        <span class="kw">match </span>(<span class="self">self</span>.access_token.take(), <span class="self">self</span>.refresh_token.take()) {
+        <span class="kw">match </span>(
+            <span class="self">self</span>.config.access_token.take(),
+            <span class="self">self</span>.config.refresh_token.take(),
+        ) {
             (<span class="prelude-val">Some</span>(access_token), <span class="prelude-val">None</span>) =&gt; {
                 signer.access_token = access_token;
                 <span class="comment">// We will never expire user specified access token.
                 </span>signer.expires_in = DateTime::&lt;Utc&gt;::MAX_UTC;
             }
             (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(refresh_token)) =&gt; {
-                <span class="kw">let </span>client_id = <span class="self">self</span>.client_id.take().ok_or_else(|| {
+                <span class="kw">let </span>client_id = <span class="self">self</span>.config.client_id.take().ok_or_else(|| {
                     Error::new(
                         ErrorKind::ConfigInvalid,
                         <span class="string">"client_id must be set when refresh_token is set"</span>,
                     )
                     .with_context(<span class="string">"service"</span>, Scheme::Gdrive)
                 })<span class="question-mark">?</span>;
-                <span class="kw">let </span>client_secret = <span class="self">self</span>.client_secret.take().ok_or_else(|| {
+                <span class="kw">let </span>client_secret = <span class="self">self</span>.config.client_secret.take().ok_or_else(|| {
                     Error::new(
                         ErrorKind::ConfigInvalid,
                         <span class="string">"client_secret must be set when refresh_token is set"</span>,
