@@ -1320,6 +1320,8 @@
 <a href="#1318" id="1318">1318</a>
 <a href="#1319" id="1319">1319</a>
 <a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1341,6 +1343,7 @@
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
+<span class="kw">use </span>std::sync::atomic::AtomicBool;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>async_trait::async_trait;
@@ -2288,6 +2291,7 @@
                 disable_stat_with_override: <span class="self">self</span>.config.disable_stat_with_override,
                 signer,
                 loader,
+                credential_loaded: AtomicBool::new(<span class="bool-val">false</span>),
                 client,
                 batch_max_operations,
             }),

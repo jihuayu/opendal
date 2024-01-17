@@ -1026,6 +1026,22 @@
 <a href="#1024" id="1024">1024</a>
 <a href="#1025" id="1025">1025</a>
 <a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -1047,6 +1063,8 @@
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::fmt::Formatter;
 <span class="kw">use </span>std::fmt::Write;
+<span class="kw">use </span>std::sync::atomic;
+<span class="kw">use </span>std::sync::atomic::AtomicBool;
 <span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>bytes::Bytes;
@@ -1111,6 +1129,7 @@
 
     <span class="kw">pub </span>signer: AwsV4Signer,
     <span class="kw">pub </span>loader: Box&lt;<span class="kw">dyn </span>AwsCredentialLoad&gt;,
+    <span class="kw">pub </span>credential_loaded: AtomicBool,
     <span class="kw">pub </span>client: HttpClient,
     <span class="kw">pub </span>batch_max_operations: usize,
 }
@@ -1135,18 +1154,31 @@
             </span>.map_err(new_request_credential_error)<span class="question-mark">?</span>;
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cred) = cred {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(cred))
-        } <span class="kw">else if </span><span class="self">self</span>.allow_anonymous {
-            <span class="comment">// If allow_anonymous has been set, we will not sign the request.
-            </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-        } <span class="kw">else </span>{
-            <span class="comment">// Mark this error as temporary since it could be caused by AWS STS.
-            </span><span class="prelude-val">Err</span>(Error::new(
-                ErrorKind::PermissionDenied,
-                <span class="string">"no valid credential found, please check configuration or try again"</span>,
-            )
-            .set_temporary())
+            <span class="comment">// Update credential_loaded to true if we have load credential successfully.
+            </span><span class="self">self</span>.credential_loaded
+                .store(<span class="bool-val">true</span>, atomic::Ordering::Relaxed);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(cred));
         }
+
+        <span class="comment">// If we have load credential before but failed to load this time, we should
+        // return error instead.
+        </span><span class="kw">if </span><span class="self">self</span>.credential_loaded.load(atomic::Ordering::Relaxed) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+                ErrorKind::PermissionDenied,
+                <span class="string">"credential was previously loaded successfully but has failed this time"</span>,
+            )
+            .set_temporary());
+        }
+
+        <span class="comment">// Credential is empty and users allow anonymous access, we will not sign the request.
+        </span><span class="kw">if </span><span class="self">self</span>.allow_anonymous {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        }
+
+        <span class="prelude-val">Err</span>(Error::new(
+            ErrorKind::PermissionDenied,
+            <span class="string">"no valid credential found and anonymous access is not allowed"</span>,
+        ))
     }
 
     <span class="kw">pub async fn </span>sign&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="kw-2">&amp;mut </span>Request&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
