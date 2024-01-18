@@ -519,6 +519,7 @@
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
 <a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -793,8 +794,9 @@
                 }
                 State::Init(fut) =&gt; {
                     <span class="kw">let </span>upload_id = <span class="macro">ready!</span>(fut.as_mut().poll(cx));
+                    <span class="comment">// Make sure the future is dropped after it returned ready.
+                    </span><span class="self">self</span>.state = State::Idle;
                     <span class="self">self</span>.upload_id = <span class="prelude-val">Some</span>(Arc::new(upload_id<span class="question-mark">?</span>));
-                    <span class="self">self</span>.state = State::Idle;
                 }
                 State::Close(<span class="kw">_</span>) =&gt; {
                     <span class="macro">unreachable!</span>(<span class="string">"MultipartWriter must not go into State::Close during poll_write"</span>)
