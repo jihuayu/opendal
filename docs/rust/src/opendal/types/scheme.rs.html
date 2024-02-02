@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/types/scheme.rs`."><title>scheme.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-4e54bb2b497cc83f.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="opendal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (6ae4cfbbb 2024-01-17)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0b2e2def73e61cbe.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/types/scheme.rs`."><title>scheme.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="opendal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0-nightly (11f32b73e 2024-01-31)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../opendal/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -442,6 +442,22 @@
 <a href="#440" id="440">440</a>
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
 </pre></div><pre class="rust"><code><span class="comment">// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -488,10 +504,14 @@
     </span>Seafile,
     <span class="doccomment">/// [Upyun][crate::services::Upyun]: Upyun Services.
     </span>Upyun,
+    <span class="doccomment">/// [VercelBlob][crate::services::VercelBlob]: VercelBlob Services.
+    </span>VercelBlob,
     <span class="doccomment">/// [YandexDisk][crate::services::YandexDisk]: YandexDisk Services.
     </span>YandexDisk,
     <span class="doccomment">/// [Pcloud][crate::services::Pcloud]: Pcloud Services.
     </span>Pcloud,
+    <span class="doccomment">/// [Koofr][crate::services::Koofr]: Koofr Services.
+    </span>Koofr,
     <span class="doccomment">/// [Chainsafe][crate::services::Chainsafe]: Chainsafe Services.
     </span>Chainsafe,
     <span class="doccomment">/// [cacache][crate::services::Cacache]: cacache backend support.
@@ -532,6 +552,8 @@
     <span class="doccomment">/// [ipmfs][crate::services::Ipmfs]: IPFS mutable file system
     </span>Ipmfs,
     <span class="doccomment">/// [memcached][crate::services::Memcached]: Memcached service support.
+    </span>Icloud,
+    <span class="doccomment">/// [icloud][crate::services::Icloud]: APPLE icloud services.
     </span>Memcached,
     <span class="doccomment">/// [memory][crate::services::Memory]: In memory backend support.
     </span>Memory,
@@ -665,6 +687,8 @@
             </span>Scheme::Ipfs,
             <span class="attr">#[cfg(feature = <span class="string">"services-ipmfs"</span>)]
             </span>Scheme::Ipmfs,
+            <span class="attr">#[cfg(feature = <span class="string">"services-icloud"</span>)]
+            </span>Scheme::Icloud,
             <span class="attr">#[cfg(feature = <span class="string">"services-libsql"</span>)]
             </span>Scheme::Libsql,
             <span class="attr">#[cfg(feature = <span class="string">"services-memcached"</span>)]
@@ -717,6 +741,8 @@
             </span>Scheme::Tikv,
             <span class="attr">#[cfg(feature = <span class="string">"services-vercel-artifacts"</span>)]
             </span>Scheme::VercelArtifacts,
+            <span class="attr">#[cfg(feature = <span class="string">"services-vercel-blob"</span>)]
+            </span>Scheme::VercelBlob,
             <span class="attr">#[cfg(feature = <span class="string">"services-webdav"</span>)]
             </span>Scheme::Webdav,
             <span class="attr">#[cfg(feature = <span class="string">"services-webhdfs"</span>)]
@@ -778,6 +804,8 @@
             <span class="string">"ftp" </span>| <span class="string">"ftps" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ftp),
             <span class="string">"ipfs" </span>| <span class="string">"ipns" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipfs),
             <span class="string">"ipmfs" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Ipmfs),
+            <span class="string">"icloud" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Icloud),
+            <span class="string">"koofr" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Koofr),
             <span class="string">"libsql" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Libsql),
             <span class="string">"memcached" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memcached),
             <span class="string">"memory" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Memory),
@@ -803,6 +831,7 @@
             <span class="string">"swift" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Swift),
             <span class="string">"oss" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Oss),
             <span class="string">"vercel_artifacts" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::VercelArtifacts),
+            <span class="string">"vercel_blob" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::VercelBlob),
             <span class="string">"webdav" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webdav),
             <span class="string">"webhdfs" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Webhdfs),
             <span class="string">"tikv" </span>=&gt; <span class="prelude-val">Ok</span>(Scheme::Tikv),
@@ -840,6 +869,8 @@
             Scheme::Ftp =&gt; <span class="string">"ftp"</span>,
             Scheme::Ipfs =&gt; <span class="string">"ipfs"</span>,
             Scheme::Ipmfs =&gt; <span class="string">"ipmfs"</span>,
+            Scheme::Icloud =&gt; <span class="string">"icloud"</span>,
+            Scheme::Koofr =&gt; <span class="string">"koofr"</span>,
             Scheme::Libsql =&gt; <span class="string">"libsql"</span>,
             Scheme::Memcached =&gt; <span class="string">"memcached"</span>,
             Scheme::Memory =&gt; <span class="string">"memory"</span>,
@@ -861,6 +892,7 @@
             Scheme::Supabase =&gt; <span class="string">"supabase"</span>,
             Scheme::Swift =&gt; <span class="string">"swift"</span>,
             Scheme::VercelArtifacts =&gt; <span class="string">"vercel_artifacts"</span>,
+            Scheme::VercelBlob =&gt; <span class="string">"vercel_blob"</span>,
             Scheme::Oss =&gt; <span class="string">"oss"</span>,
             Scheme::Webdav =&gt; <span class="string">"webdav"</span>,
             Scheme::Webhdfs =&gt; <span class="string">"webhdfs"</span>,
