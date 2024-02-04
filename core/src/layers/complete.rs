@@ -465,7 +465,7 @@ impl<A: Accessor> CompleteAccessor<A> {
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
 impl<A: Accessor> LayeredAccessor for CompleteAccessor<A> {
     type Inner = A;
     type Reader = CompleteReader<A, A::Reader>;
@@ -489,6 +489,9 @@ impl<A: Accessor> LayeredAccessor for CompleteAccessor<A> {
         }
         if cap.list && cap.write_can_empty {
             cap.create_dir = true;
+        }
+        if cap.copy && cap.delete {
+            cap.rename = true
         }
         meta
     }
@@ -554,12 +557,19 @@ impl<A: Accessor> LayeredAccessor for CompleteAccessor<A> {
     }
 
     async fn rename(&self, from: &str, to: &str, args: OpRename) -> Result<RpRename> {
-        let capability = self.meta.full_capability();
-        if !capability.rename {
-            return Err(self.new_unsupported_error(Operation::Rename));
+        let capability = self.meta.native_capability();
+        if capability.rename {
+            return self.inner().rename(from, to, args).await;
         }
 
-        self.inner().rename(from, to, args).await
+        // If beckend doesn't suppored rename, we use simulate logic
+        if capability.copy && capability.delete {
+            self.inner().copy(from, to, OpCopy::default()).await?;
+            self.inner().delete(from, OpDelete::default()).await?;
+            return Ok(RpRename::default());
+        }
+
+        Err(self.new_unsupported_error(Operation::Rename))
     }
 
     async fn stat(&self, path: &str, args: OpStat) -> Result<RpStat> {
@@ -783,7 +793,7 @@ mod tests {
     }
 
     #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-    #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+    #[cfg_attr(target_arch = "wasm32", async_trait(? Send))]
     impl Accessor for MockService {
         type Reader = oio::Reader;
         type Writer = oio::Writer;
