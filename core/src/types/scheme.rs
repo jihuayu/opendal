@@ -153,6 +153,9 @@ pub enum Scheme {
     Gridfs,
     /// [Native HDFS](crate::services::hdfs_native): Hdfs Native service, using rust hdfs-native client for hdfs
     HdfsNative,
+
+    /// [Surreal](crate::services::surreal): Surreal service
+    Surreal,
     /// Custom that allow users to implement services outside of OpenDAL.
     ///
     /// # NOTE
@@ -446,6 +449,7 @@ impl From<Scheme> for &'static str {
             Scheme::YandexDisk => "yandex_disk",
             Scheme::Pcloud => "pcloud",
             Scheme::HdfsNative => "hdfs_native",
+            Scheme::Surreal => "surreal",
             Scheme::Custom(v) => v,
         }
     }
