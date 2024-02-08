@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::arch::x86_64;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -37,8 +36,11 @@ pub struct SurrealdbConfig {
     root: Option<String>,
 
     url: Option<String>,
+
+    auth_type: Option<String>,
     username: Option<String>,
     password: Option<String>,
+    token: Option<String>,
 
     namespace: Option<String>,
     database: Option<String>,
@@ -165,7 +167,7 @@ impl Builder for SurrealdbBuilder {
     }
 
     fn build(&mut self) -> Result<Self::Accessor> {
-        let conn = match self.config.url.clone() {
+        let url = match self.config.url.clone() {
             Some(v) => v,
             None => {
                 return Err(Error::new(ErrorKind::ConfigInvalid, "url is empty")
@@ -199,11 +201,11 @@ impl Builder for SurrealdbBuilder {
         let db = futures::executor::block_on(x);
         if db.is_err() {
             return Err(Error::new(ErrorKind::ConfigInvalid, "table is empty")
-            .with_context("service", Scheme::Surreal))
+                .with_context("service", Scheme::Surreal));
         }
 
         Ok(SurrealBackend::new(Adapter {
-            db:db.unwrap(),
+            db: db.unwrap(),
             table,
             key_field,
             value_field,
@@ -261,15 +263,20 @@ impl kv::Adapter for Adapter {
     }
 
     async fn get(&self, path: &str) -> Result<Option<Vec<u8>>> {
-        todo!()
+        let res: Option<Vec<u8>> = self.db.select((&self.table, path)).await.map_err(parse_surreal_error)?;
+        Ok(res)
     }
 
     async fn set(&self, path: &str, value: &[u8]) -> Result<()> {
-        todo!()
+        let _: Option<Vec<u8>> = self.db.create((&self.table, path)).content(value).await.map_err(parse_surreal_error)?;
+        Ok(())
     }
 
     async fn delete(&self, path: &str) -> Result<()> {
-        todo!()
+       let _: Option<Vec<u8>> = self.db
+            .delete((&self.table, path))
+            .await.map_err(parse_surreal_error)?;
+        Ok(())
     }
 }
 
