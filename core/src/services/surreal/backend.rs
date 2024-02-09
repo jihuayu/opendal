@@ -263,19 +263,30 @@ impl kv::Adapter for Adapter {
     }
 
     async fn get(&self, path: &str) -> Result<Option<Vec<u8>>> {
-        let res: Option<Vec<u8>> = self.db.select((&self.table, path)).await.map_err(parse_surreal_error)?;
+        let res: Option<Vec<u8>> = self
+            .db
+            .select((&self.table, path))
+            .await
+            .map_err(parse_surreal_error)?;
         Ok(res)
     }
 
     async fn set(&self, path: &str, value: &[u8]) -> Result<()> {
-        let _: Option<Vec<u8>> = self.db.create((&self.table, path)).content(value).await.map_err(parse_surreal_error)?;
+        let _: Option<Vec<u8>> = self
+            .db
+            .create((&self.table, path))
+            .content(value)
+            .await
+            .map_err(parse_surreal_error)?;
         Ok(())
     }
 
     async fn delete(&self, path: &str) -> Result<()> {
-       let _: Option<Vec<u8>> = self.db
+        let _: Option<Vec<u8>> = self
+            .db
             .delete((&self.table, path))
-            .await.map_err(parse_surreal_error)?;
+            .await
+            .map_err(parse_surreal_error)?;
         Ok(())
     }
 }
