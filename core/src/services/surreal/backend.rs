@@ -35,6 +35,7 @@ use crate::*;
 pub struct SurrealdbConfig {
     root: Option<String>,
 
+    tls: Option<bool>,
     url: Option<String>,
 
     auth_type: Option<String>,
@@ -118,7 +119,7 @@ impl SurrealdbBuilder {
         }
         self
     }
-
+    /// Set the value field name of the surreal service to read/write.
     pub fn url(&mut self, url: &str) -> &mut Self {
         if !url.is_empty() {
             self.config.url = Some(url.to_string());
@@ -126,6 +127,7 @@ impl SurrealdbBuilder {
         self
     }
 
+    /// Set the value field name of the surreal service to read/write.
     pub fn username(&mut self, username: &str) -> &mut Self {
         if !username.is_empty() {
             self.config.username = Some(username.to_string());
@@ -133,6 +135,7 @@ impl SurrealdbBuilder {
         self
     }
 
+    /// Set the value field name of the surreal service to read/write.
     pub fn password(&mut self, password: &str) -> &mut Self {
         if !password.is_empty() {
             self.config.password = Some(password.to_string());
@@ -140,6 +143,7 @@ impl SurrealdbBuilder {
         self
     }
 
+    /// Set the value field name of the surreal service to read/write.
     pub fn namespace(&mut self, namespace: &str) -> &mut Self {
         if !namespace.is_empty() {
             self.config.namespace = Some(namespace.to_string());
@@ -147,6 +151,7 @@ impl SurrealdbBuilder {
         self
     }
 
+    /// Set the value field name of the surreal service to read/write.
     pub fn database(&mut self, database: &str) -> &mut Self {
         if !database.is_empty() {
             self.config.database = Some(database.to_string());
@@ -174,6 +179,39 @@ impl Builder for SurrealdbBuilder {
                     .with_context("service", Scheme::Surreal))
             }
         };
+        let tls = self.config.tls.unwrap_or(false);
+
+        let username = match self.config.username.clone() {
+            Some(v) => v,
+            None => {
+                return Err(Error::new(ErrorKind::ConfigInvalid, "username is empty")
+                    .with_context("service", Scheme::Surreal))
+            }
+        };
+
+        let password = match self.config.password.clone() {
+            Some(v) => v,
+            None => {
+                return Err(Error::new(ErrorKind::ConfigInvalid, "password is empty")
+                    .with_context("service", Scheme::Surreal))
+            }
+        };
+
+        let namespace = match self.config.namespace.clone() {
+            Some(v) => v,
+            None => {
+                return Err(Error::new(ErrorKind::ConfigInvalid, "namespace is empty")
+                    .with_context("service", Scheme::Surreal))
+            }
+        };
+
+        let database = match self.config.database.clone() {
+            Some(v) => v,
+            None => {
+                return Err(Error::new(ErrorKind::ConfigInvalid, "database is empty")
+                    .with_context("service", Scheme::Surreal))
+            }
+        };
 
         let table = match self.config.table.clone() {
             Some(v) => v,
@@ -182,14 +220,15 @@ impl Builder for SurrealdbBuilder {
                     .with_context("service", Scheme::Surreal))
             }
         };
-        let key_field = match self.config.key_field.clone() {
-            Some(v) => v,
-            None => "key".to_string(),
-        };
-        let value_field = match self.config.value_field.clone() {
-            Some(v) => v,
-            None => "value".to_string(),
-        };
+
+        let key_field = self.config.key_field.clone().unwrap_or("key".to_string());
+
+        let value_field = self
+            .config
+            .value_field
+            .clone()
+            .unwrap_or("value".to_string());
+
         let root = normalize_root(
             self.config
                 .root
@@ -197,11 +236,12 @@ impl Builder for SurrealdbBuilder {
                 .unwrap_or_else(|| "/".to_string())
                 .as_str(),
         );
-        let x = create_db();
-        let db = futures::executor::block_on(x);
+
+        let db_feature = create_db(tls, url, username, password, namespace, database);
+        let db = futures::executor::block_on(db_feature);
+
         if db.is_err() {
-            return Err(Error::new(ErrorKind::ConfigInvalid, "table is empty")
-                .with_context("service", Scheme::Surreal));
+            return Err(parse_surreal_error(db.err().unwrap()));
         }
 
         Ok(SurrealBackend::new(Adapter {
@@ -214,14 +254,21 @@ impl Builder for SurrealdbBuilder {
     }
 }
 
-async fn create_db() -> surrealdb::Result<Surreal<Client>> {
-    let db = Surreal::new::<Ws>("127.0.0.1:8000").await?;
+async fn create_db(
+    _: bool,
+    url: String,
+    username: String,
+    password: String,
+    namespace: String,
+    database: String,
+) -> surrealdb::Result<Surreal<Client>> {
+    let db = Surreal::new::<Ws>(url).await?;
     db.signin(Root {
-        username: "root",
-        password: "root",
+        username: username.as_str(),
+        password: password.as_str(),
     })
     .await?;
-    db.use_ns("test").use_db("test").await?;
+    db.use_ns(namespace).use_db(database).await?;
     return Ok(db);
 }
 
@@ -263,28 +310,41 @@ impl kv::Adapter for Adapter {
     }
 
     async fn get(&self, path: &str) -> Result<Option<Vec<u8>>> {
-        let res: Option<Vec<u8>> = self
+        let mut result = self
             .db
-            .select((&self.table, path))
+            .query(format!(
+                "select value {} from {} where {}=$key",
+                self.value_field, self.table, self.key_field
+            ))
+            .bind(("key", path))
             .await
             .map_err(parse_surreal_error)?;
-        Ok(res)
+        let vec: Vec<Vec<u8>> = result.take(0).map_err(parse_surreal_error)?;
+        Ok(vec.into_iter().next())
     }
 
     async fn set(&self, path: &str, value: &[u8]) -> Result<()> {
-        let _: Option<Vec<u8>> = self
+        let _ = self
             .db
-            .create((&self.table, path))
-            .content(value)
+            .query(format!(
+                "create {} set {}=$key, {}=$value",
+                self.table, self.key_field, self.value_field
+            ))
+            .bind(("key", path))
+            .bind(("value", value))
             .await
             .map_err(parse_surreal_error)?;
         Ok(())
     }
 
     async fn delete(&self, path: &str) -> Result<()> {
-        let _: Option<Vec<u8>> = self
+        let _ = self
             .db
-            .delete((&self.table, path))
+            .query(format!(
+                "delete {} WHERE {}=$key",
+                self.table, self.key_field
+            ))
+            .bind(("key", path))
             .await
             .map_err(parse_surreal_error)?;
         Ok(())
