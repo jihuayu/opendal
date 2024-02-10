@@ -304,9 +304,25 @@ impl kv::Adapter for Adapter {
             Capability {
                 read: true,
                 write: true,
+                list:true,
+                delete:true,
                 ..Default::default()
             },
         )
+    }
+
+    async fn scan(&self, path: &str) -> Result<Vec<String>> {
+        let mut result = self
+        .db
+        .query(format!(
+            "select value {} from {} where string::startsWith({},$perfix)",
+            self.key_field, self.table, self.key_field
+        ))
+        .bind(("perfix", path))
+        .await
+        .map_err(parse_surreal_error)?;
+        let vec: Vec<String> = result.take(0).map_err(parse_surreal_error)?;
+        Ok(vec)
     }
 
     async fn get(&self, path: &str) -> Result<Option<Vec<u8>>> {
