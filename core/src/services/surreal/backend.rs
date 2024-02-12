@@ -181,21 +181,9 @@ impl Builder for SurrealdbBuilder {
         };
         let tls = self.config.tls.unwrap_or(false);
 
-        let username = match self.config.username.clone() {
-            Some(v) => v,
-            None => {
-                return Err(Error::new(ErrorKind::ConfigInvalid, "username is empty")
-                    .with_context("service", Scheme::Surreal))
-            }
-        };
+        let username_opt = self.config.username.clone();
 
-        let password = match self.config.password.clone() {
-            Some(v) => v,
-            None => {
-                return Err(Error::new(ErrorKind::ConfigInvalid, "password is empty")
-                    .with_context("service", Scheme::Surreal))
-            }
-        };
+        let password_opt = self.config.password.clone();
 
         let namespace = match self.config.namespace.clone() {
             Some(v) => v,
@@ -237,7 +225,7 @@ impl Builder for SurrealdbBuilder {
                 .as_str(),
         );
 
-        let db_feature = create_db(tls, url, username, password, namespace, database);
+        let db_feature = create_db(tls, url, username_opt, password_opt, namespace, database);
         let db = futures::executor::block_on(db_feature);
 
         if db.is_err() {
@@ -257,17 +245,20 @@ impl Builder for SurrealdbBuilder {
 async fn create_db(
     _: bool,
     url: String,
-    username: String,
-    password: String,
+    username: Option<String>,
+    password: Option<String>,
     namespace: String,
     database: String,
 ) -> surrealdb::Result<Surreal<Client>> {
     let db = Surreal::new::<Ws>(url).await?;
-    db.signin(Root {
-        username: username.as_str(),
-        password: password.as_str(),
-    })
-    .await?;
+    if let (Some(username), Some(password)) = (username, password) {
+        db.signin(Root {
+            username: username.as_str(),
+            password: password.as_str(),
+        })
+        .await?;
+    }
+
     db.use_ns(namespace).use_db(database).await?;
     return Ok(db);
 }
@@ -304,8 +295,8 @@ impl kv::Adapter for Adapter {
             Capability {
                 read: true,
                 write: true,
-                list:true,
-                delete:true,
+                list: true,
+                delete: true,
                 ..Default::default()
             },
         )
@@ -313,14 +304,14 @@ impl kv::Adapter for Adapter {
 
     async fn scan(&self, path: &str) -> Result<Vec<String>> {
         let mut result = self
-        .db
-        .query(format!(
-            "select value {} from {} where string::startsWith({},$perfix)",
-            self.key_field, self.table, self.key_field
-        ))
-        .bind(("perfix", path))
-        .await
-        .map_err(parse_surreal_error)?;
+            .db
+            .query(format!(
+                "select value {} from {} where string::startsWith({},$perfix)",
+                self.key_field, self.table, self.key_field
+            ))
+            .bind(("perfix", path))
+            .await
+            .map_err(parse_surreal_error)?;
         let vec: Vec<String> = result.take(0).map_err(parse_surreal_error)?;
         Ok(vec)
     }
