@@ -20,24 +20,27 @@ use std::task::Context;
 use std::task::Poll;
 
 use bytes::Bytes;
+use futures::FutureExt;
 use hdfs_native::file::FileReader;
 
 use crate::raw::oio::Read;
 use crate::*;
 
+use super::error::parse_hdfs_error;
+
 pub struct HdfsNativeReader {
-    _f: FileReader,
+    f: FileReader,
 }
 
 impl HdfsNativeReader {
     pub fn new(f: FileReader) -> Self {
-        HdfsNativeReader { _f: f }
+        HdfsNativeReader { f }
     }
 }
 
 impl Read for HdfsNativeReader {
-    fn poll_read(&mut self, _cx: &mut Context<'_>, _buf: &mut [u8]) -> Poll<Result<usize>> {
-        todo!()
+    fn poll_read(&mut self, cx: &mut Context<'_>, buf: &mut [u8]) -> Poll<Result<usize>> {
+       Box::pin(self.f.read_buf(buf)).poll_unpin(cx).map_err(parse_hdfs_error)
     }
 
     fn poll_seek(&mut self, cx: &mut Context<'_>, pos: SeekFrom) -> Poll<Result<u64>> {
