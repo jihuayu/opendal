@@ -177,6 +177,9 @@ impl Accessor for SupabaseBackend {
                 write: true,
                 delete: true,
 
+                rename: true,
+                copy: true,
+
                 ..Default::default()
             });
 
@@ -234,6 +237,26 @@ impl Accessor for SupabaseBackend {
             } else {
                 Err(e)
             }
+        }
+    }
+
+    async fn rename(&self, from: &str, to: &str, _: OpRename) -> Result<RpRename> {
+        let resp = self.core.supabase_move_object(from, to).await?;
+        if resp.status().is_success() {
+            Ok(RpRename::default())
+        } else {
+            let e = parse_error(resp).await?;
+            Err(e)
+        }
+    }
+
+    async fn copy(&self, from: &str, to: &str, _: OpCopy) -> Result<RpCopy> {
+        let resp = self.core.supabase_copy_object(from, to).await?;
+        if resp.status().is_success() {
+            Ok(RpCopy::default())
+        } else {
+            let e = parse_error(resp).await?;
+            Err(e)
         }
     }
 }

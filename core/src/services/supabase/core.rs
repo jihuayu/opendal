@@ -22,6 +22,7 @@ use http::header::CONTENT_TYPE;
 use http::HeaderValue;
 use http::Request;
 use http::Response;
+use serde::Serialize;
 
 use crate::raw::*;
 use crate::*;
@@ -47,6 +48,22 @@ impl Debug for SupabaseCore {
             .field("endpoint", &self.endpoint)
             .finish_non_exhaustive()
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MoveRequestBody {
+    bucket_id: String,
+    source_key: String,
+    destination_key: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CopyRequestBody {
+    bucket_id: String,
+    source_key: String,
+    destination_key: String,
 }
 
 impl SupabaseCore {
@@ -120,6 +137,43 @@ impl SupabaseCore {
 
         Request::delete(&url)
             .body(AsyncBody::Empty)
+            .map_err(new_request_build_error)
+    }
+
+    pub fn supabase_move_object_request(&self, from: &str, to: &str) -> Result<Request<AsyncBody>> {
+        let from_abs = build_abs_path(&self.root, from);
+        let to_abs: String = build_abs_path(&self.root, to);
+
+        let url = format!("{}/storage/v1/object/move", self.endpoint);
+        let body = MoveRequestBody {
+            bucket_id: self.bucket.clone(),
+            source_key: from_abs,
+            destination_key: to_abs,
+        };
+        let body = serde_json::to_string(&body).map_err(new_json_serialize_error)?;
+        let body = bytes::Bytes::from(body);
+
+        Request::post(&url)
+            .body(AsyncBody::Bytes(body))
+            .map_err(new_request_build_error)
+    }
+
+    pub fn supabase_copy_object_request(&self, from: &str, to: &str) -> Result<Request<AsyncBody>> {
+        let from_abs = build_abs_path(&self.root, from);
+        let to_abs: String = build_abs_path(&self.root, to);
+
+        let url = format!("{}/storage/v1/object/copy", self.endpoint);
+
+        let body = CopyRequestBody {
+            bucket_id: self.bucket.clone(),
+            source_key: from_abs,
+            destination_key: to_abs,
+        };
+        let body = serde_json::to_string(&body).map_err(new_json_serialize_error)?;
+        let body = bytes::Bytes::from(body);
+
+        Request::post(&url)
+            .body(AsyncBody::Bytes(body))
             .map_err(new_request_build_error)
     }
 
@@ -264,6 +318,26 @@ impl SupabaseCore {
 
     pub async fn supabase_delete_object(&self, path: &str) -> Result<Response<IncomingAsyncBody>> {
         let mut req = self.supabase_delete_object_request(path)?;
+        self.sign(&mut req)?;
+        self.send(req).await
+    }
+
+    pub async fn supabase_move_object(
+        &self,
+        from: &str,
+        to: &str,
+    ) -> Result<Response<IncomingAsyncBody>> {
+        let mut req = self.supabase_move_object_request(from, to)?;
+        self.sign(&mut req)?;
+        self.send(req).await
+    }
+
+    pub async fn supabase_copy_object(
+        &self,
+        from: &str,
+        to: &str,
+    ) -> Result<Response<IncomingAsyncBody>> {
+        let mut req = self.supabase_copy_object_request(from, to)?;
         self.sign(&mut req)?;
         self.send(req).await
     }
