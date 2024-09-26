@@ -15,30 +15,61 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::sync::Arc;
 use std::task::Context;
 use std::task::Poll;
+
+use futures::FutureExt;
+use hdfs_native::client::ListStatusIterator;
 
 use crate::raw::oio;
 use crate::raw::oio::Entry;
 use crate::*;
 
+use self::raw::parse_datetime_from_from_timestamp;
+
+use super::error::parse_hdfs_error;
+
 pub struct HdfsNativeLister {
-    _path: String,
-    _client: Arc<hdfs_native::Client>,
+    iter: ListStatusIterator,
 }
 
 impl HdfsNativeLister {
-    pub fn new(path: String, client: Arc<hdfs_native::Client>) -> Self {
-        HdfsNativeLister {
-            _path: path,
-            _client: client,
-        }
+    pub fn new(iter: ListStatusIterator) -> Self {
+        HdfsNativeLister { iter }
     }
 }
 
 impl oio::List for HdfsNativeLister {
-    fn poll_next(&mut self, _cx: &mut Context<'_>) -> Poll<Result<Option<Entry>>> {
-        todo!()
+    fn poll_next(&mut self, cx: &mut Context<'_>) -> Poll<Result<Option<Entry>>> {
+        println!("HdfsNativeLister::poll_next");
+        let item = self.iter.next();
+        let ret = async move {
+            if let Some(status_result) = item.await {
+                let status = status_result.map_err(parse_hdfs_error)?;
+                println!("ok");
+                let mode = if status.isdir {
+                    EntryMode::DIR
+                } else {
+                    EntryMode::FILE
+                };
+    
+                let mut metadata = Metadata::new(mode);
+                metadata
+                    .set_last_modified(parse_datetime_from_from_timestamp(
+                        status.modification_time as i64,
+                    )?)
+                    .set_content_length(status.length as u64);
+                let path = status.path;
+                if status.isdir {
+                    // Make sure we are returning the correct path.
+                   return Ok(Some(oio::Entry::new(&format!("{path}/"), Metadata::new(EntryMode::DIR))));
+                } else {
+                    return Ok(Some(Entry::new(&path, metadata)));
+                };
+            }
+            println!("none");
+            Ok(None)
+        };
+        Box::pin(ret).poll_unpin(cx)
     }
 }

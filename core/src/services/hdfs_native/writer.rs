@@ -18,29 +18,38 @@
 use std::task::Context;
 use std::task::Poll;
 
+use futures::FutureExt;
 use hdfs_native::file::FileWriter;
 
 use crate::raw::oio;
 use crate::raw::oio::WriteBuf;
 use crate::*;
 
+use super::error::parse_hdfs_error;
+
 pub struct HdfsNativeWriter {
-    _f: FileWriter,
+    f: FileWriter,
 }
 
 impl HdfsNativeWriter {
     pub fn new(f: FileWriter) -> Self {
-        HdfsNativeWriter { _f: f }
+        HdfsNativeWriter { f }
     }
 }
 
 impl oio::Write for HdfsNativeWriter {
-    fn poll_write(&mut self, _cx: &mut Context<'_>, _bs: &dyn WriteBuf) -> Poll<Result<usize>> {
-        todo!()
+    fn poll_write(&mut self, cx: &mut Context<'_>, bs: &dyn WriteBuf) -> Poll<Result<usize>> {
+        println!("HdfsNativeWriter::poll_write{}", bs.remaining());
+        Box::pin(self.f.write(bs.bytes(bs.remaining())))
+            .poll_unpin(cx)
+            .map_err(parse_hdfs_error)
     }
 
-    fn poll_close(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
-        todo!()
+    fn poll_close(&mut self, cx: &mut Context<'_>) -> Poll<Result<()>> {
+        println!("HdfsNativeWriter::poll_close");
+        Box::pin(self.f.close())
+            .poll_unpin(cx)
+            .map_err(parse_hdfs_error)
     }
 
     fn poll_abort(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
