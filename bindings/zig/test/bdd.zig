@@ -18,83 +18,241 @@
 const opendal = @import("opendal");
 const std = @import("std");
 const testing = std.testing;
-const Code = opendal.Code;
 
-test "Opendal BDD test" {
-    const c_str = [*:0]const u8; // define a type for 'const char*' in C
+fn initThreadedIo() std.Io.Threaded {
+    return std.Io.Threaded.init(testing.allocator, .{});
+}
 
-    const OpendalBDDTest = struct {
-        p: [*c]opendal.c.opendal_operator,
-        scheme: c_str,
-        path: c_str,
-        content: c_str,
+test "sync memory operator" {
+    var op = try opendal.Operator.initKnown(.memory, &.{});
+    defer op.deinit();
 
-        pub fn init() Self {
-            var self: Self = undefined;
-            self.scheme = "memory";
-            self.path = "test";
-            self.content = "Hello, World!";
+    try op.check();
+    try op.write("dir/file.txt", "hello", .{});
+    try testing.expect(try op.exists("dir/file.txt"));
 
-            const options: [*c]opendal.c.opendal_operator_options = opendal.c.opendal_operator_options_new();
-            defer opendal.c.opendal_operator_options_free(options);
-            opendal.c.opendal_operator_options_set(options, "root", "/myroot");
+    var bytes = try op.readBytes("dir/file.txt", .{});
+    defer bytes.deinit();
+    try testing.expectEqualStrings("hello", bytes.slice());
 
-            // Given A new OpenDAL Blocking Operator
-            const result = opendal.c.opendal_operator_new(self.scheme, options);
-            testing.expectEqual(result.@"error", null) catch unreachable;
-            self.p = result.op;
+    var meta = try op.statAlloc(testing.allocator, "dir/file.txt", .{});
+    defer meta.deinit(testing.allocator);
+    try testing.expect(meta.is_file);
+    try testing.expectEqual(@as(?u64, 5), meta.content_length);
 
-            return self;
-        }
+    var info = try op.infoAlloc(testing.allocator);
+    defer info.deinit(testing.allocator);
+    try testing.expectEqualStrings("memory", info.scheme);
 
-        pub fn deinit(self: *Self) void {
-            opendal.c.opendal_operator_free(self.p);
-        }
+    var lister = try op.lister("dir/", .{});
+    defer lister.deinit();
 
-        const Self = @This();
-    };
+    const entry = (try lister.next()).?;
+    try testing.expectEqualStrings("dir/file.txt", entry.path());
+    try testing.expectEqualStrings("file.txt", entry.name());
+}
 
-    var testkit = OpendalBDDTest.init();
-    defer testkit.deinit();
+test "sync reader writer and owned entry lifecycle" {
+    var op = try opendal.Operator.initKnown(.memory, &.{});
+    defer op.deinit();
 
-    const allocator = std.heap.page_allocator;
-    const dupe_content = try allocator.dupeZ(u8, std.mem.span(testkit.content));
-    // When Blocking write path "test" with content "Hello, World!"
-    const data: opendal.c.opendal_bytes = .{
-        .data = dupe_content.ptr,
-        .len = dupe_content.len,
-        .capacity = dupe_content.len,
-    };
-    const result = opendal.c.opendal_operator_write(testkit.p, testkit.path, &data);
-    try testing.expectEqual(result, null);
+    var writer = try op.writer("notes/hello.txt", .{});
+    defer writer.deinit();
+    try writer.writeAll("abcdef");
+    try writer.close();
 
-    // The blocking file "test" should exist
-    const e: opendal.c.opendal_result_is_exist = opendal.c.opendal_operator_is_exist(testkit.p, testkit.path);
-    try testing.expectEqual(e.@"error", null);
-    try testing.expect(e.is_exist);
+    var reader = try op.reader("notes/hello.txt", .{});
+    defer reader.deinit();
 
-    // The blocking file "test" entry mode must be file
-    const s: opendal.c.opendal_result_stat = opendal.c.opendal_operator_stat(testkit.p, testkit.path);
-    try testing.expectEqual(s.@"error", null);
-    const meta: [*c]opendal.c.opendal_metadata = s.meta;
-    try testing.expect(opendal.c.opendal_metadata_is_file(meta));
+    var buf: [3]u8 = undefined;
+    const first_read = try reader.read(buf[0..]);
+    try testing.expectEqual(@as(usize, 3), first_read);
+    try testing.expectEqualStrings("abc", buf[0..first_read]);
 
-    // The blocking file "test" content length must be 13
-    try testing.expectEqual(opendal.c.opendal_metadata_content_length(meta), 13);
-    defer opendal.c.opendal_metadata_free(meta);
+    try testing.expectEqual(@as(u64, 2), try reader.seekTo(2));
+    const second_read = try reader.read(buf[0..]);
+    try testing.expectEqual(@as(usize, 3), second_read);
+    try testing.expectEqualStrings("cde", buf[0..second_read]);
 
-    // The blocking file "test" must have content "Hello, World!"
-    var r: opendal.c.opendal_result_read = opendal.c.opendal_operator_read(testkit.p, testkit.path);
-    defer opendal.c.opendal_bytes_free(&r.data);
-    try testing.expect(r.@"error" == null);
-    try testing.expectEqual(std.mem.len(testkit.content), r.data.len);
+    var lister = try op.lister("notes/", .{});
+    defer lister.deinit();
 
-    var count: usize = 0;
-    while (count < r.data.len) : (count += 1) {
-        try testing.expectEqual(testkit.content[count], r.data.data[count]);
+    const view = (try lister.next()).?;
+    try testing.expectEqualStrings("notes/hello.txt", view.path());
+    try testing.expectEqualStrings("hello.txt", view.name());
+
+    const metadata_view = view.metadata();
+    try testing.expect(metadata_view.isFile());
+    try testing.expectEqual(@as(?u64, 6), metadata_view.contentLength());
+
+    var owned = try view.cloneAlloc(testing.allocator);
+    defer owned.deinit(testing.allocator);
+    try testing.expectEqualStrings("notes/hello.txt", owned.path);
+    try testing.expectEqualStrings("hello.txt", owned.name());
+    try testing.expect(owned.metadata.is_file);
+
+    var lister_owned = try op.lister("notes/", .{});
+    defer lister_owned.deinit();
+    var owned_from_next = (try lister_owned.nextAlloc(testing.allocator)).?;
+    defer owned_from_next.deinit(testing.allocator);
+    try testing.expectEqualStrings("notes/hello.txt", owned_from_next.path);
+}
+
+test "async APIs require runtime" {
+    var op = try opendal.Operator.initKnown(.memory, &.{});
+    defer op.deinit();
+
+    try testing.expectError(error.AsyncRuntimeRequired, op.readAsync("missing.txt", .{}));
+    try testing.expectError(error.AsyncRuntimeRequired, op.infoAsync());
+    try testing.expectError(error.AsyncRuntimeRequired, op.writerAsync("missing.txt", .{}));
+}
+
+test "async memory operator" {
+    var runtime = try opendal.Runtime.init(testing.allocator, .{});
+    defer runtime.deinit();
+
+    var io_runtime = initThreadedIo();
+    defer io_runtime.deinit();
+    const io = io_runtime.io();
+
+    var op = try opendal.Operator.initKnownWithRuntime(&runtime, .memory, &.{});
+    defer op.deinit();
+
+    var write_op = try op.writeAsync("async.txt", "world", .{});
+    defer write_op.deinit();
+    try write_op.await(io);
+
+    var read_op = try op.readAsync("async.txt", .{});
+    defer read_op.deinit();
+    var bytes = try read_op.await(io);
+    defer bytes.deinit();
+    try testing.expectEqualStrings("world", bytes.slice());
+
+    var reader = try op.readerAsync("async.txt", .{});
+    defer reader.deinit();
+    var buf: [5]u8 = undefined;
+    var read_chunk = try reader.readAsync(buf[0..]);
+    defer read_chunk.deinit();
+    const read_len = try read_chunk.await(io);
+    try testing.expectEqual(@as(usize, 5), read_len);
+    try testing.expectEqualStrings("world", buf[0..read_len]);
+
+    var lister = try op.listerAsync("", .{});
+    defer lister.deinit();
+    var next_op = try lister.nextAsync();
+    defer next_op.deinit();
+    var entry = (try next_op.await(io)).?;
+    defer entry.deinit(runtime.allocator());
+    try testing.expectEqualStrings("async.txt", entry.path);
+}
+
+test "async poll, alloc, stat, info and cancel" {
+    var runtime = try opendal.Runtime.init(testing.allocator, .{});
+    defer runtime.deinit();
+
+    var io_runtime = initThreadedIo();
+    defer io_runtime.deinit();
+    const io = io_runtime.io();
+
+    var op = try opendal.Operator.initKnownWithRuntime(&runtime, .memory, &.{});
+    defer op.deinit();
+
+    try op.write("poll.txt", "zig-native", .{});
+
+    var read_op = try op.readAsync("poll.txt", .{});
+    defer read_op.deinit();
+
+    switch (try read_op.poll()) {
+        .pending => {
+            var bytes = try read_op.await(io);
+            defer bytes.deinit();
+            try testing.expectEqualStrings("zig-native", bytes.slice());
+        },
+        .ready => |bytes| {
+            var ready_bytes = bytes;
+            defer ready_bytes.deinit();
+            try testing.expectEqualStrings("zig-native", ready_bytes.slice());
+        },
+    }
+
+    var alloc_op = try op.readAsync("poll.txt", .{});
+    defer alloc_op.deinit();
+    const copied = try alloc_op.awaitAlloc(io, testing.allocator);
+    defer testing.allocator.free(copied);
+    try testing.expectEqualStrings("zig-native", copied);
+
+    var stat_op = try op.statAsync("poll.txt", .{});
+    defer stat_op.deinit();
+    var stat = try stat_op.await(io);
+    defer stat.deinit(runtime.allocator());
+    try testing.expect(stat.is_file);
+    try testing.expectEqual(@as(?u64, 10), stat.content_length);
+
+    var info_op = try op.infoAsync();
+    defer info_op.deinit();
+    var info = try info_op.await(io);
+    defer info.deinit(runtime.allocator());
+    try testing.expectEqualStrings("memory", info.scheme);
+    try testing.expect(info.full_capability.read);
+
+    var cancel_op = try op.readAsync("poll.txt", .{});
+    defer cancel_op.deinit();
+    if (try cancel_op.cancel(io)) |bytes| {
+        var canceled_bytes = bytes;
+        defer canceled_bytes.deinit();
+        try testing.expectEqualStrings("zig-native", canceled_bytes.slice());
     }
 }
 
-test "Semantic Analyzer" {
-    testing.refAllDeclsRecursive(@This());
+test "async reader writer and lister" {
+    var runtime = try opendal.Runtime.init(testing.allocator, .{});
+    defer runtime.deinit();
+
+    var io_runtime = initThreadedIo();
+    defer io_runtime.deinit();
+    const io = io_runtime.io();
+
+    var op = try opendal.Operator.initKnownWithRuntime(&runtime, .memory, &.{});
+    defer op.deinit();
+
+    var writer = try op.writerAsync("stream.txt", .{});
+    defer writer.deinit();
+
+    var first_write = try writer.writeAsync("stream-");
+    defer first_write.deinit();
+    try testing.expectEqual(@as(usize, 7), try first_write.await(io));
+
+    var second_write = try writer.writeAsync("data");
+    defer second_write.deinit();
+    try testing.expectEqual(@as(usize, 4), try second_write.await(io));
+
+    var close_op = try writer.closeAsync();
+    defer close_op.deinit();
+    try close_op.await(io);
+
+    var reader = try op.readerAsync("stream.txt", .{});
+    defer reader.deinit();
+
+    var seek_op = try reader.seekToAsync(7);
+    defer seek_op.deinit();
+    try testing.expectEqual(@as(u64, 7), try seek_op.await(io));
+
+    var buf: [4]u8 = undefined;
+    var read_op = try reader.readAsync(buf[0..]);
+    defer read_op.deinit();
+    try testing.expectEqual(@as(usize, 4), try read_op.await(io));
+    try testing.expectEqualStrings("data", buf[0..]);
+
+    var lister = try op.listerAsync("", .{});
+    defer lister.deinit();
+
+    var next_op = try lister.nextAsync();
+    defer next_op.deinit();
+    var entry = (try next_op.await(io)).?;
+    defer entry.deinit(runtime.allocator());
+    try testing.expectEqualStrings("stream.txt", entry.path);
+}
+
+test "module loads" {
+    _ = opendal;
 }

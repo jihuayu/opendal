@@ -22,104 +22,150 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const use_llvm = b.option(bool, "use-llvm", "Use LLVM backend (default: true)") orelse true;
-    const use_clang = b.option(bool, "use-clang", "Use libclang in translate-c (default: true)") orelse true;
-    // WIP
-    const enable_coroutine = b.option(bool, "use-coro", "Enable zigoro support (default: false)") orelse false;
 
-    // Generate the Zig bindings for OpenDAL C bindings
-    const opendal_binding = b.addTranslateC(.{
+    const native_binding = b.addTranslateC(.{
         .optimize = optimize,
         .target = target,
         .link_libc = true,
-        .root_source_file = b.path("../c/include/opendal.h"),
-        .use_clang = use_clang, // TODO: set 'false' use fno-llvm/fno-clang (may be zig v1.0)
+        .root_source_file = b.path("native/include/opendal_zig.h"),
     });
+    const native_header_module = native_binding.createModule();
 
-    // This function creates a module and adds it to the package's module set, making
-    // it available to other packages which depend on this one.
+    const cargo_args = switch (optimize) {
+        .Debug => &[_][]const u8{ "cargo", "build", "--manifest-path", "native/Cargo.toml" },
+        else => &[_][]const u8{ "cargo", "build", "--release", "--manifest-path", "native/Cargo.toml" },
+    };
+    const cargo_build = b.addSystemCommand(cargo_args);
+    const native_step = b.step("native", "Build the Zig native Rust runtime");
+    native_step.dependOn(&cargo_build.step);
+
+    const native_lib_dir = switch (optimize) {
+        .Debug => b.path("native/target/debug"),
+        else => b.path("native/target/release"),
+    };
+
     const opendal_module = b.addModule("opendal", .{
         .root_source_file = b.path("src/opendal.zig"),
         .target = target,
         .optimize = optimize,
-        .link_libcpp = true,
+        .link_libc = true,
     });
-    opendal_module.addImport("opendal_c_header", opendal_binding.addModule("opendal_c_header"));
+    opendal_module.addImport("opendal_zig_header", native_header_module);
+    opendal_module.addLibraryPath(native_lib_dir);
+    opendal_module.linkSystemLibrary("opendal_zig_native", .{});
+    opendal_module.linkSystemLibrary("iconv", .{});
+    opendal_module.linkFramework("Security", .{});
+    opendal_module.linkFramework("CoreFoundation", .{});
 
-    // ZigCoro - (stackful) Coroutine for Zig (library)
-    if (enable_coroutine) {
-        if (b.lazyDependency("zigcoro", .{})) |dep| {
-            const zigcoro = dep.module("libcoro");
-            opendal_module.addImport("libcoro", zigcoro);
-        }
-    }
-
-    opendal_module.addLibraryPath(switch (optimize) {
-        .Debug => b.path("../c/target/debug"),
-        else => b.path("../c/target/release"),
+    const lib = b.addLibrary(.{
+        .name = "opendal",
+        .root_module = opendal_module,
+        .use_llvm = use_llvm,
     });
-    opendal_module.linkSystemLibrary("opendal_c", .{});
+    lib.step.dependOn(&cargo_build.step);
+    b.installArtifact(lib);
 
-    // =============== OpenDAL C bindings ===============
-
-    // Creates a step for building the dependent C bindings
-    const libopendal_c_cmake = b.addSystemCommand(&[_][]const u8{ "cmake", "-S", "../c", "-B", "../c/build", "-DFEATURES=opendal/services-memory" });
-    const config_libopendal_c = b.step("libopendal_c_cmake", "Generate OpenDAL C binding CMake files");
-    config_libopendal_c.dependOn(&libopendal_c_cmake.step);
-    const libopendal_c = b.addSystemCommand(&[_][]const u8{ "make", "-C", "../c/build" });
-    const build_libopendal_c = b.step("libopendal_c", "Build OpenDAL C bindings");
-    libopendal_c.step.dependOn(config_libopendal_c);
-    build_libopendal_c.dependOn(&libopendal_c.step);
-
-    // =============== OpenDAL C bindings ===============
-
-    // Creates a step for unit testing. This only builds the test executable
-    // but does not run it.
-
-    const custom_test_runner: std.Build.Step.Compile.TestRunner = .{
-        .path = b.dependency("test_runner", .{}).path("test_runner.zig"),
-        .mode = .simple,
-    };
-
-    // Test library
-    const lib_test = b.addTest(.{
+    const lib_test_module = b.createModule(.{
         .root_source_file = b.path("src/opendal.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
+    });
+    lib_test_module.addImport("opendal_zig_header", native_header_module);
+    lib_test_module.addLibraryPath(native_lib_dir);
+    lib_test_module.linkSystemLibrary("opendal_zig_native", .{});
+    lib_test_module.linkSystemLibrary("iconv", .{});
+    lib_test_module.linkFramework("Security", .{});
+    lib_test_module.linkFramework("CoreFoundation", .{});
+
+    const lib_test = b.addTest(.{
+        .root_module = lib_test_module,
         .use_llvm = use_llvm,
-        .test_runner = custom_test_runner,
     });
-    lib_test.addLibraryPath(switch (optimize) {
-        .Debug => b.path("../c/target/debug"),
-        else => b.path("../c/target/release"),
-    });
-    lib_test.linkLibCpp();
-    lib_test.linkSystemLibrary("opendal_c");
-    lib_test.root_module.addImport("opendal_c_header", opendal_binding.addModule("opendal_c_header"));
+    lib_test.step.dependOn(&cargo_build.step);
 
-    // ZigCoro - (stackful) Coroutine for Zig (library)
-    if (enable_coroutine) {
-        if (b.lazyDependency("zigcoro", .{})) |dep| {
-            const zigcoro = dep.module("libcoro");
-            lib_test.root_module.addImport("libcoro", zigcoro);
-        }
-    }
-
-    // BDD sample test
-    const bdd_test = b.addTest(.{
-        .name = "bdd_test",
+    const bdd_test_module = b.createModule(.{
         .root_source_file = b.path("test/bdd.zig"),
         .target = target,
         .optimize = optimize,
-        .use_llvm = use_llvm,
-        .test_runner = custom_test_runner,
+        .link_libc = true,
+        .imports = &.{.{ .name = "opendal", .module = opendal_module }},
     });
-    bdd_test.root_module.addImport("opendal", opendal_module);
+    bdd_test_module.addLibraryPath(native_lib_dir);
+    bdd_test_module.linkSystemLibrary("opendal_zig_native", .{});
+    bdd_test_module.linkSystemLibrary("iconv", .{});
+    bdd_test_module.linkFramework("Security", .{});
+    bdd_test_module.linkFramework("CoreFoundation", .{});
 
-    // Creates a step for running unit tests.
+    const bdd_test = b.addTest(.{
+        .name = "bdd_test",
+        .root_module = bdd_test_module,
+        .use_llvm = use_llvm,
+    });
+    bdd_test.step.dependOn(&cargo_build.step);
+
     const run_lib_test = b.addRunArtifact(lib_test);
     const run_bdd_test = b.addRunArtifact(bdd_test);
     const test_step = b.step("test", "Run OpenDAL Zig bindings tests");
-    test_step.dependOn(&libopendal_c.step);
+    test_step.dependOn(&cargo_build.step);
     test_step.dependOn(&run_lib_test.step);
     test_step.dependOn(&run_bdd_test.step);
+
+    const sync_example_module = b.createModule(.{
+        .root_source_file = b.path("examples/sync_memory.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "opendal", .module = opendal_module }},
+    });
+    sync_example_module.addLibraryPath(native_lib_dir);
+    sync_example_module.linkSystemLibrary("opendal_zig_native", .{});
+    sync_example_module.linkSystemLibrary("iconv", .{});
+    sync_example_module.linkFramework("Security", .{});
+    sync_example_module.linkFramework("CoreFoundation", .{});
+
+    const sync_example = b.addExecutable(.{
+        .name = "opendal-zig-sync-memory-example",
+        .root_module = sync_example_module,
+        .use_llvm = use_llvm,
+    });
+    sync_example.step.dependOn(&cargo_build.step);
+
+    const async_example_module = b.createModule(.{
+        .root_source_file = b.path("examples/async_memory.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{.{ .name = "opendal", .module = opendal_module }},
+    });
+    async_example_module.addLibraryPath(native_lib_dir);
+    async_example_module.linkSystemLibrary("opendal_zig_native", .{});
+    async_example_module.linkSystemLibrary("iconv", .{});
+    async_example_module.linkFramework("Security", .{});
+    async_example_module.linkFramework("CoreFoundation", .{});
+
+    const async_example = b.addExecutable(.{
+        .name = "opendal-zig-async-memory-example",
+        .root_module = async_example_module,
+        .use_llvm = use_llvm,
+    });
+    async_example.step.dependOn(&cargo_build.step);
+
+    b.installArtifact(sync_example);
+    b.installArtifact(async_example);
+
+    const run_sync_example = b.addRunArtifact(sync_example);
+    const run_async_example = b.addRunArtifact(async_example);
+
+    const example_sync_step = b.step("example-sync-memory", "Run the synchronous memory example");
+    example_sync_step.dependOn(&cargo_build.step);
+    example_sync_step.dependOn(&run_sync_example.step);
+
+    const example_async_step = b.step("example-async-memory", "Run the asynchronous memory example");
+    example_async_step.dependOn(&cargo_build.step);
+    example_async_step.dependOn(&run_async_example.step);
+
+    const examples_step = b.step("examples", "Build and run Zig examples");
+    examples_step.dependOn(example_sync_step);
+    examples_step.dependOn(example_async_step);
 }
