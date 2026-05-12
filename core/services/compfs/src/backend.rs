@@ -16,6 +16,7 @@
 // under the License.
 
 use std::io::Cursor;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use compio::dispatcher::Dispatcher;
@@ -74,6 +75,15 @@ impl Builder for CompfsBuilder {
             }
         }
 
+        let root = PathBuf::from(root).canonicalize().map_err(|e| {
+            Error::new(
+                ErrorKind::Unexpected,
+                "canonicalize of root directory failed",
+            )
+            .with_operation("Builder::build")
+            .set_source(e)
+        })?;
+
         let dispatcher = Dispatcher::new().map_err(|_| {
             Error::new(
                 ErrorKind::Unexpected,
@@ -84,7 +94,7 @@ impl Builder for CompfsBuilder {
             info: {
                 let am = AccessorInfo::default();
                 am.set_scheme(COMPFS_SCHEME)
-                    .set_root(&root)
+                    .set_root(&root.to_string_lossy())
                     .set_native_capability(Capability {
                         stat: true,
 
@@ -108,7 +118,7 @@ impl Builder for CompfsBuilder {
 
                 am.into()
             },
-            root: root.into(),
+            root,
             dispatcher,
             buf_pool: oio::PooledBuf::new(16),
         };
@@ -134,7 +144,7 @@ impl Access for CompfsBackend {
     }
 
     async fn create_dir(&self, path: &str, _: OpCreateDir) -> Result<RpCreateDir> {
-        let path = self.core.prepare_path(path);
+        let path = self.core.prepare_path(path)?;
 
         self.core
             .exec(move || async move { compio::fs::create_dir_all(path).await })
@@ -144,7 +154,7 @@ impl Access for CompfsBackend {
     }
 
     async fn stat(&self, path: &str, _: OpStat) -> Result<RpStat> {
-        let path = self.core.prepare_path(path);
+        let path = self.core.prepare_path(path)?;
         let meta = self
             .core
             .exec(move || async move { compio::fs::metadata(path).await })
@@ -172,8 +182,8 @@ impl Access for CompfsBackend {
     }
 
     async fn copy(&self, from: &str, to: &str, _: OpCopy) -> Result<RpCopy> {
-        let from = self.core.prepare_path(from);
-        let to = self.core.prepare_path(to);
+        let from = self.core.prepare_path(from)?;
+        let to = self.core.prepare_path(to)?;
 
         self.core
             .exec(move || async move {
@@ -199,8 +209,8 @@ impl Access for CompfsBackend {
     }
 
     async fn rename(&self, from: &str, to: &str, _: OpRename) -> Result<RpRename> {
-        let from = self.core.prepare_path(from);
-        let to = self.core.prepare_path(to);
+        let from = self.core.prepare_path(from)?;
+        let to = self.core.prepare_path(to)?;
 
         self.core
             .exec(move || async move {
@@ -215,7 +225,7 @@ impl Access for CompfsBackend {
     }
 
     async fn read(&self, path: &str, op: OpRead) -> Result<(RpRead, Self::Reader)> {
-        let path = self.core.prepare_path(path);
+        let path = self.core.prepare_path(path)?;
 
         let file = self
             .core
@@ -227,7 +237,7 @@ impl Access for CompfsBackend {
     }
 
     async fn write(&self, path: &str, args: OpWrite) -> Result<(RpWrite, Self::Writer)> {
-        let path = self.core.prepare_path(path);
+        let path = self.core.prepare_path(path)?;
         let append = args.append();
         let file = self
             .core
@@ -255,7 +265,7 @@ impl Access for CompfsBackend {
     }
 
     async fn list(&self, path: &str, _: OpList) -> Result<(RpList, Self::Lister)> {
-        let path = self.core.prepare_path(path);
+        let path = self.core.prepare_path(path)?;
 
         let read_dir = match self
             .core

@@ -36,7 +36,7 @@ pub struct FsCore {
 impl FsCore {
     // Build write path and ensure the parent dirs created
     pub async fn ensure_write_abs_path(&self, parent: &Path, path: &str) -> Result<PathBuf> {
-        let p = parent.join(path);
+        let p = build_local_abs_path(parent, path)?;
 
         // Create dir before write path.
         //
@@ -63,7 +63,7 @@ impl FsCore {
     }
 
     pub async fn fs_create_dir(&self, path: &str) -> Result<()> {
-        let p = self.root.join(path.trim_end_matches('/'));
+        let p = build_local_abs_path(&self.root, path)?;
         tokio::fs::create_dir_all(&p)
             .await
             .map_err(new_std_io_error)?;
@@ -71,7 +71,7 @@ impl FsCore {
     }
 
     pub async fn fs_stat(&self, path: &str) -> Result<Metadata> {
-        let p = self.root.join(path.trim_end_matches('/'));
+        let p = build_local_abs_path(&self.root, path)?;
         let meta = tokio::fs::metadata(&p).await.map_err(new_std_io_error)?;
         let mode = if meta.is_dir() {
             EntryMode::DIR
@@ -99,7 +99,7 @@ impl FsCore {
     }
 
     pub async fn fs_read(&self, path: &str, args: &OpRead) -> Result<tokio::fs::File> {
-        let p = self.root.join(path.trim_end_matches('/'));
+        let p = build_local_abs_path(&self.root, path)?;
 
         let mut f = tokio::fs::OpenOptions::new()
             .read(true)
@@ -152,6 +152,8 @@ impl FsCore {
             ));
         };
 
+        build_local_abs_path(&self.root, path)?;
+
         let tmp_path = self
             .ensure_write_abs_path(atomic_write_dir, &build_tmp_path_of(path))
             .await?;
@@ -169,7 +171,7 @@ impl FsCore {
     }
 
     pub async fn fs_list(&self, path: &str) -> Result<Option<tokio::fs::ReadDir>> {
-        let p = self.root.join(path.trim_end_matches('/'));
+        let p = build_local_abs_path(&self.root, path)?;
 
         match tokio::fs::read_dir(&p).await {
             Ok(rd) => Ok(Some(rd)),
@@ -191,25 +193,21 @@ impl FsCore {
     }
 
     pub async fn fs_copy(&self, from: &str, to: &str) -> Result<()> {
-        let from = self.root.join(from.trim_end_matches('/'));
+        let from = build_local_abs_path(&self.root, from)?;
         // try to get the metadata of the source file to ensure it exists
         tokio::fs::metadata(&from).await.map_err(new_std_io_error)?;
 
-        let to = self
-            .ensure_write_abs_path(&self.root, to.trim_end_matches('/'))
-            .await?;
+        let to = self.ensure_write_abs_path(&self.root, to).await?;
 
         tokio::fs::copy(from, to).await.map_err(new_std_io_error)?;
         Ok(())
     }
 
     pub async fn fs_rename(&self, from: &str, to: &str) -> Result<()> {
-        let from = self.root.join(from.trim_end_matches('/'));
+        let from = build_local_abs_path(&self.root, from)?;
         tokio::fs::metadata(&from).await.map_err(new_std_io_error)?;
 
-        let to = self
-            .ensure_write_abs_path(&self.root, to.trim_end_matches('/'))
-            .await?;
+        let to = self.ensure_write_abs_path(&self.root, to).await?;
 
         tokio::fs::rename(from, to)
             .await

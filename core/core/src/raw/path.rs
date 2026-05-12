@@ -17,6 +17,9 @@
 
 use crate::*;
 use std::hash::{BuildHasher, Hasher};
+use std::path::Component;
+use std::path::Path;
+use std::path::PathBuf;
 
 /// build_abs_path will build an absolute path with root.
 ///
@@ -118,6 +121,31 @@ pub fn normalize_path(path: &str) -> String {
     }
 
     p
+}
+
+/// Resolve a normalized OpenDAL path under a local filesystem root.
+///
+/// This helper rejects path components that can escape the configured root when
+/// interpreted by the operating system.
+pub fn build_local_abs_path(root: &Path, path: &str) -> Result<PathBuf> {
+    let mut p = root.to_path_buf();
+
+    for component in Path::new(path.trim_end_matches('/')).components() {
+        match component {
+            Component::Normal(v) => p.push(v),
+            Component::CurDir => {}
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
+                return Err(Error::new(
+                    ErrorKind::PermissionDenied,
+                    "path is not allowed to escape root",
+                )
+                .with_context("root", root.to_string_lossy())
+                .with_context("path", path));
+            }
+        }
+    }
+
+    Ok(p)
 }
 
 /// Make sure root is normalized to style like `/abc/def/`.
@@ -289,6 +317,49 @@ mod tests {
 
         for (name, input, expect) in cases {
             assert_eq!(normalize_path(input), expect, "{name}")
+        }
+    }
+
+    #[test]
+    fn test_build_local_abs_path() {
+        let root = Path::new("/tmp/opendal-root");
+
+        let cases = [
+            ("root", "/", "/tmp/opendal-root"),
+            ("file", "abc/def", "/tmp/opendal-root/abc/def"),
+            ("dir", "abc/def/", "/tmp/opendal-root/abc/def"),
+            ("current dir", "abc/./def", "/tmp/opendal-root/abc/def"),
+        ];
+
+        for (name, input, expect) in cases {
+            assert_eq!(
+                build_local_abs_path(root, input).unwrap(),
+                PathBuf::from(expect),
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_build_local_abs_path_rejects_escape() {
+        let root = Path::new("/tmp/opendal-root");
+
+        let cases = ["../secret", "abc/../../secret", "/abs", "abc/../def"];
+
+        for input in cases {
+            assert_eq!(
+                build_local_abs_path(root, input).unwrap_err().kind(),
+                ErrorKind::PermissionDenied,
+                "{input}"
+            );
+        }
+
+        #[cfg(windows)]
+        {
+            assert_eq!(
+                build_local_abs_path(root, "C:\\secret").unwrap_err().kind(),
+                ErrorKind::PermissionDenied
+            );
         }
     }
 

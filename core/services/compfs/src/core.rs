@@ -63,8 +63,8 @@ pub(super) struct CompfsCore {
 }
 
 impl CompfsCore {
-    pub fn prepare_path(&self, path: &str) -> PathBuf {
-        self.root.join(path.trim_end_matches('/'))
+    pub fn prepare_path(&self, path: &str) -> Result<PathBuf> {
+        build_local_abs_path(&self.root, path)
     }
 
     pub async fn exec<Fn, Fut, R>(&self, f: Fn) -> opendal_core::Result<R>

@@ -38,6 +38,111 @@ pub struct FsBuilder {
     pub(super) config: FsConfig,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Fs;
+
+    fn new_operator(root: &std::path::Path) -> Operator {
+        Operator::new(Fs::default().root(&root.to_string_lossy()))
+            .unwrap()
+            .finish()
+    }
+
+    async fn assert_rejected(res: Result<impl std::fmt::Debug>) {
+        assert_eq!(res.unwrap_err().kind(), ErrorKind::PermissionDenied);
+    }
+
+    #[tokio::test]
+    async fn test_reject_path_escape_for_single_path_ops() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("root");
+        let outside = dir.path().join("secret");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(&outside, b"secret").unwrap();
+
+        let op = new_operator(&root);
+
+        assert_rejected(op.read("../secret").await).await;
+        assert_rejected(op.stat("../secret").await).await;
+        assert_rejected(op.list("../").await).await;
+        assert_rejected(op.write("../secret", "changed").await).await;
+        assert_rejected(op.create_dir("../created/").await).await;
+        assert_rejected(op.delete_with("../secret").await).await;
+        assert_rejected(op.delete_with("../").recursive(true).await).await;
+
+        assert_eq!(std::fs::read(&outside).unwrap(), b"secret");
+        assert!(!dir.path().join("created").exists());
+    }
+
+    #[tokio::test]
+    async fn test_reject_path_escape_for_copy_and_rename() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("root");
+        let outside = dir.path().join("secret");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("inside"), b"inside").unwrap();
+        std::fs::write(&outside, b"secret").unwrap();
+
+        let op = new_operator(&root);
+
+        assert_rejected(op.copy("../secret", "copied").await).await;
+        assert_rejected(op.copy("inside", "../copied").await).await;
+        assert_rejected(op.rename("../secret", "renamed").await).await;
+        assert_rejected(op.rename("inside", "../renamed").await).await;
+
+        assert_eq!(std::fs::read(&outside).unwrap(), b"secret");
+        assert_eq!(std::fs::read(root.join("inside")).unwrap(), b"inside");
+        assert!(!root.join("copied").exists());
+        assert!(!dir.path().join("copied").exists());
+        assert!(!dir.path().join("renamed").exists());
+    }
+
+    #[tokio::test]
+    async fn test_reject_path_escape_with_atomic_write_dir() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("root");
+        let atomic = dir.path().join("atomic");
+        let outside = dir.path().join("secret");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::create_dir_all(&atomic).unwrap();
+        std::fs::write(&outside, b"secret").unwrap();
+
+        let op = Operator::new(
+            Fs::default()
+                .root(&root.to_string_lossy())
+                .atomic_write_dir(&atomic.to_string_lossy()),
+        )
+        .unwrap()
+        .finish();
+
+        assert_rejected(op.write("../secret", "changed").await).await;
+
+        assert_eq!(std::fs::read(&outside).unwrap(), b"secret");
+        assert_eq!(std::fs::read_dir(&atomic).unwrap().count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_accept_normal_local_paths() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("root");
+        std::fs::create_dir_all(&root).unwrap();
+
+        let op = new_operator(&root);
+
+        op.create_dir("dir/").await.unwrap();
+        op.write("dir/file", "content").await.unwrap();
+        assert_eq!(
+            op.read("dir/file").await.unwrap().to_bytes().as_ref(),
+            b"content"
+        );
+        op.copy("dir/file", "dir/copied").await.unwrap();
+        op.rename("dir/copied", "dir/renamed").await.unwrap();
+        op.delete("dir/renamed").await.unwrap();
+        assert!(!root.join("dir/renamed").exists());
+    }
+}
+
 impl FsBuilder {
     /// Set root for backend.
     pub fn root(mut self, root: &str) -> Self {

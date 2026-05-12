@@ -96,13 +96,13 @@ impl MonoiofsCore {
     }
 
     /// join root and path
-    pub fn prepare_path(&self, path: &str) -> PathBuf {
-        self.root.join(path.trim_end_matches('/'))
+    pub fn prepare_path(&self, path: &str) -> Result<PathBuf> {
+        build_local_abs_path(&self.root, path)
     }
 
     /// join root and path, create parent dirs
     pub async fn prepare_write_path(&self, path: &str) -> Result<PathBuf> {
-        let path = self.prepare_path(path);
+        let path = self.prepare_path(path)?;
         let parent = path
             .parent()
             .ok_or_else(|| {
