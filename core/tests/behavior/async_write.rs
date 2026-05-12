@@ -35,6 +35,8 @@ pub fn tests(op: &Operator, tests: &mut Vec<Trial>) {
         tests.extend(async_trials!(
             op,
             test_write_only,
+            test_write_to_new_file_in_existing_dir,
+            test_write_to_new_file_in_nested_dir,
             test_write_with_empty_content,
             test_write_with_dir_path,
             test_write_with_special_chars,
@@ -80,6 +82,51 @@ pub async fn test_write_only(op: Operator) -> Result<()> {
     let meta = op.stat(&path).await.expect("stat must succeed");
     assert_eq!(meta.content_length(), size as u64);
 
+    Ok(())
+}
+
+/// Write a new file under an existing parent dir should succeed.
+pub async fn test_write_to_new_file_in_existing_dir(op: Operator) -> Result<()> {
+    if !op.info().full_capability().create_dir {
+        return Ok(());
+    }
+
+    let dir = format!("{}/", uuid::Uuid::new_v4());
+    let path = format!("{}{}", dir, uuid::Uuid::new_v4());
+    let (content, size) = gen_bytes(op.info().full_capability());
+
+    op.create_dir(&dir).await?;
+    op.write(&path, content).await?;
+
+    let meta = op.stat(&path).await.expect("stat must succeed");
+    assert_eq!(meta.content_length(), size as u64);
+
+    op.delete(&path).await.expect("delete must succeed");
+    op.delete(&dir).await.expect("delete must succeed");
+    Ok(())
+}
+
+/// Write a new file under missing nested parent dirs should succeed.
+pub async fn test_write_to_new_file_in_nested_dir(op: Operator) -> Result<()> {
+    if !op.info().full_capability().create_dir {
+        return Ok(());
+    }
+
+    let root = uuid::Uuid::new_v4();
+    let dir = format!("{root}/{}/", uuid::Uuid::new_v4());
+    let path = format!("{}{}", dir, uuid::Uuid::new_v4());
+    let (content, size) = gen_bytes(op.info().full_capability());
+
+    op.write(&path, content).await?;
+
+    let meta = op.stat(&path).await.expect("stat must succeed");
+    assert_eq!(meta.content_length(), size as u64);
+
+    op.delete(&path).await.expect("delete must succeed");
+    op.delete(&dir).await.expect("delete must succeed");
+    op.delete(&format!("{root}/"))
+        .await
+        .expect("delete must succeed");
     Ok(())
 }
 

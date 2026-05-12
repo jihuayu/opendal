@@ -31,6 +31,7 @@ pub fn tests(op: &Operator, tests: &mut Vec<Trial>) {
             test_copy_source_dir,
             test_copy_target_dir,
             test_copy_self,
+            test_copy_to_new_file_in_existing_dir,
             test_copy_nested,
             test_copy_overwrite
         ))
@@ -173,6 +174,39 @@ pub async fn test_copy_self(op: Operator) -> Result<()> {
     assert_eq!(err.kind(), ErrorKind::IsSameFile);
 
     op.delete(&source_path).await.expect("delete must succeed");
+    Ok(())
+}
+
+/// Copy to a new file under an existing parent dir should succeed.
+pub async fn test_copy_to_new_file_in_existing_dir(op: Operator) -> Result<()> {
+    if !op.info().full_capability().create_dir {
+        return Ok(());
+    }
+
+    let source_path = uuid::Uuid::new_v4().to_string();
+    let (source_content, _) = gen_bytes(op.info().full_capability());
+
+    op.write(&source_path, source_content.clone()).await?;
+
+    let target_dir = format!("{}/", uuid::Uuid::new_v4());
+    let target_path = format!("{}{}", target_dir, uuid::Uuid::new_v4());
+    op.create_dir(&target_dir).await?;
+
+    op.copy(&source_path, &target_path).await?;
+
+    let target_content = op
+        .read(&target_path)
+        .await
+        .expect("read must succeed")
+        .to_bytes();
+    assert_eq!(
+        sha256_digest(target_content),
+        sha256_digest(&source_content),
+    );
+
+    op.delete(&source_path).await.expect("delete must succeed");
+    op.delete(&target_path).await.expect("delete must succeed");
+    op.delete(&target_dir).await.expect("delete must succeed");
     Ok(())
 }
 

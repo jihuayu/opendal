@@ -39,6 +39,18 @@ use super::writer::SftpWriter;
 use opendal_core::raw::*;
 use opendal_core::*;
 
+fn split_parent(path: &str) -> (&str, &str) {
+    match path.rsplit_once('/') {
+        Some(("", file_name)) => ("/", file_name),
+        Some((parent, file_name)) => (parent, file_name),
+        None => (".", path),
+    }
+}
+
+fn build_rooted_path(root: PathBuf, path: &str) -> PathBuf {
+    root.join(path)
+}
+
 /// SFTP services support. (only works on unix)
 ///
 /// If you are interested in working on windows, please refer to [this](https://github.com/apache/opendal/issues/2963) issue.
@@ -286,7 +298,10 @@ impl Access for SftpBackend {
 
         let mut fs = client.fs();
         fs.set_cwd(&self.core.root);
-        let path = fs.canonicalize(path).await.map_err(parse_sftp_error)?;
+        let (parent, file_name) = split_parent(path);
+        let parent = build_rooted_path(PathBuf::from(&self.core.root), parent);
+        let parent = fs.canonicalize(parent).await.map_err(parse_sftp_error)?;
+        let path = build_rooted_path(parent, file_name);
 
         let mut option = client.options();
         if op.if_not_exists() {
@@ -365,7 +380,10 @@ impl Access for SftpBackend {
         }
 
         let src = fs.canonicalize(from).await.map_err(parse_sftp_error)?;
-        let dst = fs.canonicalize(to).await.map_err(parse_sftp_error)?;
+        let (parent, file_name) = split_parent(to);
+        let parent = build_rooted_path(PathBuf::from(&self.core.root), parent);
+        let parent = fs.canonicalize(parent).await.map_err(parse_sftp_error)?;
+        let dst = build_rooted_path(parent, file_name);
         let mut src_file = client.open(&src).await.map_err(parse_sftp_error)?;
         let mut dst_file = client.create(dst).await.map_err(parse_sftp_error)?;
 
@@ -389,5 +407,51 @@ impl Access for SftpBackend {
         fs.rename(from, to).await.map_err(parse_sftp_error)?;
 
         Ok(RpRename::default())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+    use std::path::PathBuf;
+
+    use super::*;
+
+    #[test]
+    fn split_parent_handles_file_in_current_dir() {
+        assert_eq!(split_parent("file.txt"), (".", "file.txt"));
+    }
+
+    #[test]
+    fn split_parent_handles_nested_file() {
+        assert_eq!(
+            split_parent("dir/subdir/file.txt"),
+            ("dir/subdir", "file.txt")
+        );
+    }
+
+    #[test]
+    fn split_parent_handles_absolute_file() {
+        assert_eq!(split_parent("/file.txt"), ("/", "file.txt"));
+        assert_eq!(
+            split_parent("/dir/subdir/file.txt"),
+            ("/dir/subdir", "file.txt")
+        );
+    }
+
+    #[test]
+    fn build_rooted_path_uses_root() {
+        assert_eq!(
+            build_rooted_path(PathBuf::from("/root/"), "dir/new-file.txt"),
+            Path::new("/root/dir/new-file.txt")
+        );
+    }
+
+    #[test]
+    fn build_rooted_path_allows_default_remote_root() {
+        assert_eq!(
+            build_rooted_path(PathBuf::from("/"), "dir/new-file.txt"),
+            Path::new("/dir/new-file.txt")
+        );
     }
 }
