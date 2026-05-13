@@ -157,13 +157,7 @@ impl Access for DropboxBackend {
 
         match status {
             StatusCode::OK => Ok(RpCopy::default()),
-            _ => {
-                let err = parse_error(resp);
-                match err.kind() {
-                    ErrorKind::NotFound => Ok(RpCopy::default()),
-                    _ => Err(err),
-                }
-            }
+            _ => Err(parse_error(resp)),
         }
     }
 
@@ -174,13 +168,73 @@ impl Access for DropboxBackend {
 
         match status {
             StatusCode::OK => Ok(RpRename::default()),
-            _ => {
-                let err = parse_error(resp);
-                match err.kind() {
-                    ErrorKind::NotFound => Ok(RpRename::default()),
-                    _ => Err(err),
-                }
-            }
+            _ => Err(parse_error(resp)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bytes::Bytes;
+    use futures::stream;
+    use http::Request;
+    use http::Response;
+    use http::StatusCode;
+    use opendal_core::Buffer;
+    use opendal_core::ErrorKind;
+    use opendal_core::Operator;
+    use opendal_core::layers::HttpClientLayer;
+    use opendal_core::raw::HttpBody;
+    use opendal_core::raw::HttpClient;
+    use opendal_core::raw::HttpFetch;
+
+    use super::super::builder::DropboxBuilder;
+
+    struct NotFoundFetcher;
+
+    impl HttpFetch for NotFoundFetcher {
+        async fn fetch(&self, req: Request<Buffer>) -> opendal_core::Result<Response<HttpBody>> {
+            let body = match req.uri().path() {
+                "/2/files/copy_v2" | "/2/files/move_v2" => {
+                    r#"{"error_summary":"from_lookup/not_found/..."}"#
+                }
+                path => panic!("unexpected request path: {path}"),
+            };
+
+            Ok(Response::builder()
+                .status(StatusCode::CONFLICT)
+                .body(HttpBody::new(
+                    stream::iter([Ok(Buffer::from(Bytes::from_static(body.as_bytes())))]),
+                    Some(body.len() as u64),
+                ))
+                .expect("response must build"))
+        }
+    }
+
+    fn new_operator() -> Operator {
+        Operator::new(DropboxBuilder::default().access_token("test"))
+            .expect("operator must build")
+            .layer(HttpClientLayer::new(HttpClient::with(NotFoundFetcher)))
+            .finish()
+    }
+
+    #[tokio::test]
+    async fn copy_returns_not_found_for_missing_source() {
+        let err = new_operator()
+            .copy("missing-source", "target")
+            .await
+            .expect_err("copy must fail");
+
+        assert_eq!(err.kind(), ErrorKind::NotFound);
+    }
+
+    #[tokio::test]
+    async fn rename_returns_not_found_for_missing_source() {
+        let err = new_operator()
+            .rename("missing-source", "target")
+            .await
+            .expect_err("rename must fail");
+
+        assert_eq!(err.kind(), ErrorKind::NotFound);
     }
 }
