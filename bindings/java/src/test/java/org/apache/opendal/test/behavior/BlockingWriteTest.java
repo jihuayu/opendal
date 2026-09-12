@@ -22,19 +22,21 @@ package org.apache.opendal.test.behavior;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import java.security.MessageDigest;
 import java.util.Random;
 import java.util.UUID;
-import org.apache.commons.io.IOUtils;
+import org.apache.opendal.ByteRange;
 import org.apache.opendal.Capability;
 import org.apache.opendal.Metadata;
 import org.apache.opendal.OpenDALException;
 import org.apache.opendal.OperatorInputStream;
-import org.apache.opendal.ReadOptions;
 import org.apache.opendal.ReaderOptions;
 import org.apache.opendal.test.condition.OpenDALExceptionCondition;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BlockingWriteTest extends BehaviorTestBase {
@@ -67,21 +69,34 @@ class BlockingWriteTest extends BehaviorTestBase {
         op().delete(path);
     }
 
-    @Test
-    public void testBlockingInputStreamWithReaderOptions() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    public void testBlockingInputStreamWithReaderOptions(boolean chunked) throws Exception {
         final String path = UUID.randomUUID().toString();
         final byte[] content = new byte[1024 * 1024 + 13];
         new Random(8252).nextBytes(content);
         op().write(path, content);
         try {
-            final ReaderOptions options = ReaderOptions.builder()
-                    .concurrent(4)
-                    .chunk(256 * 1024L)
-                    .prefetch(2)
-                    .build();
+            final ReaderOptions options = chunked
+                    ? ReaderOptions.builder()
+                            .concurrent(4)
+                            .chunk(256 * 1024L)
+                            .prefetch(2)
+                            .build()
+                    : ReaderOptions.builder().build();
             try (final OperatorInputStream in =
-                    op().createInputStream(path, ReadOptions.builder().build(), options)) {
-                assertThat(IOUtils.toByteArray(in)).isEqualTo(content);
+                    op().createInputStream(path, ByteRange.all(), options)) {
+                final MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                final byte[] buffer = new byte[8191];
+                long total = 0;
+                int count;
+                while ((count = in.read(buffer)) != -1) {
+                    digest.update(buffer, 0, count);
+                    total += count;
+                }
+                assertThat(total).isEqualTo(content.length);
+                assertThat(digest.digest())
+                        .isEqualTo(MessageDigest.getInstance("SHA-256").digest(content));
                 assertThat(in.read()).isEqualTo(-1);
             }
         } finally {

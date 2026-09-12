@@ -29,6 +29,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
+import org.apache.opendal.ByteRange;
 import org.apache.opendal.OpenDALException;
 import org.apache.opendal.Operator;
 import org.apache.opendal.OperatorInputStream;
@@ -111,7 +112,7 @@ public class OperatorInputOutputStreamTest {
                     .prefetch(2)
                     .build();
             try (final OperatorInputStream in =
-                    op.createInputStream(path, ReadOptions.builder().build(), options)) {
+                    op.createInputStream(path, ByteRange.all(), options)) {
                 assertThat(IOUtils.toByteArray(in)).isEqualTo(content);
                 assertThat(in.read()).isEqualTo(-1);
             }
@@ -125,7 +126,7 @@ public class OperatorInputOutputStreamTest {
         try (final Operator op = Operator.of(fs)) {
             final String path = "chunked-range.txt";
             op.write(path, "0123456789");
-            final ReadOptions range = ReadOptions.builder().offset(4).length(5).build();
+            final ByteRange range = ByteRange.of(3, 5);
             final ReaderOptions options = ReaderOptions.builder()
                     .concurrent(2)
                     .chunk(2)
@@ -133,7 +134,7 @@ public class OperatorInputOutputStreamTest {
                     .contentLengthHint(10)
                     .build();
             try (final OperatorInputStream in = op.createInputStream(path, range, options)) {
-                assertThat(IOUtils.toByteArray(in)).isEqualTo("45678".getBytes(StandardCharsets.UTF_8));
+                assertThat(IOUtils.toByteArray(in)).isEqualTo("34567".getBytes(StandardCharsets.UTF_8));
                 assertThat(in.read()).isEqualTo(-1);
             }
         }
@@ -148,9 +149,10 @@ public class OperatorInputOutputStreamTest {
             op.write(path, new byte[0]);
             final ReaderOptions options =
                     ReaderOptions.builder().chunk(2).contentLengthHint(0).build();
-            try (final OperatorInputStream in =
-                    op.createInputStream(path, ReadOptions.builder().build(), options)) {
-                assertThat(in.read()).isEqualTo(-1);
+            for (ByteRange range : new ByteRange[] {ByteRange.all(), ByteRange.suffix(4)}) {
+                try (final OperatorInputStream in = op.createInputStream(path, range, options)) {
+                    assertThat(in.read()).isEqualTo(-1);
+                }
             }
         }
     }
@@ -165,6 +167,85 @@ public class OperatorInputOutputStreamTest {
                 Arguments.of(ReaderOptions.builder().contentLengthHint(-2).build(), "contentLengthHint"));
     }
 
+    static Stream<Arguments> byteRanges() {
+        return Stream.of(
+                Arguments.of(ByteRange.all(), "0123456789"),
+                Arguments.of(ByteRange.from(3), "3456789"),
+                Arguments.of(ByteRange.of(3, -1), "3456789"),
+                Arguments.of(ByteRange.of(3, 5), "34567"),
+                Arguments.of(ByteRange.of(3, 0), ""),
+                Arguments.of(ByteRange.suffix(3), "789"),
+                Arguments.of(ByteRange.suffix(20), "0123456789"),
+                Arguments.of(ByteRange.suffix(0), ""));
+    }
+
+    @ParameterizedTest
+    @MethodSource("byteRanges")
+    void testByteRanges(ByteRange range, String expected) throws Exception {
+        final ServiceConfig.Fs fs =
+                ServiceConfig.Fs.builder().root(tempDir.toString()).build();
+        try (final Operator op = Operator.of(fs)) {
+            op.write("ranges.txt", "0123456789");
+            try (final OperatorInputStream in = op.createInputStream("ranges.txt", range)) {
+                assertThat(IOUtils.toByteArray(in)).isEqualTo(expected.getBytes(StandardCharsets.UTF_8));
+                assertThat(in.read()).isEqualTo(-1);
+            }
+            final ReaderOptions options = ReaderOptions.builder()
+                    .chunk(2)
+                    .concurrent(2)
+                    .prefetch(1)
+                    .build();
+            try (final OperatorInputStream in = op.createInputStream("ranges.txt", range, options)) {
+                assertThat(IOUtils.toByteArray(in)).isEqualTo(expected.getBytes(StandardCharsets.UTF_8));
+                assertThat(in.read()).isEqualTo(-1);
+            }
+        }
+    }
+
+    static Stream<Arguments> invalidByteRanges() {
+        return Stream.of(
+                Arguments.of(ByteRange.from(-1), "offset"),
+                Arguments.of(ByteRange.of(0, -2), "length"),
+                Arguments.of(ByteRange.suffix(-1), "suffix length"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidByteRanges")
+    void testInvalidByteRanges(ByteRange range, String field) {
+        final ServiceConfig.Fs fs =
+                ServiceConfig.Fs.builder().root(tempDir.toString()).build();
+        try (final Operator op = Operator.of(fs)) {
+            assertThatThrownBy(() -> {
+                        try (final OperatorInputStream in = op.createInputStream("invalid-range", range)) {
+                            in.read();
+                        }
+                    })
+                    .is(OpenDALExceptionCondition.ofSync(OpenDALException.Code.RangeNotSatisfied))
+                    .hasMessageContaining(field);
+        }
+    }
+
+    @Test
+    void testLegacyStreamConstructorAndReadOptions() throws Exception {
+        final ServiceConfig.Fs fs =
+                ServiceConfig.Fs.builder().root(tempDir.toString()).build();
+        try (final Operator op = Operator.of(fs)) {
+            op.write("legacy.txt", "0123456789");
+            final ReadOptions range = ReadOptions.builder().offset(3).length(-1).build();
+            final byte[] expected = "3456789".getBytes(StandardCharsets.UTF_8);
+            assertThat(op.read("legacy.txt", range)).isEqualTo(expected);
+            try (final OperatorInputStream in = op.createInputStream("legacy.txt", range)) {
+                assertThat(IOUtils.toByteArray(in)).isEqualTo(expected);
+            }
+            try (final OperatorInputStream in = new OperatorInputStream(op, "legacy.txt", range)) {
+                assertThat(IOUtils.toByteArray(in)).isEqualTo(expected);
+            }
+            final ReadOptions invalid = ReadOptions.builder().offset(-1).build();
+            assertThatThrownBy(() -> op.createInputStream("legacy.txt", invalid))
+                    .is(OpenDALExceptionCondition.ofSync(OpenDALException.Code.RangeNotSatisfied));
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("invalidReaderOptions")
     void testInvalidReaderOptions(ReaderOptions options, String field) {
@@ -173,7 +254,7 @@ public class OperatorInputOutputStreamTest {
         try (final Operator op = Operator.of(fs)) {
             assertThatThrownBy(() -> {
                         try (final OperatorInputStream in = op.createInputStream(
-                                "invalid-options", ReadOptions.builder().build(), options)) {
+                                "invalid-options", ByteRange.all(), options)) {
                             in.read();
                         }
                     })

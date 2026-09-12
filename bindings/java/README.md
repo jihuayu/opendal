@@ -94,9 +94,12 @@ Use the synchronous `Operator` for blocking calls, or `AsyncOperator` for
 
 ## Tune input stream reads
 
-`ReadOptions` selects the logical byte range. `ReaderOptions` controls how the
-stream executes reads. Existing `createInputStream(path)` and
-`createInputStream(path, readOptions)` calls keep unchunked streaming defaults.
+`ByteRange` selects the bytes to read. `ReaderOptions` configures the reader
+used by the stream. The stream API accepts one options object and an independent
+range; `ReadOptions` continues to configure one-shot `read` calls.
+Existing `createInputStream(path)` and `createInputStream(path, readOptions)`
+calls, and the constructor accepting `ReadOptions`, remain available with their
+unchunked streaming defaults.
 
 ```java
 ReaderOptions readerOptions = ReaderOptions.builder()
@@ -106,7 +109,7 @@ ReaderOptions readerOptions = ReaderOptions.builder()
         .build();
 
 try (OperatorInputStream in = op.createInputStream(
-        "large.bin", ReadOptions.builder().build(), readerOptions)) {
+        "large.bin", ByteRange.all(), readerOptions)) {
     byte[] buffer = new byte[8192];
     int count;
     while ((count = in.read(buffer)) != -1) {
@@ -114,6 +117,14 @@ try (OperatorInputStream in = op.createInputStream(
     }
 }
 ```
+
+Use `ByteRange.from(offset)` to read to the end, `ByteRange.of(offset, length)`
+for a bounded range, and `ByteRange.suffix(length)` for the last bytes of an
+object. `ByteRange.of(offset, -1)` retains the existing read-to-end convention.
+All offsets and lengths are in bytes; zero length selects an empty range.
+Invalid ranges produce `OpenDALException` with code `RangeNotSatisfied` when
+the stream is created. Service errors and existing out-of-bounds behavior are
+preserved. A range alone can be passed to `createInputStream(path, range)`.
 
 A positive `chunk` enables internal range requests. `concurrent` limits these
 requests, not application transfers or Java threads; `prefetch` counts completed

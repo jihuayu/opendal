@@ -40,7 +40,7 @@ public class OperatorInputStream extends InputStream {
     private byte[] bytes = new byte[0];
 
     public OperatorInputStream(Operator operator, String path, ReadOptions options) {
-        this(operator, path, options, ReaderOptions.builder().build());
+        this(operator, path, ByteRange.of(options.offset, options.length), ReaderOptions.builder().build());
     }
 
     /**
@@ -48,13 +48,15 @@ public class OperatorInputStream extends InputStream {
      *
      * @param operator operator that reads the object
      * @param path object path
-     * @param readOptions logical offset and length
+     * @param range byte range to read
      * @param readerOptions internal chunk request and buffering controls
-     * @throws OpenDALException if reader options are invalid (ConfigInvalid) or creation fails
+     * @throws OpenDALException if the range is invalid (RangeNotSatisfied), reader options are
+     *                         invalid (ConfigInvalid), or creation fails
      */
-    public OperatorInputStream(Operator operator, String path, ReadOptions readOptions, ReaderOptions readerOptions) {
+    public OperatorInputStream(Operator operator, String path, ByteRange range, ReaderOptions readerOptions) {
         final long op = operator.nativeHandle;
-        this.reader = new Reader(constructReader(op, path, readOptions, readerOptions));
+        this.reader = new Reader(constructReader(
+                op, path, Objects.requireNonNull(range, "range"), Objects.requireNonNull(readerOptions, "readerOptions")));
     }
 
     @Override
@@ -112,8 +114,7 @@ public class OperatorInputStream extends InputStream {
         reader.close();
     }
 
-    private static native long constructReader(
-            long op, String path, ReadOptions readOptions, ReaderOptions readerOptions);
+    private static native long constructReader(long op, String path, ByteRange range, ReaderOptions readerOptions);
 
     private static native void disposeReader(long reader);
 
