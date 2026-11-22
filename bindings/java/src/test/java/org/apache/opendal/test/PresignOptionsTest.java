@@ -22,6 +22,7 @@ package org.apache.opendal.test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.stream.Stream;
@@ -140,17 +141,30 @@ public class PresignOptionsTest {
             assertThat(new URIBuilder(request.getUri()).getQueryParams())
                     .extracting(NameValuePair::getName, NameValuePair::getValue)
                     .contains(tuple("versionId", "version-1"), tuple("X-Amz-Expires", "600"));
+
+            for (long seconds : new long[] {1, Duration.ofDays(7).getSeconds()}) {
+                PresignedRequest boundary =
+                        op.presignDelete("report.csv", Duration.ofSeconds(seconds)).join();
+                assertThat(URI.create(boundary.getUri()).getRawQuery().split("&"))
+                        .contains("X-Amz-Expires=" + seconds);
+            }
         }
     }
 
     static Stream<Duration> invalidPresignDurations() {
         return Stream.of(
-                Duration.ZERO, Duration.ofSeconds(-1), Duration.ofNanos(-1), Duration.ofSeconds(Long.MAX_VALUE));
+                Duration.ZERO,
+                Duration.ofSeconds(-1),
+                Duration.ofNanos(-1),
+                Duration.ofMillis(500),
+                Duration.ofDays(7).plusNanos(1),
+                Duration.ofDays(8),
+                Duration.ofSeconds(Long.MAX_VALUE));
     }
 
     @ParameterizedTest
     @MethodSource("invalidPresignDurations")
-    public void testPresignDeleteRejectsNonPositiveOrOverflowingDuration(Duration invalidDuration) {
+    public void testS3PresignDeleteRejectsInvalidDuration(Duration invalidDuration) {
         try (final AsyncOperator op = AsyncOperator.of(CONFIG)) {
             assertThatThrownBy(() -> op.presignDelete("report.csv", invalidDuration))
                     .is(OpenDALExceptionCondition.ofSync(Code.ConfigInvalid));
