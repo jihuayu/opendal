@@ -459,7 +459,7 @@ public class Capability {
                 false);
     }
 
-    public Capability(
+    private Capability(
             boolean stat,
             boolean statWithIfMatch,
             boolean statWithIfNoneMatch,
