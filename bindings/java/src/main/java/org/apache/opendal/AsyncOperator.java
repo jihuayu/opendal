@@ -339,7 +339,8 @@ public class AsyncOperator extends NativeObject {
         try {
             nanos = duration.toNanos();
         } catch (ArithmeticException e) {
-            throw new OpenDALException(OpenDALException.Code.ConfigInvalid, "duration cannot be represented in nanoseconds");
+            throw new OpenDALException(
+                    OpenDALException.Code.ConfigInvalid, "duration cannot be represented in nanoseconds");
         }
         final long requestId = presignDelete(nativeHandle, executorHandle, path, nanos, options);
         return AsyncRegistry.take(requestId);

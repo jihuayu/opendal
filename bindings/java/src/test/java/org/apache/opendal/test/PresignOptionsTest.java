@@ -143,8 +143,8 @@ public class PresignOptionsTest {
                     .contains(tuple("versionId", "version-1"), tuple("X-Amz-Expires", "600"));
 
             for (long seconds : new long[] {1, Duration.ofDays(7).getSeconds()}) {
-                PresignedRequest boundary =
-                        op.presignDelete("report.csv", Duration.ofSeconds(seconds)).join();
+                PresignedRequest boundary = op.presignDelete("report.csv", Duration.ofSeconds(seconds))
+                        .join();
                 assertThat(URI.create(boundary.getUri()).getRawQuery().split("&"))
                         .contains("X-Amz-Expires=" + seconds);
             }
