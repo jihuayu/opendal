@@ -181,6 +181,10 @@ fn make_metadata<'a>(env: &mut Env<'a>, metadata: Metadata) -> Result<JObject<'a
 
     let content_type = convert::string_to_jstring(env, metadata.content_type())?;
 
+    let content_encoding = convert::string_to_jstring(env, metadata.content_encoding())?;
+
+    let content_language = convert::string_to_jstring(env, metadata.content_language())?;
+
     let etag = convert::string_to_jstring(env, metadata.etag())?;
 
     let version = convert::string_to_jstring(env, metadata.version())?;
@@ -190,11 +194,25 @@ fn make_metadata<'a>(env: &mut Env<'a>, metadata: Metadata) -> Result<JObject<'a
     let user_metadata =
         convert::hashmap_to_jmap(env, metadata.user_metadata().into_iter().flatten())?;
 
+    let is_current = match metadata.is_current() {
+        None => JObject::null(),
+        Some(value) => env
+            .call_static_method(
+                jni_str!("java/lang/Boolean"),
+                jni_str!("valueOf"),
+                jni_sig!("(Z)Ljava/lang/Boolean;"),
+                &[JValue::Bool(value)],
+            )?
+            .l()?,
+    };
+
+    let is_deleted = metadata.is_deleted();
+
     let result = env
         .new_object(
             jni_str!("org/apache/opendal/Metadata"),
             jni_sig!(
-                "(IJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Ljava/util/Map;)V"
+                "(IJLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;Z)V"
             ),
             &[
                 JValue::Int(mode as jint),
@@ -207,6 +225,10 @@ fn make_metadata<'a>(env: &mut Env<'a>, metadata: Metadata) -> Result<JObject<'a
                 JValue::Object(&last_modified),
                 JValue::Object(&version),
                 JValue::Object(&user_metadata),
+                JValue::Object(&content_encoding),
+                JValue::Object(&content_language),
+                JValue::Object(&is_current),
+                JValue::Bool(is_deleted),
             ],
         )?;
     Ok(result)

@@ -63,6 +63,20 @@ public class Metadata {
     public final String contentType;
 
     /**
+     * Content Encoding of the entry.
+     * <p>
+     * Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.
+     */
+    public final String contentEncoding;
+
+    /**
+     * Content Language of the entry.
+     * <p>
+     * Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.
+     */
+    public final String contentLanguage;
+
+    /**
      * Cache Control of the entry.
      * <p>
      * Note: For now, this value is only available when calling on result of `stat`, otherwise it will be null.
@@ -100,6 +114,16 @@ public class Metadata {
      */
     public final Map<String, String> userMetadata;
 
+    /**
+     * Whether this metadata describes the current object version, or null when unknown.
+     */
+    public final Boolean current;
+
+    /**
+     * Whether this metadata describes a deleted object or delete marker.
+     */
+    public final boolean deleted;
+
     public Metadata(
             int mode,
             long contentLength,
@@ -134,16 +158,52 @@ public class Metadata {
             Instant lastModified,
             String version,
             Map<String, String> userMetadata) {
+        this(
+                mode,
+                contentLength,
+                contentDisposition,
+                contentMd5,
+                contentType,
+                cacheControl,
+                etag,
+                lastModified,
+                version,
+                userMetadata,
+                null,
+                null,
+                null,
+                false);
+    }
+
+    private Metadata(
+            int mode,
+            long contentLength,
+            String contentDisposition,
+            String contentMd5,
+            String contentType,
+            String cacheControl,
+            String etag,
+            Instant lastModified,
+            String version,
+            Map<String, String> userMetadata,
+            String contentEncoding,
+            String contentLanguage,
+            Boolean current,
+            boolean deleted) {
         this.mode = EntryMode.of(mode);
         this.contentLength = contentLength;
         this.contentDisposition = contentDisposition;
         this.contentMd5 = contentMd5;
         this.contentType = contentType;
+        this.contentEncoding = contentEncoding;
+        this.contentLanguage = contentLanguage;
         this.cacheControl = cacheControl;
         this.etag = etag;
         this.lastModified = lastModified;
         this.version = version;
         this.userMetadata = userMetadata;
+        this.current = current;
+        this.deleted = deleted;
     }
 
     public boolean isFile() {
