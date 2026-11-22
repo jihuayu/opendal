@@ -21,12 +21,13 @@ package org.apache.opendal.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Collections;
 import org.apache.opendal.AsyncOperator;
 import org.apache.opendal.OpenDALException.Code;
 import org.apache.opendal.Operator;
-import org.apache.opendal.layer.CapabilityOverrideLayer;
 import org.apache.opendal.test.condition.OpenDALExceptionCondition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -55,12 +56,24 @@ public class OperatorExistsCheckTest {
     }
 
     @Test
-    void testExistsPropagatesNonNotFoundErrors() {
-        try (AsyncOperator base = newOperator("memory");
-                AsyncOperator noStat = base.layer(new CapabilityOverrideLayer("stat=false"));
-                Operator op = noStat.blocking()) {
-            assertThatThrownBy(() -> op.exists("file")).is(OpenDALExceptionCondition.ofSync(Code.Unsupported));
-            assertThatThrownBy(noStat.exists("file")::join).is(OpenDALExceptionCondition.ofAsync(Code.Unsupported));
+    void testExistsPropagatesNonNotFoundErrors() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/", exchange -> {
+            try {
+                exchange.sendResponseHeaders(403, -1);
+            } finally {
+                exchange.close();
+            }
+        });
+        server.start();
+        String endpoint = "http://127.0.0.1:" + server.getAddress().getPort();
+
+        try (AsyncOperator async = AsyncOperator.of("http", Collections.singletonMap("endpoint", endpoint));
+                Operator op = async.blocking()) {
+            assertThatThrownBy(() -> op.exists("file")).is(OpenDALExceptionCondition.ofSync(Code.PermissionDenied));
+            assertThatThrownBy(async.exists("file")::join).is(OpenDALExceptionCondition.ofAsync(Code.PermissionDenied));
+        } finally {
+            server.stop(0);
         }
     }
 

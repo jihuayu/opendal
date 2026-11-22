@@ -180,6 +180,7 @@ public class Operator extends NativeObject {
 
     /**
      * Verifies that the operator works by listing the root path ({@code "/"}).
+     * If reading the listing reports {@code NotFound}, the check succeeds.
      *
      * @throws OpenDALException if listing the root path fails
      */
