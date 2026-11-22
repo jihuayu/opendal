@@ -164,8 +164,8 @@ public class OperatorOperationsTest {
             assertThat(versioned.getUri()).contains("versionId=v1");
 
             for (long seconds : new long[] {1, Duration.ofDays(7).getSeconds()}) {
-                PresignedRequest boundary =
-                        op.presignDelete("report.csv", Duration.ofSeconds(seconds)).join();
+                PresignedRequest boundary = op.presignDelete("report.csv", Duration.ofSeconds(seconds))
+                        .join();
                 assertThat(URI.create(boundary.getUri()).getRawQuery().split("&"))
                         .contains("X-Amz-Expires=" + seconds);
             }
