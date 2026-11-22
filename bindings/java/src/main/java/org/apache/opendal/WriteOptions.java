@@ -19,6 +19,7 @@
 
 package org.apache.opendal;
 
+import java.time.Duration;
 import java.util.Map;
 import lombok.Builder;
 
@@ -89,6 +90,12 @@ public class WriteOptions {
      * Requires capability: writeWithUserMetadata
      */
     public final Map<String, String> userMetadata;
+
+    /**
+     * Sets how long the new file lives after the write commits.
+     * Requires capability: writeWithExpires
+     */
+    public final Duration expires;
 
     /**
      * Enables append mode for writing.

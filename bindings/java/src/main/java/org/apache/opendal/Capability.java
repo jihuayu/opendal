@@ -181,6 +181,11 @@ public class Capability {
     public final boolean writeWithUserMetadata;
 
     /**
+     * If operator supports write with per-write expiration.
+     */
+    public final boolean writeWithExpires;
+
+    /**
      * write_multi_max_size is the max size that services support in write_multi.
      * For example, AWS S3 supports 5GiB as max in write_multi.
      */
@@ -456,6 +461,7 @@ public class Capability {
                 readWithIfModifiedSince,
                 readWithIfUnmodifiedSince,
                 false,
+                false,
                 false);
     }
 
@@ -507,7 +513,8 @@ public class Capability {
             boolean readWithIfModifiedSince,
             boolean readWithIfUnmodifiedSince,
             boolean writeWithIfVersionMatch,
-            boolean writeWithIfVersionNotMatch) {
+            boolean writeWithIfVersionNotMatch,
+            boolean writeWithExpires) {
         this.stat = stat;
         this.statWithIfMatch = statWithIfMatch;
         this.statWithIfNoneMatch = statWithIfNoneMatch;
@@ -556,5 +563,6 @@ public class Capability {
         this.readWithIfUnmodifiedSince = readWithIfUnmodifiedSince;
         this.writeWithIfVersionMatch = writeWithIfVersionMatch;
         this.writeWithIfVersionNotMatch = writeWithIfVersionNotMatch;
+        this.writeWithExpires = writeWithExpires;
     }
 }
