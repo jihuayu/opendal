@@ -208,6 +208,21 @@ public class Capability {
     public final boolean renameWithIfNotExists;
 
     /**
+     * If operator supports restore operations.
+     */
+    public final boolean restore;
+
+    /**
+     * If operator supports restoring a specific version.
+     */
+    public final boolean restoreWithVersion;
+
+    /**
+     * If operator supports conditional restore with if-not-exists.
+     */
+    public final boolean restoreWithIfNotExists;
+
+    /**
      * If operator supports list.
      */
     public final boolean list;
@@ -450,6 +465,9 @@ public class Capability {
                 readWithIfVersionNotMatch,
                 readWithIfModifiedSince,
                 readWithIfUnmodifiedSince,
+                false,
+                false,
+                false,
                 false);
     }
 
@@ -500,7 +518,10 @@ public class Capability {
             boolean readWithIfVersionNotMatch,
             boolean readWithIfModifiedSince,
             boolean readWithIfUnmodifiedSince,
-            boolean renameWithIfNotExists) {
+            boolean renameWithIfNotExists,
+            boolean restore,
+            boolean restoreWithVersion,
+            boolean restoreWithIfNotExists) {
         this.stat = stat;
         this.statWithIfMatch = statWithIfMatch;
         this.statWithIfNoneMatch = statWithIfNoneMatch;
@@ -548,5 +569,8 @@ public class Capability {
         this.readWithIfModifiedSince = readWithIfModifiedSince;
         this.readWithIfUnmodifiedSince = readWithIfUnmodifiedSince;
         this.renameWithIfNotExists = renameWithIfNotExists;
+        this.restore = restore;
+        this.restoreWithVersion = restoreWithVersion;
+        this.restoreWithIfNotExists = restoreWithIfNotExists;
     }
 }

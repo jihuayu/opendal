@@ -96,7 +96,7 @@ fn make_operator_info<'a>(env: &mut Env<'a>, info: OperatorInfo) -> Result<JObje
 fn make_capability<'a>(env: &mut Env<'a>, cap: Capability) -> Result<JObject<'a>> {
     let capability = env.new_object(
         jni_str!("org/apache/opendal/Capability"),
-        jni_sig!("(ZZZZZZZZZZZZZZZZZZZZZZZZJJZZZZZZZZZZZZZZZZZZZZZ)V"),
+        jni_sig!("(ZZZZZZZZZZZZZZZZZZZZZZZZJJZZZZZZZZZZZZZZZZZZZZZZZZ)V"),
         &[
             JValue::Bool(cap.stat),
             JValue::Bool(cap.stat_with_if_match),
@@ -145,6 +145,9 @@ fn make_capability<'a>(env: &mut Env<'a>, cap: Capability) -> Result<JObject<'a>
             JValue::Bool(cap.read_with_if_modified_since),
             JValue::Bool(cap.read_with_if_unmodified_since),
             JValue::Bool(cap.rename_with_if_not_exists),
+            JValue::Bool(cap.restore),
+            JValue::Bool(cap.restore_with_version),
+            JValue::Bool(cap.restore_with_if_not_exists),
         ],
     )?;
     Ok(capability)
@@ -456,6 +459,16 @@ fn make_rename_options(
     options: &JObject,
 ) -> Result<opendal::options::RenameOptions> {
     Ok(opendal::options::RenameOptions {
+        if_not_exists: convert::read_bool_field(env, options, "ifNotExists")?,
+    })
+}
+
+fn make_restore_options(
+    env: &mut Env,
+    options: &JObject,
+) -> Result<opendal::options::RestoreOptions> {
+    Ok(opendal::options::RestoreOptions {
+        version: convert::read_string_field(env, options, "version")?,
         if_not_exists: convert::read_bool_field(env, options, "ifNotExists")?,
     })
 }

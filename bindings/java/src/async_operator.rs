@@ -43,7 +43,7 @@ use crate::make_operator_info;
 use crate::make_presigned_request;
 use crate::{
     make_delete_options, make_entry, make_list_options, make_read_options, make_rename_options,
-    make_stat_options, make_write_options,
+    make_restore_options, make_stat_options, make_write_options,
 };
 
 #[unsafe(no_mangle)]
@@ -635,6 +635,36 @@ fn intern_presign_stat(
     });
 
     Ok(id)
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_restore<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString<'local>,
+    options: JObject<'local>,
+) -> jlong {
+    env.with_env(|env| {
+        let path = jstring_to_string(env, &path)?;
+        let options = make_restore_options(env, &options)?;
+        let op = unsafe { &*op }.clone();
+        let executor = executor_or_default(env, executor)?;
+        let id = request_id(env)?;
+        executor.spawn(async move {
+            let result = op.restore_options(&path, options).await;
+            complete_future(id, move |_env| {
+                result?;
+                Ok(JObject::null())
+            });
+        });
+        Ok(id)
+    })
+    .resolve::<ThrowException>()
 }
 
 /// Complete the Java `CompletableFuture` identified by `id`.

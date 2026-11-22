@@ -366,6 +366,37 @@ public class AsyncOperator extends NativeObject {
         return AsyncRegistry.take(requestId);
     }
 
+    /**
+     * Restores a deleted or historical object at {@code path} using default options.
+     * Requires {@link Capability#restore}.
+     *
+     * @param path the path to restore
+     * @return a future that completes exceptionally with {@link OpenDALException} if the service
+     *     does not support restore ({@code Unsupported}) or the restore fails
+     */
+    public CompletableFuture<Void> restore(String path) {
+        return restore(path, RestoreOptions.builder().build());
+    }
+
+    /**
+     * Restores a deleted or historical object at {@code path} with the supplied options.
+     * Requires {@link Capability#restore}, plus {@link Capability#restoreWithVersion} when
+     * {@link RestoreOptions#version} is set and {@link Capability#restoreWithIfNotExists} when
+     * {@link RestoreOptions#ifNotExists} is true. Setting {@code ifNotExists} without a
+     * {@code version} fails with {@code ConfigInvalid}.
+     *
+     * @param path the path to restore
+     * @param options the restore options
+     * @return a future that completes exceptionally with {@link OpenDALException} if an option is
+     *     invalid ({@code ConfigInvalid}) or unsupported ({@code Unsupported}), the destination
+     *     condition fails ({@code ConditionNotMatch}), the selected version does not exist
+     *     ({@code NotFound}), or the restore fails
+     */
+    public CompletableFuture<Void> restore(String path, RestoreOptions options) {
+        final long requestId = restore(nativeHandle, executorHandle, path, options);
+        return AsyncRegistry.take(requestId);
+    }
+
     public CompletableFuture<Void> removeAll(String path) {
         final long requestId = removeAll(nativeHandle, executorHandle, path);
         return AsyncRegistry.take(requestId);
@@ -418,6 +449,8 @@ public class AsyncOperator extends NativeObject {
 
     private static native long rename(
             long nativeHandle, long executorHandle, String sourcePath, String targetPath, RenameOptions options);
+
+    private static native long restore(long nativeHandle, long executorHandle, String path, RestoreOptions options);
 
     private static native long removeAll(long nativeHandle, long executorHandle, String path);
 

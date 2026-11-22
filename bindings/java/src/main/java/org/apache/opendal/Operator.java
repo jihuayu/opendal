@@ -213,6 +213,35 @@ public class Operator extends NativeObject {
         rename(nativeHandle, sourcePath, targetPath, options);
     }
 
+    /**
+     * Restores a deleted or historical object at {@code path} using default options.
+     * Requires {@link Capability#restore}.
+     *
+     * @param path the path to restore
+     * @throws OpenDALException if the service does not support restore ({@code Unsupported}) or
+     *     the restore fails
+     */
+    public void restore(String path) {
+        restore(path, RestoreOptions.builder().build());
+    }
+
+    /**
+     * Restores a deleted or historical object at {@code path} with the supplied options.
+     * Requires {@link Capability#restore}, plus {@link Capability#restoreWithVersion} when
+     * {@link RestoreOptions#version} is set and {@link Capability#restoreWithIfNotExists} when
+     * {@link RestoreOptions#ifNotExists} is true. Setting {@code ifNotExists} without a
+     * {@code version} fails with {@code ConfigInvalid}.
+     *
+     * @param path the path to restore
+     * @param options the restore options
+     * @throws OpenDALException if an option is invalid ({@code ConfigInvalid}) or unsupported
+     *     ({@code Unsupported}), the destination condition fails ({@code ConditionNotMatch}),
+     *     the selected version does not exist ({@code NotFound}), or the restore fails
+     */
+    public void restore(String path, RestoreOptions options) {
+        restore(nativeHandle, path, options);
+    }
+
     public void removeAll(String path) {
         removeAll(nativeHandle, path);
     }
@@ -243,6 +272,8 @@ public class Operator extends NativeObject {
     private static native void copy(long op, String sourcePath, String targetPath);
 
     private static native void rename(long op, String sourcePath, String targetPath, RenameOptions options);
+
+    private static native void restore(long op, String path, RestoreOptions options);
 
     private static native void removeAll(long op, String path);
 
