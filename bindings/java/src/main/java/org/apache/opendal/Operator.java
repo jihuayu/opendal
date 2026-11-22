@@ -195,7 +195,22 @@ public class Operator extends NativeObject {
     }
 
     public void rename(String sourcePath, String targetPath) {
-        rename(nativeHandle, sourcePath, targetPath);
+        rename(sourcePath, targetPath, RenameOptions.builder().build());
+    }
+
+    /**
+     * Renames a file from {@code sourcePath} to {@code targetPath} with the supplied options.
+     * Conditions check the destination path, never the source.
+     *
+     * @param sourcePath the source path
+     * @param targetPath the destination path
+     * @param options the rename options
+     * @throws OpenDALException if an option is unsupported ({@code Unsupported}), a destination
+     *     condition fails ({@code ConditionNotMatch}), the source is missing ({@code NotFound}),
+     *     or the rename fails
+     */
+    public void rename(String sourcePath, String targetPath, RenameOptions options) {
+        rename(nativeHandle, sourcePath, targetPath, options);
     }
 
     public void removeAll(String path) {
@@ -227,7 +242,7 @@ public class Operator extends NativeObject {
 
     private static native void copy(long op, String sourcePath, String targetPath);
 
-    private static native void rename(long op, String sourcePath, String targetPath);
+    private static native void rename(long op, String sourcePath, String targetPath, RenameOptions options);
 
     private static native void removeAll(long op, String path);
 

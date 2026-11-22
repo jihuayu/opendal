@@ -42,7 +42,8 @@ use crate::make_metadata;
 use crate::make_operator_info;
 use crate::make_presigned_request;
 use crate::{
-    make_delete_options, make_entry, make_list_options, make_read_options, make_stat_options,
+    make_delete_options, make_entry, make_list_options, make_read_options, make_rename_options,
+    make_stat_options,
     make_write_options,
 };
 
@@ -398,8 +399,9 @@ pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_rename<'loca
     executor: *const Executor,
     source_path: JString<'local>,
     target_path: JString<'local>,
+    options: JObject<'local>,
 ) -> jlong {
-    env.with_env(|env| intern_rename(env, op, executor, source_path, target_path))
+    env.with_env(|env| intern_rename(env, op, executor, source_path, target_path, options))
         .resolve::<ThrowException>()
 }
 
@@ -409,15 +411,17 @@ fn intern_rename(
     executor: *const Executor,
     source_path: JString,
     target_path: JString,
+    options: JObject,
 ) -> Result<jlong> {
-    let op = unsafe { &*op }.clone();
-    let id = request_id(env)?;
-
     let source_path = jstring_to_string(env, &source_path)?;
     let target_path = jstring_to_string(env, &target_path)?;
+    let options = make_rename_options(env, &options)?;
+    let op = unsafe { &*op }.clone();
 
-    executor_or_default(env, executor)?.spawn(async move {
-        let result = op.rename(&source_path, &target_path).await;
+    let executor = executor_or_default(env, executor)?;
+    let id = request_id(env)?;
+    executor.spawn(async move {
+        let result = op.rename_options(&source_path, &target_path, options).await;
         complete_future(id, move |_env| {
             result?;
             Ok(JObject::null())

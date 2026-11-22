@@ -346,7 +346,23 @@ public class AsyncOperator extends NativeObject {
     }
 
     public CompletableFuture<Void> rename(String sourcePath, String targetPath) {
-        final long requestId = rename(nativeHandle, executorHandle, sourcePath, targetPath);
+        return rename(sourcePath, targetPath, RenameOptions.builder().build());
+    }
+
+    /**
+     * Renames a file from {@code sourcePath} to {@code targetPath} with the supplied options.
+     * Conditions check the destination path, never the source.
+     *
+     * @param sourcePath the source path
+     * @param targetPath the destination path
+     * @param options the rename options
+     * @return a future that completes exceptionally with {@link OpenDALException} if an option is
+     *     unsupported ({@code Unsupported}), a destination condition fails
+     *     ({@code ConditionNotMatch}), the source is missing ({@code NotFound}), or the rename
+     *     fails
+     */
+    public CompletableFuture<Void> rename(String sourcePath, String targetPath, RenameOptions options) {
+        final long requestId = rename(nativeHandle, executorHandle, sourcePath, targetPath, options);
         return AsyncRegistry.take(requestId);
     }
 
@@ -400,7 +416,8 @@ public class AsyncOperator extends NativeObject {
 
     private static native long copy(long nativeHandle, long executorHandle, String sourcePath, String targetPath);
 
-    private static native long rename(long nativeHandle, long executorHandle, String sourcePath, String targetPath);
+    private static native long rename(
+            long nativeHandle, long executorHandle, String sourcePath, String targetPath, RenameOptions options);
 
     private static native long removeAll(long nativeHandle, long executorHandle, String path);
 

@@ -32,7 +32,8 @@ use crate::convert::{bytes_to_jbytearray, jstring_to_string};
 use crate::error::ThrowException;
 use crate::make_metadata;
 use crate::{
-    make_delete_options, make_entry, make_list_options, make_stat_options, make_write_options,
+    make_delete_options, make_entry, make_list_options, make_rename_options, make_stat_options,
+    make_write_options,
 };
 
 /// # Safety
@@ -246,24 +247,16 @@ pub unsafe extern "system" fn Java_org_apache_opendal_Operator_rename<'local>(
     op: *mut blocking::Operator,
     source_path: JString<'local>,
     target_path: JString<'local>,
+    options: JObject<'local>,
 ) {
     env.with_env(|env| {
-        let op_ref = unsafe { &mut *op };
-        intern_rename(env, op_ref, source_path, target_path)
+        let op = unsafe { &*op };
+        let source_path = jstring_to_string(env, &source_path)?;
+        let target_path = jstring_to_string(env, &target_path)?;
+        let options = make_rename_options(env, &options)?;
+        Ok(op.rename_options(&source_path, &target_path, options)?)
     })
     .resolve::<ThrowException>()
-}
-
-fn intern_rename<'local>(
-    env: &mut Env<'local>,
-    op: &mut blocking::Operator,
-    source_path: JString<'local>,
-    target_path: JString<'local>,
-) -> Result<()> {
-    let source_path = jstring_to_string(env, &source_path)?;
-    let target_path = jstring_to_string(env, &target_path)?;
-
-    Ok(op.rename(&source_path, &target_path)?)
 }
 
 /// # Safety
