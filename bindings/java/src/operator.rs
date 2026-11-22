@@ -241,9 +241,6 @@ fn intern_copy<'local>(
 /// # Safety
 ///
 /// This function should not be called before the Operator is ready.
-/// # Safety
-///
-/// This function should not be called before the Operator is ready.
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_org_apache_opendal_Operator_check<'local>(
     mut env: EnvUnowned<'local>,
@@ -275,6 +272,9 @@ pub unsafe extern "system" fn Java_org_apache_opendal_Operator_exists<'local>(
     .resolve::<ThrowException>()
 }
 
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_org_apache_opendal_Operator_rename<'local>(
     mut env: EnvUnowned<'local>,

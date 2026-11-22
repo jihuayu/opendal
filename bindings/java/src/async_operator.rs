@@ -390,9 +390,6 @@ fn intern_copy(
 /// # Safety
 ///
 /// This function should not be called before the Operator is ready.
-/// # Safety
-///
-/// This function should not be called before the Operator is ready.
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_check<'local>(
     mut env: EnvUnowned<'local>,
