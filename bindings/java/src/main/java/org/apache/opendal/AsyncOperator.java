@@ -234,6 +234,31 @@ public class AsyncOperator extends NativeObject {
         return AsyncRegistry.take(requestId);
     }
 
+    /**
+     * Verifies that the operator works by listing the root path ({@code "/"}).
+     *
+     * @return a future that completes exceptionally with {@link OpenDALException} if listing the
+     *     root path fails
+     */
+    public CompletableFuture<Void> check() {
+        final long requestId = check(nativeHandle, executorHandle);
+        return AsyncRegistry.take(requestId);
+    }
+
+    /**
+     * Checks whether the given path exists by querying its metadata ({@code stat}).
+     * Only a {@code NotFound} error is converted into {@code false}; any other error completes
+     * the returned future exceptionally with {@link OpenDALException}.
+     *
+     * @param path the path to check
+     * @return a future completing with {@code true} if the path exists, or {@code false} if
+     *     {@code stat} reports {@code NotFound}
+     */
+    public CompletableFuture<Boolean> exists(String path) {
+        final long requestId = exists(nativeHandle, executorHandle, path);
+        return AsyncRegistry.take(requestId);
+    }
+
     public CompletableFuture<Metadata> stat(String path) {
         return stat(path, StatOptions.builder().build());
     }
@@ -380,6 +405,10 @@ public class AsyncOperator extends NativeObject {
     private static native long append(long nativeHandle, long executorHandle, String path, byte[] content);
 
     private static native long delete(long nativeHandle, long executorHandle, String path, DeleteOptions options);
+
+    private static native long check(long nativeHandle, long executorHandle);
+
+    private static native long exists(long nativeHandle, long executorHandle, String path);
 
     private static native long stat(long nativeHandle, long executorHandle, String path, StatOptions options);
 

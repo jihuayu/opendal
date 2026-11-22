@@ -642,6 +642,67 @@ fn intern_presign_stat(
 /// Java object within that frame; on error the future is completed
 /// exceptionally. All local references created during completion live and die
 /// within the frame.
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_check<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+) -> jlong {
+    env.with_env(|env| {
+        let op = unsafe { &*op }.clone();
+        let executor = executor_or_default(env, executor)?;
+        let id = request_id(env)?;
+        executor.spawn(async move {
+            let result = op.check().await;
+            complete_future(id, move |_env| {
+                result?;
+                Ok(JObject::null())
+            });
+        });
+        Ok(id)
+    })
+    .resolve::<ThrowException>()
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_exists<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString<'local>,
+) -> jlong {
+    env.with_env(|env| {
+        let path = jstring_to_string(env, &path)?;
+        let op = unsafe { &*op }.clone();
+        let executor = executor_or_default(env, executor)?;
+        let id = request_id(env)?;
+        executor.spawn(async move {
+            let result = op.exists(&path).await;
+            complete_future(id, move |env| {
+                let exists = result?;
+                Ok(env
+                    .call_static_method(
+                        jni_str!("java/lang/Boolean"),
+                        jni_str!("valueOf"),
+                        jni_sig!("(Z)Ljava/lang/Boolean;"),
+                        &[JValue::Bool(exists)],
+                    )?
+                    .l()?)
+            });
+        });
+        Ok(id)
+    })
+    .resolve::<ThrowException>()
+}
+
 fn complete_future<F>(id: jlong, build: F)
 where
     F: for<'a> FnOnce(&mut Env<'a>) -> Result<JObject<'a>>,

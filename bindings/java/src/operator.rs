@@ -23,6 +23,7 @@ use jni::objects::JClass;
 use jni::objects::JObject;
 use jni::objects::JObjectArray;
 use jni::objects::JString;
+use jni::sys::jboolean;
 use jni::sys::jlong;
 use jni::sys::jsize;
 use opendal::blocking;
@@ -340,4 +341,38 @@ fn intern_list<'local>(
     }
 
     Ok(jarray)
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_Operator_check<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut blocking::Operator,
+) {
+    env.with_env(|_env| {
+        let op = unsafe { &*op };
+        Ok(op.check()?)
+    })
+    .resolve::<ThrowException>()
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_Operator_exists<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut blocking::Operator,
+    path: JString<'local>,
+) -> jboolean {
+    env.with_env(|env| {
+        let op = unsafe { &*op };
+        let path = jstring_to_string(env, &path)?;
+        Ok(op.exists(&path)?)
+    })
+    .resolve::<ThrowException>()
 }

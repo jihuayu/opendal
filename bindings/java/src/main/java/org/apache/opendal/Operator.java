@@ -178,6 +178,28 @@ public class Operator extends NativeObject {
         delete(nativeHandle, path, options);
     }
 
+    /**
+     * Verifies that the operator works by listing the root path ({@code "/"}).
+     *
+     * @throws OpenDALException if listing the root path fails
+     */
+    public void check() {
+        check(nativeHandle);
+    }
+
+    /**
+     * Checks whether the given path exists by querying its metadata ({@code stat}).
+     * Only a {@code NotFound} error is converted into {@code false}; any other error is
+     * thrown as an {@link OpenDALException}.
+     *
+     * @param path the path to check
+     * @return {@code true} if the path exists, or {@code false} if {@code stat} reports {@code NotFound}
+     * @throws OpenDALException if checking the path fails with an error other than {@code NotFound}
+     */
+    public boolean exists(String path) {
+        return exists(nativeHandle, path);
+    }
+
     public Metadata stat(String path) {
         return stat(nativeHandle, path, StatOptions.builder().build());
     }
@@ -220,6 +242,10 @@ public class Operator extends NativeObject {
     private static native byte[] read(long op, String path, ReadOptions options);
 
     private static native void delete(long op, String path, DeleteOptions options);
+
+    private static native void check(long op);
+
+    private static native boolean exists(long op, String path);
 
     private static native Metadata stat(long op, String path, StatOptions options);
 
