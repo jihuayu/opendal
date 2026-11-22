@@ -42,8 +42,8 @@ use crate::make_metadata;
 use crate::make_operator_info;
 use crate::make_presigned_request;
 use crate::{
-    make_delete_options, make_entry, make_list_options, make_read_options, make_stat_options,
-    make_write_options,
+    make_delete_options, make_entry, make_list_options, make_read_options, make_rename_options,
+    make_restore_options, make_stat_options, make_write_options,
 };
 
 #[unsafe(no_mangle)]
@@ -390,6 +390,67 @@ fn intern_copy(
 /// # Safety
 ///
 /// This function should not be called before the Operator is ready.
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_check<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+) -> jlong {
+    env.with_env(|env| {
+        let op = unsafe { &*op }.clone();
+        let executor = executor_or_default(env, executor)?;
+        let id = request_id(env)?;
+        executor.spawn(async move {
+            let result = op.check().await;
+            complete_future(id, move |_env| {
+                result?;
+                Ok(JObject::null())
+            });
+        });
+        Ok(id)
+    })
+    .resolve::<ThrowException>()
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_exists<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString<'local>,
+) -> jlong {
+    env.with_env(|env| {
+        let path = jstring_to_string(env, &path)?;
+        let op = unsafe { &*op }.clone();
+        let executor = executor_or_default(env, executor)?;
+        let id = request_id(env)?;
+        executor.spawn(async move {
+            let result = op.exists(&path).await;
+            complete_future(id, move |env| {
+                let exists = result?;
+                Ok(env
+                    .call_static_method(
+                        jni_str!("java/lang/Boolean"),
+                        jni_str!("valueOf"),
+                        jni_sig!("(Z)Ljava/lang/Boolean;"),
+                        &[JValue::Bool(exists)],
+                    )?
+                    .l()?)
+            });
+        });
+        Ok(id)
+    })
+    .resolve::<ThrowException>()
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_rename<'local>(
     mut env: EnvUnowned<'local>,
@@ -398,8 +459,9 @@ pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_rename<'loca
     executor: *const Executor,
     source_path: JString<'local>,
     target_path: JString<'local>,
+    options: JObject<'local>,
 ) -> jlong {
-    env.with_env(|env| intern_rename(env, op, executor, source_path, target_path))
+    env.with_env(|env| intern_rename(env, op, executor, source_path, target_path, options))
         .resolve::<ThrowException>()
 }
 
@@ -409,15 +471,17 @@ fn intern_rename(
     executor: *const Executor,
     source_path: JString,
     target_path: JString,
+    options: JObject,
 ) -> Result<jlong> {
-    let op = unsafe { &*op }.clone();
-    let id = request_id(env)?;
-
     let source_path = jstring_to_string(env, &source_path)?;
     let target_path = jstring_to_string(env, &target_path)?;
+    let options = make_rename_options(env, &options)?;
+    let op = unsafe { &*op }.clone();
 
-    executor_or_default(env, executor)?.spawn(async move {
-        let result = op.rename(&source_path, &target_path).await;
+    let executor = executor_or_default(env, executor)?;
+    let id = request_id(env)?;
+    executor.spawn(async move {
+        let result = op.rename_options(&source_path, &target_path, options).await;
         complete_future(id, move |_env| {
             result?;
             Ok(JObject::null())
@@ -425,6 +489,36 @@ fn intern_rename(
     });
 
     Ok(id)
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_restore<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString<'local>,
+    options: JObject<'local>,
+) -> jlong {
+    env.with_env(|env| {
+        let path = jstring_to_string(env, &path)?;
+        let options = make_restore_options(env, &options)?;
+        let op = unsafe { &*op }.clone();
+        let executor = executor_or_default(env, executor)?;
+        let id = request_id(env)?;
+        executor.spawn(async move {
+            let result = op.restore_options(&path, options).await;
+            complete_future(id, move |_env| {
+                result?;
+                Ok(JObject::null())
+            });
+        });
+        Ok(id)
+    })
+    .resolve::<ThrowException>()
 }
 
 /// # Safety
@@ -628,6 +722,52 @@ fn intern_presign_stat(
 
     executor_or_default(env, executor)?.spawn(async move {
         let result = op.presign_stat_options(&path, expire, stat_opts).await;
+        complete_future(id, move |env| make_presigned_request(env, result?));
+    });
+
+    Ok(id)
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_presignDelete<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString<'local>,
+    expire: jlong,
+    options: JObject<'local>,
+) -> jlong {
+    env.with_env(|env| intern_presign_delete(env, op, executor, path, expire, options))
+        .resolve::<ThrowException>()
+}
+
+fn intern_presign_delete(
+    env: &mut Env,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString,
+    expire: jlong,
+    options: JObject,
+) -> Result<jlong> {
+    let Ok(expire @ 1..) = u64::try_from(expire) else {
+        return Err(
+            opendal::Error::new(opendal::ErrorKind::ConfigInvalid, "duration must be positive")
+                .into(),
+        );
+    };
+    let expire = Duration::from_nanos(expire);
+    let delete_opts = make_delete_options(env, &options)?;
+    let path = jstring_to_string(env, &path)?;
+    let op = unsafe { &*op }.clone();
+
+    let executor = executor_or_default(env, executor)?;
+    let id = request_id(env)?;
+    executor.spawn(async move {
+        let result = op.presign_delete_options(&path, expire, delete_opts).await;
         complete_future(id, move |env| make_presigned_request(env, result?));
     });
 

@@ -234,6 +234,31 @@ public class AsyncOperator extends NativeObject {
         return AsyncRegistry.take(requestId);
     }
 
+    /**
+     * Verifies that the operator works by listing the root path ({@code "/"}).
+     *
+     * @return a future that completes exceptionally with {@link OpenDALException} if listing the
+     *     root path fails
+     */
+    public CompletableFuture<Void> check() {
+        final long requestId = check(nativeHandle, executorHandle);
+        return AsyncRegistry.take(requestId);
+    }
+
+    /**
+     * Checks whether the given path exists by querying its metadata ({@code stat}).
+     * Only a {@code NotFound} error is converted into {@code false}; any other error completes
+     * the returned future exceptionally with {@link OpenDALException}.
+     *
+     * @param path the path to check
+     * @return a future completing with {@code true} if the path exists, or {@code false} if
+     *     {@code stat} reports {@code NotFound}
+     */
+    public CompletableFuture<Boolean> exists(String path) {
+        final long requestId = exists(nativeHandle, executorHandle, path);
+        return AsyncRegistry.take(requestId);
+    }
+
     public CompletableFuture<Metadata> stat(String path) {
         return stat(path, StatOptions.builder().build());
     }
@@ -316,6 +341,39 @@ public class AsyncOperator extends NativeObject {
         return AsyncRegistry.take(requestId);
     }
 
+    public CompletableFuture<PresignedRequest> presignDelete(String path, Duration duration) {
+        return presignDelete(path, duration, DeleteOptions.builder().build());
+    }
+
+    /**
+     * Creates a presigned delete request with the given options.
+     *
+     * <p>The service must support presigning delete requests ({@link Capability#presignDelete}),
+     * and {@code duration} must be positive.
+     *
+     * @param path the path of the object.
+     * @param duration how long the presigned request remains valid; must be positive.
+     * @param options the delete options to include in the presigned request.
+     * @return the presigned request.
+     * @throws OpenDALException if {@code duration} is zero, negative, or overflows nanoseconds
+     *     ({@code ConfigInvalid})
+     */
+    public CompletableFuture<PresignedRequest> presignDelete(String path, Duration duration, DeleteOptions options) {
+        Objects.requireNonNull(duration, "duration");
+        final long nanos;
+        if (duration.isZero() || duration.isNegative()) {
+            nanos = 0L;
+        } else {
+            try {
+                nanos = duration.toNanos();
+            } catch (ArithmeticException e) {
+                throw new OpenDALException(OpenDALException.Code.ConfigInvalid, "duration is too large");
+            }
+        }
+        final long requestId = presignDelete(nativeHandle, executorHandle, path, nanos, options);
+        return AsyncRegistry.take(requestId);
+    }
+
     public CompletableFuture<Void> delete(String path) {
         return delete(path, DeleteOptions.builder().build());
     }
@@ -346,7 +404,54 @@ public class AsyncOperator extends NativeObject {
     }
 
     public CompletableFuture<Void> rename(String sourcePath, String targetPath) {
-        final long requestId = rename(nativeHandle, executorHandle, sourcePath, targetPath);
+        return rename(sourcePath, targetPath, RenameOptions.builder().build());
+    }
+
+    /**
+     * Renames a file from {@code sourcePath} to {@code targetPath} with the supplied options.
+     * Conditions check the destination path, never the source.
+     *
+     * @param sourcePath the source path
+     * @param targetPath the destination path
+     * @param options the rename options
+     * @return a future that completes exceptionally with {@link OpenDALException} if an option is
+     *     unsupported ({@code Unsupported}), a destination condition fails
+     *     ({@code ConditionNotMatch}), the source is missing ({@code NotFound}), or the rename
+     *     fails
+     */
+    public CompletableFuture<Void> rename(String sourcePath, String targetPath, RenameOptions options) {
+        final long requestId = rename(nativeHandle, executorHandle, sourcePath, targetPath, options);
+        return AsyncRegistry.take(requestId);
+    }
+
+    /**
+     * Restores a deleted or historical object at {@code path} using default options.
+     * Requires {@link Capability#restore}.
+     *
+     * @param path the path to restore
+     * @return a future that completes exceptionally with {@link OpenDALException} if the service
+     *     does not support restore ({@code Unsupported}) or the restore fails
+     */
+    public CompletableFuture<Void> restore(String path) {
+        return restore(path, RestoreOptions.builder().build());
+    }
+
+    /**
+     * Restores a deleted or historical object at {@code path} with the supplied options.
+     * Requires {@link Capability#restore}, plus {@link Capability#restoreWithVersion} when
+     * {@link RestoreOptions#version} is set and {@link Capability#restoreWithIfNotExists} when
+     * {@link RestoreOptions#ifNotExists} is true. Setting {@code ifNotExists} without a
+     * {@code version} fails with {@code ConfigInvalid}.
+     *
+     * @param path the path to restore
+     * @param options the restore options
+     * @return a future that completes exceptionally with {@link OpenDALException} if an option is
+     *     invalid ({@code ConfigInvalid}) or unsupported ({@code Unsupported}), the destination
+     *     condition fails ({@code ConditionNotMatch}), the selected version does not exist
+     *     ({@code NotFound}), or the restore fails
+     */
+    public CompletableFuture<Void> restore(String path, RestoreOptions options) {
+        final long requestId = restore(nativeHandle, executorHandle, path, options);
         return AsyncRegistry.take(requestId);
     }
 
@@ -374,6 +479,10 @@ public class AsyncOperator extends NativeObject {
 
     private static native long read(long nativeHandle, long executorHandle, String path, ReadOptions options);
 
+    private static native long check(long nativeHandle, long executorHandle);
+
+    private static native long exists(long nativeHandle, long executorHandle, String path);
+
     private static native long write(
             long nativeHandle, long executorHandle, String path, byte[] content, WriteOptions options);
 
@@ -392,6 +501,9 @@ public class AsyncOperator extends NativeObject {
     private static native long presignStat(
             long nativeHandle, long executorHandle, String path, long duration, StatOptions options);
 
+    private static native long presignDelete(
+            long nativeHandle, long executorHandle, String path, long duration, DeleteOptions options);
+
     private static native OperatorInfo makeOperatorInfo(long nativeHandle);
 
     private static native long makeBlockingOp(long nativeHandle, long executorHandle);
@@ -400,7 +512,10 @@ public class AsyncOperator extends NativeObject {
 
     private static native long copy(long nativeHandle, long executorHandle, String sourcePath, String targetPath);
 
-    private static native long rename(long nativeHandle, long executorHandle, String sourcePath, String targetPath);
+    private static native long rename(
+            long nativeHandle, long executorHandle, String sourcePath, String targetPath, RenameOptions options);
+
+    private static native long restore(long nativeHandle, long executorHandle, String path, RestoreOptions options);
 
     private static native long removeAll(long nativeHandle, long executorHandle, String path);
 

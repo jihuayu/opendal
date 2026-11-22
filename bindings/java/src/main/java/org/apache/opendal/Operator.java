@@ -178,6 +178,28 @@ public class Operator extends NativeObject {
         delete(nativeHandle, path, options);
     }
 
+    /**
+     * Verifies that the operator works by listing the root path ({@code "/"}).
+     *
+     * @throws OpenDALException if listing the root path fails
+     */
+    public void check() {
+        check(nativeHandle);
+    }
+
+    /**
+     * Checks whether the given path exists by querying its metadata ({@code stat}).
+     * Only a {@code NotFound} error is converted into {@code false}; any other error is
+     * thrown as an {@link OpenDALException}.
+     *
+     * @param path the path to check
+     * @return {@code true} if the path exists, or {@code false} if {@code stat} reports {@code NotFound}
+     * @throws OpenDALException if checking the path fails with an error other than {@code NotFound}
+     */
+    public boolean exists(String path) {
+        return exists(nativeHandle, path);
+    }
+
     public Metadata stat(String path) {
         return stat(nativeHandle, path, StatOptions.builder().build());
     }
@@ -195,7 +217,51 @@ public class Operator extends NativeObject {
     }
 
     public void rename(String sourcePath, String targetPath) {
-        rename(nativeHandle, sourcePath, targetPath);
+        rename(sourcePath, targetPath, RenameOptions.builder().build());
+    }
+
+    /**
+     * Renames a file from {@code sourcePath} to {@code targetPath} with the supplied options.
+     * Conditions check the destination path, never the source.
+     *
+     * @param sourcePath the source path
+     * @param targetPath the destination path
+     * @param options the rename options
+     * @throws OpenDALException if an option is unsupported ({@code Unsupported}), a destination
+     *     condition fails ({@code ConditionNotMatch}), the source is missing ({@code NotFound}),
+     *     or the rename fails
+     */
+    public void rename(String sourcePath, String targetPath, RenameOptions options) {
+        rename(nativeHandle, sourcePath, targetPath, options);
+    }
+
+    /**
+     * Restores a deleted or historical object at {@code path} using default options.
+     * Requires {@link Capability#restore}.
+     *
+     * @param path the path to restore
+     * @throws OpenDALException if the service does not support restore ({@code Unsupported}) or
+     *     the restore fails
+     */
+    public void restore(String path) {
+        restore(path, RestoreOptions.builder().build());
+    }
+
+    /**
+     * Restores a deleted or historical object at {@code path} with the supplied options.
+     * Requires {@link Capability#restore}, plus {@link Capability#restoreWithVersion} when
+     * {@link RestoreOptions#version} is set and {@link Capability#restoreWithIfNotExists} when
+     * {@link RestoreOptions#ifNotExists} is true. Setting {@code ifNotExists} without a
+     * {@code version} fails with {@code ConfigInvalid}.
+     *
+     * @param path the path to restore
+     * @param options the restore options
+     * @throws OpenDALException if an option is invalid ({@code ConfigInvalid}) or unsupported
+     *     ({@code Unsupported}), the destination condition fails ({@code ConditionNotMatch}),
+     *     the selected version does not exist ({@code NotFound}), or the restore fails
+     */
+    public void restore(String path, RestoreOptions options) {
+        restore(nativeHandle, path, options);
     }
 
     public void removeAll(String path) {
@@ -221,13 +287,19 @@ public class Operator extends NativeObject {
 
     private static native void delete(long op, String path, DeleteOptions options);
 
+    private static native void check(long op);
+
+    private static native boolean exists(long op, String path);
+
     private static native Metadata stat(long op, String path, StatOptions options);
 
     private static native void createDir(long op, String path);
 
     private static native void copy(long op, String sourcePath, String targetPath);
 
-    private static native void rename(long op, String sourcePath, String targetPath);
+    private static native void rename(long op, String sourcePath, String targetPath, RenameOptions options);
+
+    private static native void restore(long op, String path, RestoreOptions options);
 
     private static native void removeAll(long op, String path);
 
