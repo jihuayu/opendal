@@ -32,7 +32,8 @@ use crate::convert::{bytes_to_jbytearray, jstring_to_string};
 use crate::error::ThrowException;
 use crate::make_metadata;
 use crate::{
-    make_delete_options, make_entry, make_list_options, make_stat_options, make_write_options,
+    make_delete_options, make_entry, make_list_options, make_restore_options, make_stat_options,
+    make_write_options,
 };
 
 /// # Safety
@@ -340,4 +341,24 @@ fn intern_list<'local>(
     }
 
     Ok(jarray)
+}
+
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_Operator_restore<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut blocking::Operator,
+    path: JString<'local>,
+    options: JObject<'local>,
+) {
+    env.with_env(|env| {
+        let op = unsafe { &*op };
+        let path = jstring_to_string(env, &path)?;
+        let options = make_restore_options(env, &options)?;
+        Ok(op.restore_options(&path, options)?)
+    })
+    .resolve::<ThrowException>()
 }
