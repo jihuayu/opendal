@@ -23,15 +23,73 @@ use jni::objects::JByteArray;
 use jni::objects::JMap;
 use jni::objects::JObject;
 use jni::objects::JString;
+use jni::objects::JValue;
 use jni::strings::JNIString;
 use jni::sys::jlong;
-use opendal::{Error, ErrorKind};
+use opendal::{EntryMode, Error, ErrorKind};
 use std::collections::HashMap;
 use std::ops::Bound;
 
 pub(crate) fn usize_to_jlong(n: Option<usize>) -> jlong {
     // usize is always >= 0, so we can use -1 to identify the empty value.
     n.map_or(-1, |v| v as jlong)
+}
+
+pub(crate) fn entry_mode_to_jobject<'a>(env: &mut Env<'a>, mode: EntryMode) -> Result<JObject<'a>> {
+    let code = match mode {
+        EntryMode::FILE => 0,
+        EntryMode::DIR => 1,
+        EntryMode::Unknown => 2,
+    };
+    Ok(env
+        .call_static_method(
+            jni_str!("org/apache/opendal/Metadata$EntryMode"),
+            jni_str!("of"),
+            jni_sig!("(I)Lorg/apache/opendal/Metadata$EntryMode;"),
+            &[JValue::Int(code)],
+        )?
+        .l()?)
+}
+
+pub(crate) fn option_bool_to_jboolean<'a>(
+    env: &mut Env<'a>,
+    value: Option<bool>,
+) -> Result<JObject<'a>> {
+    value.map_or_else(
+        || Ok(JObject::null()),
+        |v| {
+            Ok(env
+                .call_static_method(
+                    jni_str!("java/lang/Boolean"),
+                    jni_str!("valueOf"),
+                    jni_sig!("(Z)Ljava/lang/Boolean;"),
+                    &[JValue::Bool(v)],
+                )?
+                .l()?)
+        },
+    )
+}
+
+pub(crate) fn timestamp_to_jinstant<'a>(
+    env: &mut Env<'a>,
+    ts: Option<opendal::raw::Timestamp>,
+) -> Result<JObject<'a>> {
+    ts.map_or_else(
+        || Ok(JObject::null()),
+        |v| {
+            Ok(env
+                .call_static_method(
+                    jni_str!("java/time/Instant"),
+                    jni_str!("ofEpochSecond"),
+                    jni_sig!("(JJ)Ljava/time/Instant;"),
+                    &[
+                        JValue::Long(v.into_inner().as_second()),
+                        JValue::Long(v.into_inner().subsec_nanosecond() as jlong),
+                    ],
+                )?
+                .l()?)
+        },
+    )
 }
 
 pub(crate) fn jmap_to_hashmap(env: &mut Env, params: &JObject) -> Result<HashMap<String, String>> {
@@ -73,6 +131,49 @@ pub(crate) fn read_bool_field(env: &mut Env<'_>, obj: &JObject, field: &str) -> 
     Ok(env
         .get_field(obj, JNIString::new(field), jni_sig!("Z"))?
         .z()?)
+}
+
+pub(crate) fn read_boxed_bool_field(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<Option<bool>> {
+    let result = env
+        .get_field(obj, JNIString::new(field), jni_sig!("Ljava/lang/Boolean;"))?
+        .l()?;
+    if result.is_null() {
+        Ok(None)
+    } else {
+        Ok(Some(
+            env.call_method(&result, jni_str!("booleanValue"), jni_sig!("()Z"), &[])?
+                .z()?,
+        ))
+    }
+}
+
+pub(crate) fn read_entry_mode_field(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<EntryMode> {
+    let result = env
+        .get_field(
+            obj,
+            JNIString::new(field),
+            jni_sig!("Lorg/apache/opendal/Metadata$EntryMode;"),
+        )?
+        .l()?;
+    if result.is_null() {
+        return Ok(EntryMode::Unknown);
+    }
+    let ordinal = env
+        .call_method(&result, jni_str!("ordinal"), jni_sig!("()I"), &[])?
+        .i()?;
+    Ok(match ordinal {
+        0 => EntryMode::FILE,
+        1 => EntryMode::DIR,
+        _ => EntryMode::Unknown,
+    })
 }
 
 pub(crate) fn read_int64_field(env: &mut Env<'_>, obj: &JObject, field: &str) -> Result<i64> {
