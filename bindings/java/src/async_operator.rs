@@ -753,16 +753,25 @@ fn intern_presign_delete(
     expire: jlong,
     options: JObject,
 ) -> Result<jlong> {
-    let Ok(expire @ 1..) = u64::try_from(expire) else {
-        return Err(
-            opendal::Error::new(opendal::ErrorKind::ConfigInvalid, "duration must be positive")
-                .into(),
-        );
+    let expire = u64::try_from(expire).ok().map(Duration::from_nanos);
+    let Some(expire) = expire.filter(|duration| duration.as_secs() > 0) else {
+        return Err(opendal::Error::new(
+            opendal::ErrorKind::ConfigInvalid,
+            "duration must be at least one second",
+        )
+        .into());
     };
-    let expire = Duration::from_nanos(expire);
+    let op = unsafe { &*op };
+    if op.info().scheme() == "s3" && expire > Duration::from_secs(7 * 24 * 60 * 60) {
+        return Err(opendal::Error::new(
+            opendal::ErrorKind::ConfigInvalid,
+            "S3 presigned delete duration must be at most seven days",
+        )
+        .into());
+    }
     let delete_opts = make_delete_options(env, &options)?;
     let path = jstring_to_string(env, &path)?;
-    let op = unsafe { &*op }.clone();
+    let op = op.clone();
 
     let executor = executor_or_default(env, executor)?;
     let id = request_id(env)?;

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
@@ -161,17 +162,30 @@ public class OperatorOperationsTest {
                     .join();
             assertThat(versioned.getMethod()).isEqualTo("DELETE");
             assertThat(versioned.getUri()).contains("versionId=v1");
+
+            for (long seconds : new long[] {1, Duration.ofDays(7).getSeconds()}) {
+                PresignedRequest boundary =
+                        op.presignDelete("report.csv", Duration.ofSeconds(seconds)).join();
+                assertThat(URI.create(boundary.getUri()).getRawQuery().split("&"))
+                        .contains("X-Amz-Expires=" + seconds);
+            }
         }
     }
 
     static Stream<Duration> invalidPresignDurations() {
         return Stream.of(
-                Duration.ZERO, Duration.ofSeconds(-1), Duration.ofNanos(-1), Duration.ofSeconds(Long.MAX_VALUE));
+                Duration.ZERO,
+                Duration.ofSeconds(-1),
+                Duration.ofNanos(-1),
+                Duration.ofMillis(500),
+                Duration.ofDays(7).plusNanos(1),
+                Duration.ofDays(8),
+                Duration.ofSeconds(Long.MAX_VALUE));
     }
 
     @ParameterizedTest
     @MethodSource("invalidPresignDurations")
-    void testPresignDeleteRejectsNonPositiveOrOverflowingDuration(Duration invalidDuration) {
+    void testS3PresignDeleteRejectsInvalidDuration(Duration invalidDuration) {
         ServiceConfig.S3 s3 = ServiceConfig.S3
                 .builder()
                 .bucket("opendal-test")

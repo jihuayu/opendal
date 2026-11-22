@@ -350,26 +350,22 @@ public class AsyncOperator extends NativeObject {
      * Creates a presigned delete request with the given options.
      *
      * <p>The service must support presigning delete requests ({@link Capability#presignDelete}),
-     * and {@code duration} must be positive.
+     * and {@code duration} must be at least one second. S3 limits the duration to seven days.
      *
      * @param path the path of the object.
-     * @param duration how long the presigned request remains valid; must be positive.
+     * @param duration how long the presigned request remains valid
      * @param options the delete options to include in the presigned request.
      * @return the presigned request.
-     * @throws OpenDALException if {@code duration} is zero, negative, or overflows nanoseconds
-     *     ({@code ConfigInvalid})
+     * @throws OpenDALException if {@code duration} is less than one second, exceeds the S3 limit
+     *     on S3, or overflows nanoseconds ({@code ConfigInvalid})
      */
     public CompletableFuture<PresignedRequest> presignDelete(String path, Duration duration, DeleteOptions options) {
         Objects.requireNonNull(duration, "duration");
         final long nanos;
-        if (duration.isZero() || duration.isNegative()) {
-            nanos = 0L;
-        } else {
-            try {
-                nanos = duration.toNanos();
-            } catch (ArithmeticException e) {
-                throw new OpenDALException(OpenDALException.Code.ConfigInvalid, "duration is too large");
-            }
+        try {
+            nanos = duration.toNanos();
+        } catch (ArithmeticException e) {
+            throw new OpenDALException(OpenDALException.Code.ConfigInvalid, "duration cannot be represented in nanoseconds");
         }
         final long requestId = presignDelete(nativeHandle, executorHandle, path, nanos, options);
         return AsyncRegistry.take(requestId);
