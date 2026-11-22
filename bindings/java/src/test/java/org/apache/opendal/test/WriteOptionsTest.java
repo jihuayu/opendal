@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
+import java.nio.file.Path;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -40,6 +41,7 @@ import org.apache.opendal.WriteOptions;
 import org.apache.opendal.layer.CapabilityCheckLayer;
 import org.apache.opendal.test.condition.OpenDALExceptionCondition;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -117,10 +119,10 @@ public class WriteOptionsTest {
     }
 
     @Test
-    void testContentLanguageReachesCoreAndS3Request() throws Exception {
+    void testContentLanguageReachesCoreAndS3Request(@TempDir Path root) throws Exception {
         WriteOptions options =
                 WriteOptions.builder().contentLanguage("fr-CA, en").build();
-        try (AsyncOperator base = AsyncOperator.of("memory", Collections.emptyMap());
+        try (AsyncOperator base = AsyncOperator.of("fs", Collections.singletonMap("root", root.toString()));
                 AsyncOperator checked = base.layer(new CapabilityCheckLayer());
                 Operator op = checked.blocking()) {
             assertThatThrownBy(() -> op.write("file", "content", options))
