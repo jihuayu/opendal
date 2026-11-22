@@ -87,4 +87,18 @@ public class WriteContentLanguageTest {
             assertThat(headers.getFirst("Content-Language")).isEqualTo("fr-CA, en");
         }
     }
+
+    @Test
+    void testContentLanguageRoundTripsThroughStat() {
+        String language = "fr-CA, en";
+        WriteOptions options = WriteOptions.builder().contentLanguage(language).build();
+        try (AsyncOperator async = AsyncOperator.of("memory", Collections.emptyMap());
+                Operator op = async.blocking()) {
+            op.write("blocking", "content", options);
+            assertThat(op.stat("blocking").getContentLanguage()).isEqualTo(language);
+
+            async.write("async", "content", options).join();
+            assertThat(async.stat("async").join().getContentLanguage()).isEqualTo(language);
+        }
+    }
 }
