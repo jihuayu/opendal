@@ -145,6 +145,37 @@ pub(crate) fn read_int_field(env: &mut Env<'_>, obj: &JObject, field: &str) -> R
         .i()?)
 }
 
+pub(crate) fn read_positive_jint_to_usize(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<usize> {
+    let value = read_int_field(env, obj, field)?;
+    if value <= 0 {
+        return Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field} must be positive"),
+        )
+        .into());
+    }
+    Ok(usize::try_from(value)
+        .map_err(|_| Error::new(ErrorKind::ConfigInvalid, format!("{field} is too large")))?)
+}
+
+pub(crate) fn read_non_negative_jint_to_usize(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<usize> {
+    let value = read_int_field(env, obj, field)?;
+    Ok(usize::try_from(value).map_err(|_| {
+        Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field} must be non-negative"),
+        )
+    })?)
+}
+
 pub(crate) fn read_string_field(
     env: &mut Env<'_>,
     obj: &JObject,
@@ -205,18 +236,60 @@ pub(crate) fn read_map_field(
 }
 
 pub(crate) fn read_jlong_field_to_usize(
-    env: &mut Env,
+    env: &mut Env<'_>,
     options: &JObject,
     field_name: &str,
 ) -> Result<Option<usize>> {
     match read_int64_field(env, options, field_name)? {
         -1 => Ok(None),
-        v if v > 0 => Ok(Some(v as usize)),
-        v => Err(Error::new(
-            ErrorKind::Unexpected,
-            format!("{field_name} must be positive, instead got: {v}"),
+        value if value > 0 => Ok(Some(usize::try_from(value).map_err(|_| {
+            Error::new(
+                ErrorKind::ConfigInvalid,
+                format!("{field_name} is too large"),
+            )
+        })?)),
+        _ => Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field_name} must be -1 or positive"),
         )
         .into()),
+    }
+}
+
+pub(crate) fn read_non_negative_jlong_to_usize(
+    env: &mut Env<'_>,
+    options: &JObject,
+    field_name: &str,
+) -> Result<Option<usize>> {
+    match read_int64_field(env, options, field_name)? {
+        -1 => Ok(None),
+        value if value >= 0 => Ok(Some(usize::try_from(value).map_err(|_| {
+            Error::new(
+                ErrorKind::ConfigInvalid,
+                format!("{field_name} is too large"),
+            )
+        })?)),
+        _ => Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field_name} must be -1 or non-negative"),
+        )
+        .into()),
+    }
+}
+
+pub(crate) fn read_non_negative_jlong_to_u64(
+    env: &mut Env<'_>,
+    options: &JObject,
+    field_name: &str,
+) -> Result<Option<u64>> {
+    match read_int64_field(env, options, field_name)? {
+        -1 => Ok(None),
+        value => Ok(Some(u64::try_from(value).map_err(|_| {
+            Error::new(
+                ErrorKind::ConfigInvalid,
+                format!("{field_name} must be -1 or non-negative"),
+            )
+        })?)),
     }
 }
 
@@ -247,6 +320,55 @@ pub(crate) fn read_instant_field_to_timestamp(
         .set_source(err)
         .into()),
     }
+}
+
+pub(crate) fn read_duration_field(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<Option<opendal::raw::Duration>> {
+    let result = env
+        .get_field(obj, JNIString::new(field), jni_sig!("Ljava/time/Duration;"))?
+        .l()?;
+    if result.is_null() {
+        return Ok(None);
+    }
+
+    let seconds = env
+        .call_method(&result, jni_str!("getSeconds"), jni_sig!("()J"), &[])?
+        .j()?;
+    let nanos = env
+        .call_method(&result, jni_str!("getNano"), jni_sig!("()I"), &[])?
+        .i()?;
+    if seconds < 0 || (seconds == 0 && nanos <= 0) {
+        return Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field} must be positive: seconds={seconds}, nanos={nanos}"),
+        )
+        .into());
+    }
+
+    let secs = u64::try_from(seconds).map_err(|err| {
+        Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("invalid {field} seconds: {seconds}"),
+        )
+        .set_source(err)
+    })?;
+    let subsec_nanos = u32::try_from(nanos).map_err(|err| {
+        Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("invalid {field} nanos: {nanos}"),
+        )
+        .set_source(err)
+    })?;
+    Ok(Some(opendal::raw::Duration::new(secs, subsec_nanos)))
+}
+
+pub(crate) fn read_range_fields(env: &mut Env<'_>, obj: &JObject) -> Result<opendal::BytesRange> {
+    let offset = read_int64_field(env, obj, "offset")?;
+    let length = read_int64_field(env, obj, "length")?;
+    Ok(offset_length_to_range(offset, length)?.into())
 }
 
 pub(crate) fn offset_length_to_range(offset: i64, length: i64) -> Result<(Bound<u64>, Bound<u64>)> {

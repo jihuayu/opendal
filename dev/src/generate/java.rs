@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::generate::parser::{Config, ConfigType, Services, sorted_services};
-use anyhow::Result;
+use anyhow::{Result, bail};
 use minijinja::value::ViaDeserialize;
 use minijinja::{Environment, context};
 use serde::Serialize;
@@ -24,6 +24,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::capability;
+use super::core_options::{self, OptionField, OptionKind, OptionsStruct};
 use super::metadata::{self, MetadataKind};
 
 /// Fields present in the legacy 46-parameter public `Capability` constructor.
@@ -90,6 +91,17 @@ const LEGACY_10_METADATA_FIELDS: &[&str] = &[
     "user_metadata",
 ];
 
+/// The core option structs the Java binding exposes, with the snake_case
+/// name used in the generated `make_<fn_name>_options` JNI converter.
+const EXPOSED_OPTIONS: &[(&str, &str)] = &[
+    ("DeleteOptions", "delete"),
+    ("ListOptions", "list"),
+    ("ReadOptions", "read"),
+    ("ReaderOptions", "reader"),
+    ("StatOptions", "stat"),
+    ("WriteOptions", "write"),
+];
+
 /// Render model handed to the Java capability templates.
 #[derive(Serialize)]
 struct CapabilityField {
@@ -124,6 +136,47 @@ struct MetadataField {
     doc: String,
 }
 
+/// Render model for one public `*Options` Java class and its JNI parser.
+#[derive(Serialize)]
+struct OptionsClass {
+    /// The class name, identical to the core struct name, e.g. `ReadOptions`.
+    name: String,
+    /// snake_case operation name for `make_{fn_name}_options`, e.g. `read`.
+    fn_name: String,
+    /// Class Javadoc summary line.
+    summary: String,
+    /// Ordered Java imports before `lombok.*`.
+    imports: Vec<String>,
+    /// The public fields in core field order.
+    properties: Vec<OptionProperty>,
+    /// Field initializers in `opendal::options::{name} { ... }`.
+    rs_fields: Vec<OptionRsField>,
+}
+
+/// One public field of a Java `*Options` class.
+#[derive(Serialize)]
+struct OptionProperty {
+    /// camelCase field name in Java.
+    camel: String,
+    /// The Java field type, e.g. `String`, `boolean`, `int`, `long`, `Instant`.
+    java_type: String,
+    /// Default initializer after ` = ` when `@Builder.Default` is needed, empty otherwise.
+    default_value: String,
+    /// Field Javadoc summary line.
+    summary: String,
+    /// `@see` targets of the capabilities the core doc refers to.
+    see_also: Vec<String>,
+}
+
+/// One field initialization in `opendal::options::{name} { ... }`.
+#[derive(Serialize)]
+struct OptionRsField {
+    /// snake_case field name in core.
+    name: String,
+    /// Rust expression producing the core field value from `env` and `options`.
+    expr: String,
+}
+
 fn enabled_service(srv: &str) -> bool {
     match srv {
         // not enabled in bindings/java/Cargo.toml
@@ -135,7 +188,8 @@ fn enabled_service(srv: &str) -> bool {
 pub fn generate(workspace_dir: PathBuf, services: Services) -> Result<()> {
     generate_service_config(&workspace_dir, services)?;
     generate_capability(&workspace_dir)?;
-    generate_metadata(&workspace_dir)
+    generate_metadata(&workspace_dir)?;
+    generate_options(&workspace_dir)
 }
 
 fn generate_service_config(workspace_dir: &Path, services: Services) -> Result<()> {
@@ -304,6 +358,343 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
     }
 }
 
+fn generate_options(workspace_dir: &Path) -> Result<()> {
+    let source = workspace_dir.join("core/core/src/types/options.rs");
+    let structs = core_options::parse(&source)?;
+
+    let mut classes = Vec::with_capacity(EXPOSED_OPTIONS.len());
+    for (name, fn_name) in EXPOSED_OPTIONS {
+        let Some(options) = structs.iter().find(|s| s.name == *name) else {
+            bail!("options struct {name} not found in {}", source.display());
+        };
+        classes.push(options_class(options, fn_name));
+    }
+
+    let mut env = Environment::new();
+    env.add_template("options_rs", include_str!("java/options_rs.j2"))?;
+    env.add_template("options_java", include_str!("java/options_java.j2"))?;
+
+    let rendered = env
+        .get_template("options_rs")?
+        .render(context! { classes => classes })?;
+    fs::write(
+        workspace_dir.join("bindings/java/src/options.rs"),
+        format!("{rendered}\n"),
+    )?;
+
+    let tmpl = env.get_template("options_java")?;
+    for class in &classes {
+        let rendered = tmpl.render(context! { class => class })?;
+        let output = workspace_dir.join(format!(
+            "bindings/java/src/main/java/org/apache/opendal/{}.java",
+            class.name
+        ));
+        fs::write(output, format!("{rendered}\n"))?;
+    }
+
+    Ok(())
+}
+
+fn options_class(options: &OptionsStruct, fn_name: &str) -> OptionsClass {
+    let ctx = DocContext {
+        fields: &options.fields,
+    };
+
+    let mut imports = Vec::new();
+    let mut properties = Vec::new();
+    let mut rs_fields = Vec::new();
+
+    for f in &options.fields {
+        let key = f.name.as_str();
+        let camel = case_java_field_name(key);
+        let property = |java_type: &str, default_value: &str| OptionProperty {
+            camel: camel.clone(),
+            java_type: java_type.to_string(),
+            default_value: default_value.to_string(),
+            summary: ctx.summary(&f.doc, Some(key)),
+            see_also: capability_refs(&f.doc),
+        };
+        let call_3 = |func: &str| {
+            let single = format!("{func}(env, options, \"{camel}\")?");
+            if 8 + key.len() + 2 + single.len() + 1 > 100 {
+                format!(
+                    "{func}(\n            env,\n            options,\n            \"{camel}\",\n        )?"
+                )
+            } else {
+                single
+            }
+        };
+
+        match f.kind {
+            OptionKind::Bool => {
+                properties.push(property("boolean", ""));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_bool_field"),
+                });
+            }
+            OptionKind::Usize => {
+                let (default_value, func) = if key == "prefetch" {
+                    ("0", "convert::read_non_negative_jint_to_usize")
+                } else {
+                    ("1", "convert::read_positive_jint_to_usize")
+                };
+                properties.push(property("int", default_value));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3(func),
+                });
+            }
+            OptionKind::OptionUsize => {
+                let func = if key == "gap" {
+                    "convert::read_non_negative_jlong_to_usize"
+                } else {
+                    "convert::read_jlong_field_to_usize"
+                };
+                properties.push(property("long", "-1L"));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3(func),
+                });
+            }
+            OptionKind::OptionU64 => {
+                properties.push(property("long", "-1L"));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_non_negative_jlong_to_u64"),
+                });
+            }
+            OptionKind::OptionString => {
+                properties.push(property("String", ""));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_string_field"),
+                });
+            }
+            OptionKind::OptionTimestamp => {
+                add_import(&mut imports, "java.time.Instant");
+                properties.push(property("Instant", ""));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_instant_field_to_timestamp"),
+                });
+            }
+            OptionKind::OptionDuration => {
+                add_import(&mut imports, "java.time.Duration");
+                properties.push(property("Duration", ""));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_duration_field"),
+                });
+            }
+            OptionKind::OptionStringMap => {
+                add_import(&mut imports, "java.util.Map");
+                properties.push(property("Map<String, String>", ""));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_map_field"),
+                });
+            }
+            OptionKind::OptionMetadata => {
+                properties.push(property("Metadata", ""));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: call_3("convert::read_metadata_condition_field"),
+                });
+            }
+            OptionKind::BytesRange => {
+                let range = |camel: &str, default_value: &str, summary: &str| OptionProperty {
+                    camel: camel.to_string(),
+                    java_type: "long".to_string(),
+                    default_value: default_value.to_string(),
+                    summary: summary.to_string(),
+                    see_also: Vec::new(),
+                };
+                properties.push(range(
+                    "offset",
+                    "",
+                    "The byte offset to start reading from. Must be non-negative; defaults to zero.",
+                ));
+                properties.push(range(
+                    "length",
+                    "-1L",
+                    "The number of bytes to read from {@link #offset}. The default of {@code -1L} reads to the end.",
+                ));
+                rs_fields.push(OptionRsField {
+                    name: key.to_string(),
+                    expr: "convert::read_range_fields(env, options)?".to_string(),
+                });
+            }
+        }
+    }
+
+    imports.sort();
+    let summary = match ctx.summary(&options.doc, None) {
+        s if s.is_empty() => format!("Options for {fn_name} operations."),
+        s => s,
+    };
+
+    OptionsClass {
+        name: options.name.clone(),
+        fn_name: fn_name.to_string(),
+        summary,
+        imports,
+        properties,
+        rs_fields,
+    }
+}
+
+fn add_import(imports: &mut Vec<String>, imp: &str) {
+    if !imports.iter().any(|existing| existing == imp) {
+        imports.push(imp.to_string());
+    }
+}
+
+/// Renders rustdoc of one options struct as Javadoc text.
+struct DocContext<'a> {
+    /// Fields of the struct, so code spans naming sibling fields become `{@link #<field>}`.
+    fields: &'a [OptionField],
+}
+
+impl DocContext<'_> {
+    /// The first paragraph of a rustdoc comment as a single line of Javadoc text.
+    fn summary(&self, lines: &[String], current_field: Option<&str>) -> String {
+        let paragraph = lines
+            .iter()
+            .map(|line| line.trim())
+            .take_while(|line| !line.is_empty())
+            .collect::<Vec<_>>()
+            .join(" ");
+        self.inline(&paragraph, current_field)
+    }
+
+    /// Translate inline rustdoc markup: intra-doc links, Markdown links, and
+    /// code spans. Everything else is HTML-escaped text.
+    fn inline(&self, text: &str, current_field: Option<&str>) -> String {
+        let mut out = String::with_capacity(text.len());
+        let mut rest = text;
+        while let Some(pos) = rest.find(['[', '`']) {
+            out.push_str(&html_escape(&rest[..pos]));
+            rest = &rest[pos..];
+
+            if let Some(code) = rest.strip_prefix('`') {
+                match code.find('`') {
+                    Some(end) => {
+                        out.push_str(&self.code(&code[..end], current_field));
+                        rest = &code[end + 1..];
+                    }
+                    None => {
+                        out.push('`');
+                        rest = code;
+                    }
+                }
+                continue;
+            }
+
+            let Some(close) = rest.find(']') else {
+                out.push('[');
+                rest = &rest[1..];
+                continue;
+            };
+            let label = &rest[1..close];
+            let after = &rest[close + 1..];
+            if let Some(target) = after.strip_prefix('(')
+                && let Some(end) = target.find(')')
+            {
+                let url = &target[..end];
+                if url.starts_with("http://") || url.starts_with("https://") {
+                    out.push_str(&format!(
+                        "<a href=\"{}\">{}</a>",
+                        html_escape(url),
+                        self.inline(label, current_field)
+                    ));
+                } else {
+                    out.push_str(&self.path(url, current_field));
+                }
+                rest = &target[end + 1..];
+            } else if let Some(target) = after.strip_prefix('[')
+                && let Some(end) = target.find(']')
+            {
+                out.push_str(&self.inline(label, current_field));
+                rest = &target[end + 1..];
+            } else if let Some(path) = label.strip_prefix('`').and_then(|l| l.strip_suffix('`')) {
+                out.push_str(&self.path(path, current_field));
+                rest = after;
+            } else {
+                out.push_str(&self.inline(label, current_field));
+                rest = after;
+            }
+        }
+        out.push_str(&html_escape(rest));
+        out
+    }
+
+    /// An intra-doc link target, e.g. `crate::Capability::read_with_version`.
+    fn path(&self, path: &str, current_field: Option<&str>) -> String {
+        let path = path.strip_prefix("crate::").unwrap_or(path);
+        let segments: Vec<&str> = path.split("::").collect();
+        match segments.as_slice() {
+            ["Capability", field] => {
+                format!("{{@link Capability#{}}}", case_java_field_name(field))
+            }
+            ["ErrorKind", variant] => format!("{{@link OpenDALException.Code#{variant}}}"),
+            ["Metadata", field] => {
+                format!("{{@link Metadata#{}}}", metadata_camel(field))
+            }
+            ["Self", field] => self.code(field, current_field),
+            [ty] if EXPOSED_OPTIONS.iter().any(|(name, _)| name == ty) => {
+                format!("{{@link {ty}}}")
+            }
+            [ty, field] if EXPOSED_OPTIONS.iter().any(|(name, _)| name == ty) => {
+                format!("{{@link {ty}#{}}}", case_java_field_name(field))
+            }
+            _ => format!("{{@code {path}}}"),
+        }
+    }
+
+    /// A code span: a sibling field becomes a `{@link #<field>}` reference.
+    fn code(&self, code: &str, current_field: Option<&str>) -> String {
+        if current_field != Some(code)
+            && self
+                .fields
+                .iter()
+                .any(|f| f.name == code && f.kind != OptionKind::BytesRange)
+        {
+            format!("{{@link #{}}}", case_java_field_name(code))
+        } else {
+            format!("{{@code {code}}}")
+        }
+    }
+}
+
+/// The `@see` targets of every `Capability` field a rustdoc comment links to,
+/// in order of first mention.
+fn capability_refs(lines: &[String]) -> Vec<String> {
+    const MARKER: &str = "crate::Capability::";
+
+    let mut refs = Vec::new();
+    for line in lines {
+        let mut rest = line.as_str();
+        while let Some(pos) = rest.find(MARKER) {
+            rest = &rest[pos + MARKER.len()..];
+            let end = rest
+                .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+                .unwrap_or(rest.len());
+            let cref = format!("Capability#{}", case_java_field_name(&rest[..end]));
+            if !refs.contains(&cref) {
+                refs.push(cref);
+            }
+        }
+    }
+    refs
+}
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
 fn case_java_class_name(s: &str) -> String {
     heck::AsUpperCamelCase(s).to_string()
 }
@@ -435,6 +826,22 @@ mod tests {
                 fields.iter().any(|f| f.name == legacy),
                 "legacy metadata field `{legacy}` is missing from core Metadata"
             );
+        }
+    }
+
+    #[test]
+    fn test_exposed_options_exist_in_core() {
+        let path = crate::workspace_dir().join("core/core/src/types/options.rs");
+        let structs = core_options::parse(&path).expect("core options must parse");
+
+        for (name, fn_name) in EXPOSED_OPTIONS {
+            let options = structs
+                .iter()
+                .find(|s| s.name == *name)
+                .unwrap_or_else(|| panic!("exposed options struct `{name}` is missing from core"));
+            let class = options_class(options, fn_name);
+            assert!(!class.properties.is_empty());
+            assert_eq!(class.rs_fields.len(), options.fields.len());
         }
     }
 }

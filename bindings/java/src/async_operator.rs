@@ -129,11 +129,10 @@ fn intern_write(
     options: JObject,
 ) -> Result<jlong> {
     let op = unsafe { &*op }.clone();
-    let id = request_id(env)?;
-
     let write_opts = make_write_options(env, &options)?;
     let path = jstring_to_string(env, &path)?;
     let content = env.convert_byte_array(content)?;
+    let id = request_id(env)?;
 
     executor_or_default(env, executor)?.spawn(async move {
         let result = op.write_options(&path, content, write_opts).await;
@@ -170,10 +169,9 @@ fn intern_stat(
     options: JObject,
 ) -> Result<jlong> {
     let op = unsafe { &*op }.clone();
-    let id = request_id(env)?;
-
     let path = jstring_to_string(env, &path)?;
     let stat_opts = make_stat_options(env, &options)?;
+    let id = request_id(env)?;
 
     executor_or_default(env, executor)?.spawn(async move {
         let result = op.stat_options(&path, stat_opts).await;
@@ -490,10 +488,10 @@ fn intern_list(
     options: JObject,
 ) -> Result<jlong> {
     let op = unsafe { &*op }.clone();
-    let id = request_id(env)?;
-
     let path = jstring_to_string(env, &path)?;
     let list_opts = make_list_options(env, &options)?;
+    let id = request_id(env)?;
+
     executor_or_default(env, executor)?.spawn(async move {
         let result = op.list_options(&path, list_opts).await;
         complete_future(id, move |env| make_entries(env, result?));

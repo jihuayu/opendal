@@ -61,6 +61,7 @@ public class OperatorInputStream extends InputStream {
                 .ifUnmodifiedSince(options.ifUnmodifiedSince)
                 .concurrent(options.concurrent)
                 .chunk(options.chunk)
+                .gap(options.gap)
                 .contentLengthHint(options.contentLengthHint)
                 .build();
         try (OperatorReader source = operator.createReader(path, readerOptions)) {

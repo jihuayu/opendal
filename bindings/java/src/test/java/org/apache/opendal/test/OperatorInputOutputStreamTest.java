@@ -143,6 +143,7 @@ public class OperatorInputOutputStreamTest {
                 Arguments.of(ReaderOptions.builder().concurrent(-1).build(), "concurrent"),
                 Arguments.of(ReaderOptions.builder().chunk(0).build(), "chunk"),
                 Arguments.of(ReaderOptions.builder().chunk(-2).build(), "chunk"),
+                Arguments.of(ReaderOptions.builder().gap(-2).build(), "gap"),
                 Arguments.of(ReaderOptions.builder().prefetch(-1).build(), "prefetch"),
                 Arguments.of(ReaderOptions.builder().contentLengthHint(-2).build(), "contentLengthHint"));
     }
