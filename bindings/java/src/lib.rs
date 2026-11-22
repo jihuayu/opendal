@@ -96,7 +96,7 @@ fn make_operator_info<'a>(env: &mut Env<'a>, info: OperatorInfo) -> Result<JObje
 fn make_capability<'a>(env: &mut Env<'a>, cap: Capability) -> Result<JObject<'a>> {
     let capability = env.new_object(
         jni_str!("org/apache/opendal/Capability"),
-        jni_sig!("(ZZZZZZZZZZZZZZZZZZZZZZZZJJZZZZZZZZZZZZZZZZZZZZ)V"),
+        jni_sig!("(ZZZZZZZZZZZZZZZZZZZZZZZZJJZZZZZZZZZZZZZZZZZZZZZZ)V"),
         &[
             JValue::Bool(cap.stat),
             JValue::Bool(cap.stat_with_if_match),
@@ -144,6 +144,8 @@ fn make_capability<'a>(env: &mut Env<'a>, cap: Capability) -> Result<JObject<'a>
             JValue::Bool(cap.read_with_if_version_not_match),
             JValue::Bool(cap.read_with_if_modified_since),
             JValue::Bool(cap.read_with_if_unmodified_since),
+            JValue::Bool(cap.write_with_if_version_match),
+            JValue::Bool(cap.write_with_if_version_not_match),
         ],
     )?;
     Ok(capability)
@@ -223,6 +225,29 @@ fn make_entry<'a>(env: &mut Env<'a>, entry: Entry) -> Result<JObject<'a>> {
     )?)
 }
 
+fn read_if_not_changed_metadata(env: &mut Env, options: &JObject) -> Result<Option<Metadata>> {
+    let metadata = env
+        .get_field(
+            options,
+            jni_str!("ifNotChanged"),
+            jni_sig!("Lorg/apache/opendal/Metadata;"),
+        )?
+        .l()?;
+    if metadata.is_null() {
+        Ok(None)
+    } else {
+        // Identity conditions use only the version and ETag from the snapshot.
+        let mut builder = MetadataBuilder::unknown();
+        if let Some(version) = convert::read_string_field(env, &metadata, "version")? {
+            builder.version(version);
+        }
+        if let Some(etag) = convert::read_string_field(env, &metadata, "etag")? {
+            builder.etag(etag);
+        }
+        Ok(Some(builder.build()))
+    }
+}
+
 fn make_write_options<'a>(
     env: &mut Env<'a>,
     options: &JObject,
@@ -238,14 +263,17 @@ fn make_write_options<'a>(
         }
     };
     Ok(opendal::options::WriteOptions {
-        append: convert::read_bool_field(env, options, "append").unwrap_or_default(),
+        append: convert::read_bool_field(env, options, "append")?,
         content_type: convert::read_string_field(env, options, "contentType")?,
         content_disposition: convert::read_string_field(env, options, "contentDisposition")?,
         content_encoding: convert::read_string_field(env, options, "contentEncoding")?,
         cache_control: convert::read_string_field(env, options, "cacheControl")?,
         if_match: convert::read_string_field(env, options, "ifMatch")?,
         if_none_match: convert::read_string_field(env, options, "ifNoneMatch")?,
-        if_not_exists: convert::read_bool_field(env, options, "ifNotExists").unwrap_or_default(),
+        if_version_match: convert::read_string_field(env, options, "ifVersionMatch")?,
+        if_version_not_match: convert::read_string_field(env, options, "ifVersionNotMatch")?,
+        if_not_exists: convert::read_bool_field(env, options, "ifNotExists")?,
+        if_not_changed: read_if_not_changed_metadata(env, options)?,
         user_metadata: convert::read_map_field(env, options, "userMetadata")?,
         concurrent,
         chunk: convert::read_jlong_field_to_usize(env, options, "chunk")?,
@@ -257,26 +285,7 @@ fn make_delete_options(
     env: &mut Env,
     options: &JObject,
 ) -> Result<opendal::options::DeleteOptions> {
-    let metadata = env
-        .get_field(
-            options,
-            jni_str!("ifNotChanged"),
-            jni_sig!("Lorg/apache/opendal/Metadata;"),
-        )?
-        .l()?;
-    let if_not_changed = if metadata.is_null() {
-        None
-    } else {
-        // Delete conditions use only the version and ETag from the snapshot.
-        let mut builder = MetadataBuilder::unknown();
-        if let Some(version) = convert::read_string_field(env, &metadata, "version")? {
-            builder.version(version);
-        }
-        if let Some(etag) = convert::read_string_field(env, &metadata, "etag")? {
-            builder.etag(etag);
-        }
-        Some(builder.build())
-    };
+    let if_not_changed = read_if_not_changed_metadata(env, options)?;
 
     Ok(opendal::options::DeleteOptions {
         version: convert::read_string_field(env, options, "version")?,
