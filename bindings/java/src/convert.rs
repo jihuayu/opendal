@@ -198,3 +198,46 @@ pub(crate) fn bytes_to_jbytearray<'a>(
 pub(crate) fn jstring_to_string(env: &mut Env, s: &JString) -> Result<String> {
     Ok(s.mutf8_chars(env)?.into())
 }
+
+pub(crate) fn read_duration_field(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<Option<std::time::Duration>> {
+    let result = env
+        .get_field(obj, JNIString::new(field), jni_sig!("Ljava/time/Duration;"))?
+        .l()?;
+    if result.is_null() {
+        return Ok(None);
+    }
+
+    let seconds = env
+        .call_method(&result, jni_str!("getSeconds"), jni_sig!("()J"), &[])?
+        .j()?;
+    let nanos = env
+        .call_method(&result, jni_str!("getNano"), jni_sig!("()I"), &[])?
+        .i()?;
+    let Ok(seconds) = u64::try_from(seconds) else {
+        return Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field} must be positive"),
+        )
+        .into());
+    };
+    let Ok(nanos) = u32::try_from(nanos) else {
+        return Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field} nanoseconds must be non-negative"),
+        )
+        .into());
+    };
+    let duration = std::time::Duration::new(seconds, nanos);
+    if duration.is_zero() {
+        return Err(Error::new(
+            ErrorKind::ConfigInvalid,
+            format!("{field} must be positive"),
+        )
+        .into());
+    }
+    Ok(Some(duration))
+}

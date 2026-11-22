@@ -126,14 +126,14 @@ fn intern_write(
     content: JByteArray,
     options: JObject,
 ) -> Result<jlong> {
-    let op = unsafe { &*op }.clone();
-    let id = request_id(env)?;
-
     let write_opts = make_write_options(env, &options)?;
     let path = jstring_to_string(env, &path)?;
     let content = env.convert_byte_array(content)?;
+    let op = unsafe { &*op }.clone();
 
-    executor_or_default(env, executor)?.spawn(async move {
+    let executor = executor_or_default(env, executor)?;
+    let id = request_id(env)?;
+    executor.spawn(async move {
         let result = op.write_options(&path, content, write_opts).await;
         complete_future(id, move |_env| {
             result?;

@@ -19,6 +19,7 @@
 
 package org.apache.opendal;
 
+import java.time.Duration;
 import java.util.Map;
 import lombok.Builder;
 
@@ -44,9 +45,16 @@ public class WriteOptions {
     public final String cacheControl;
 
     /**
-     * Sets the Content-Encoding header for the object
+     * Sets the Content-Encoding header for the object.
+     * Requires capability: writeWithContentEncoding
      */
     public final String contentEncoding;
+
+    /**
+     * Sets the Content-Language system metadata on the object being written.
+     * Requires capability: writeWithContentLanguage
+     */
+    public final String contentLanguage;
 
     /**
      * Sets the If-Match header for conditional writes
@@ -61,10 +69,40 @@ public class WriteOptions {
     public final String ifNoneMatch;
 
     /**
+     * Writes only when the file at the write path has this exact version.
+     * Requires capability: writeWithIfVersionMatch
+     */
+    public final String ifVersionMatch;
+
+    /**
+     * Writes only when the file at the write path does not have this version.
+     * Requires capability: writeWithIfVersionNotMatch
+     */
+    public final String ifVersionNotMatch;
+
+    /**
+     * Writes only when the current file at the write path still has the identity recorded in
+     * metadata previously returned by OpenDAL for the same path.
+     * OpenDAL derives a version match when the service supports version conditions and a version
+     * is present; otherwise it uses a strong (non-weak) ETag when available.
+     * Fails with {@code ConfigInvalid} when the metadata contains neither a version nor a non-weak
+     * ETag, {@code ConditionNotMatch} when the file changed, is missing, or is combined with a
+     * conflicting {@link #ifMatch} or {@link #ifVersionMatch} value, and {@code Unsupported} when
+     * the service does not support the derived primitive condition.
+     */
+    public final Metadata ifNotChanged;
+
+    /**
      * Sets custom metadata for the file.
      * Requires capability: writeWithUserMetadata
      */
     public final Map<String, String> userMetadata;
+
+    /**
+     * Sets how long the new file lives after the write commits.
+     * Requires capability: writeWithExpires
+     */
+    public final Duration expires;
 
     /**
      * Enables append mode for writing.
