@@ -316,6 +316,39 @@ public class AsyncOperator extends NativeObject {
         return AsyncRegistry.take(requestId);
     }
 
+    public CompletableFuture<PresignedRequest> presignDelete(String path, Duration duration) {
+        return presignDelete(path, duration, DeleteOptions.builder().build());
+    }
+
+    /**
+     * Creates a presigned delete request with the given options.
+     *
+     * <p>The service must support presigning delete requests ({@link Capability#presignDelete}),
+     * and {@code duration} must be positive.
+     *
+     * @param path the path of the object.
+     * @param duration how long the presigned request remains valid; must be positive.
+     * @param options the delete options to include in the presigned request.
+     * @return the presigned request.
+     * @throws OpenDALException if {@code duration} is zero, negative, or overflows nanoseconds
+     *     ({@code ConfigInvalid})
+     */
+    public CompletableFuture<PresignedRequest> presignDelete(String path, Duration duration, DeleteOptions options) {
+        Objects.requireNonNull(duration, "duration");
+        final long nanos;
+        if (duration.isZero() || duration.isNegative()) {
+            nanos = 0L;
+        } else {
+            try {
+                nanos = duration.toNanos();
+            } catch (ArithmeticException e) {
+                throw new OpenDALException(OpenDALException.Code.ConfigInvalid, "duration is too large");
+            }
+        }
+        final long requestId = presignDelete(nativeHandle, executorHandle, path, nanos, options);
+        return AsyncRegistry.take(requestId);
+    }
+
     public CompletableFuture<Void> delete(String path) {
         return delete(path, DeleteOptions.builder().build());
     }
@@ -391,6 +424,9 @@ public class AsyncOperator extends NativeObject {
 
     private static native long presignStat(
             long nativeHandle, long executorHandle, String path, long duration, StatOptions options);
+
+    private static native long presignDelete(
+            long nativeHandle, long executorHandle, String path, long duration, DeleteOptions options);
 
     private static native OperatorInfo makeOperatorInfo(long nativeHandle);
 

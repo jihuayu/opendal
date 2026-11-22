@@ -253,6 +253,11 @@ public class Capability {
     public final boolean presignWrite;
 
     /**
+     * If operator supports presign delete.
+     */
+    public final boolean presignDelete;
+
+    /**
      * If operator supports shared.
      */
     public final boolean shared;
@@ -398,6 +403,104 @@ public class Capability {
             boolean readWithIfVersionNotMatch,
             boolean readWithIfModifiedSince,
             boolean readWithIfUnmodifiedSince) {
+        this(
+                stat,
+                statWithIfMatch,
+                statWithIfNoneMatch,
+                statWithIfVersionMatch,
+                statWithIfVersionNotMatch,
+                statWithIfModifiedSince,
+                statWithIfUnmodifiedSince,
+                statWithVersion,
+                read,
+                readWithIfMatch,
+                readWithIfNoneMatch,
+                readWithOverrideCacheControl,
+                readWithOverrideContentDisposition,
+                readWithOverrideContentType,
+                write,
+                writeCanMulti,
+                writeCanAppend,
+                writeWithContentType,
+                writeWithContentDisposition,
+                writeWithCacheControl,
+                writeWithIfMatch,
+                writeWithIfNoneMatch,
+                writeWithIfNotExists,
+                writeWithUserMetadata,
+                writeMultiMaxSize,
+                writeMultiMinSize,
+                createDir,
+                delete,
+                copy,
+                rename,
+                list,
+                listWithLimit,
+                listWithStartAfter,
+                listWithRecursive,
+                listWithVersions,
+                listWithDeleted,
+                presign,
+                presignRead,
+                presignStat,
+                presignWrite,
+                shared,
+                readWithVersion,
+                readWithIfVersionMatch,
+                readWithIfVersionNotMatch,
+                readWithIfModifiedSince,
+                readWithIfUnmodifiedSince,
+                false);
+    }
+
+    public Capability(
+            boolean stat,
+            boolean statWithIfMatch,
+            boolean statWithIfNoneMatch,
+            boolean statWithIfVersionMatch,
+            boolean statWithIfVersionNotMatch,
+            boolean statWithIfModifiedSince,
+            boolean statWithIfUnmodifiedSince,
+            boolean statWithVersion,
+            boolean read,
+            boolean readWithIfMatch,
+            boolean readWithIfNoneMatch,
+            boolean readWithOverrideCacheControl,
+            boolean readWithOverrideContentDisposition,
+            boolean readWithOverrideContentType,
+            boolean write,
+            boolean writeCanMulti,
+            boolean writeCanAppend,
+            boolean writeWithContentType,
+            boolean writeWithContentDisposition,
+            boolean writeWithCacheControl,
+            boolean writeWithIfMatch,
+            boolean writeWithIfNoneMatch,
+            boolean writeWithIfNotExists,
+            boolean writeWithUserMetadata,
+            long writeMultiMaxSize,
+            long writeMultiMinSize,
+            boolean createDir,
+            boolean delete,
+            boolean copy,
+            boolean rename,
+            boolean list,
+            boolean listWithLimit,
+            boolean listWithStartAfter,
+            boolean listWithRecursive,
+            boolean listWithVersions,
+            boolean listWithDeleted,
+            boolean presign,
+            boolean presignRead,
+            boolean presignStat,
+            boolean presignWrite,
+            boolean shared,
+            boolean readWithVersion,
+            boolean readWithIfVersionMatch,
+            boolean readWithIfVersionNotMatch,
+            boolean readWithIfModifiedSince,
+            boolean readWithIfUnmodifiedSince,
+            boolean presignDelete) {
         this.stat = stat;
         this.statWithIfMatch = statWithIfMatch;
         this.statWithIfNoneMatch = statWithIfNoneMatch;
@@ -444,5 +547,6 @@ public class Capability {
         this.readWithIfVersionNotMatch = readWithIfVersionNotMatch;
         this.readWithIfModifiedSince = readWithIfModifiedSince;
         this.readWithIfUnmodifiedSince = readWithIfUnmodifiedSince;
+        this.presignDelete = presignDelete;
     }
 }

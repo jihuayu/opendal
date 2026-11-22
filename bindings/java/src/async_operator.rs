@@ -634,6 +634,52 @@ fn intern_presign_stat(
     Ok(id)
 }
 
+/// # Safety
+///
+/// This function should not be called before the Operator is ready.
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_presignDelete<'local>(
+    mut env: EnvUnowned<'local>,
+    _: JClass<'local>,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString<'local>,
+    expire: jlong,
+    options: JObject<'local>,
+) -> jlong {
+    env.with_env(|env| intern_presign_delete(env, op, executor, path, expire, options))
+        .resolve::<ThrowException>()
+}
+
+fn intern_presign_delete(
+    env: &mut Env,
+    op: *mut Operator,
+    executor: *const Executor,
+    path: JString,
+    expire: jlong,
+    options: JObject,
+) -> Result<jlong> {
+    let Ok(expire @ 1..) = u64::try_from(expire) else {
+        return Err(
+            opendal::Error::new(opendal::ErrorKind::ConfigInvalid, "duration must be positive")
+                .into(),
+        );
+    };
+    let expire = Duration::from_nanos(expire);
+    let delete_opts = make_delete_options(env, &options)?;
+    let path = jstring_to_string(env, &path)?;
+    let op = unsafe { &*op }.clone();
+
+    let executor = executor_or_default(env, executor)?;
+    let id = request_id(env)?;
+    executor.spawn(async move {
+        let result = op.presign_delete_options(&path, expire, delete_opts).await;
+        complete_future(id, move |env| make_presigned_request(env, result?));
+    });
+
+    Ok(id)
+}
+
 /// Complete the Java `CompletableFuture` identified by `id`.
 ///
 /// This runs on a `tokio` worker thread that was permanently attached to the

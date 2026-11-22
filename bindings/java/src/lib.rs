@@ -96,7 +96,7 @@ fn make_operator_info<'a>(env: &mut Env<'a>, info: OperatorInfo) -> Result<JObje
 fn make_capability<'a>(env: &mut Env<'a>, cap: Capability) -> Result<JObject<'a>> {
     let capability = env.new_object(
         jni_str!("org/apache/opendal/Capability"),
-        jni_sig!("(ZZZZZZZZZZZZZZZZZZZZZZZZJJZZZZZZZZZZZZZZZZZZZZ)V"),
+        jni_sig!("(ZZZZZZZZZZZZZZZZZZZZZZZZJJZZZZZZZZZZZZZZZZZZZZZ)V"),
         &[
             JValue::Bool(cap.stat),
             JValue::Bool(cap.stat_with_if_match),
@@ -144,6 +144,7 @@ fn make_capability<'a>(env: &mut Env<'a>, cap: Capability) -> Result<JObject<'a>
             JValue::Bool(cap.read_with_if_version_not_match),
             JValue::Bool(cap.read_with_if_modified_since),
             JValue::Bool(cap.read_with_if_unmodified_since),
+            JValue::Bool(cap.presign_delete),
         ],
     )?;
     Ok(capability)

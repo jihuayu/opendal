@@ -20,19 +20,26 @@
 package org.apache.opendal.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.stream.Stream;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.opendal.AsyncOperator;
+import org.apache.opendal.DeleteOptions;
+import org.apache.opendal.OpenDALException.Code;
 import org.apache.opendal.PresignedRequest;
 import org.apache.opendal.ReadOptions;
 import org.apache.opendal.ServiceConfig;
 import org.apache.opendal.StatOptions;
 import org.apache.opendal.WriteOptions;
+import org.apache.opendal.test.condition.OpenDALExceptionCondition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @Timeout(10)
 public class PresignOptionsTest {
@@ -118,6 +125,35 @@ public class PresignOptionsTest {
                     .containsEntry("content-disposition", DISPOSITION)
                     .containsEntry("cache-control", "private, max-age=60")
                     .containsEntry("x-amz-meta-source", "java");
+        }
+    }
+
+    @Test
+    public void testPresignDeleteOptions() throws Exception {
+        try (final AsyncOperator op = AsyncOperator.of(CONFIG)) {
+            final DeleteOptions options =
+                    DeleteOptions.builder().version("version-1").build();
+            final PresignedRequest request =
+                    op.presignDelete("report.csv", EXPIRY, options).join();
+
+            assertThat(request.getMethod()).isEqualTo("DELETE");
+            assertThat(new URIBuilder(request.getUri()).getQueryParams())
+                    .extracting(NameValuePair::getName, NameValuePair::getValue)
+                    .contains(tuple("versionId", "version-1"), tuple("X-Amz-Expires", "600"));
+        }
+    }
+
+    static Stream<Duration> invalidPresignDurations() {
+        return Stream.of(
+                Duration.ZERO, Duration.ofSeconds(-1), Duration.ofNanos(-1), Duration.ofSeconds(Long.MAX_VALUE));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidPresignDurations")
+    public void testPresignDeleteRejectsNonPositiveOrOverflowingDuration(Duration invalidDuration) {
+        try (final AsyncOperator op = AsyncOperator.of(CONFIG)) {
+            assertThatThrownBy(() -> op.presignDelete("report.csv", invalidDuration))
+                    .is(OpenDALExceptionCondition.ofSync(Code.ConfigInvalid));
         }
     }
 
