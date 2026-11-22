@@ -43,8 +43,7 @@ use crate::make_operator_info;
 use crate::make_presigned_request;
 use crate::{
     make_delete_options, make_entry, make_list_options, make_read_options, make_rename_options,
-    make_stat_options,
-    make_write_options,
+    make_stat_options, make_write_options,
 };
 
 #[unsafe(no_mangle)]
