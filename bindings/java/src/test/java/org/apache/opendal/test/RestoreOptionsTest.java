@@ -42,4 +42,16 @@ public class RestoreOptionsTest {
                     .is(OpenDALExceptionCondition.ofAsync(Code.Unsupported));
         }
     }
+
+    @Test
+    void testRestoreIfNotExistsRequiresVersion() {
+        try (AsyncOperator async = AsyncOperator.of("memory", Collections.emptyMap());
+                Operator op = async.blocking()) {
+            RestoreOptions options = RestoreOptions.builder().ifNotExists(true).build();
+            assertThatThrownBy(() -> op.restore("file", options))
+                    .is(OpenDALExceptionCondition.ofSync(Code.ConfigInvalid));
+            assertThatThrownBy(async.restore("file", options)::join)
+                    .is(OpenDALExceptionCondition.ofAsync(Code.ConfigInvalid));
+        }
+    }
 }

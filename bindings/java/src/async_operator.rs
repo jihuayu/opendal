@@ -43,8 +43,7 @@ use crate::make_operator_info;
 use crate::make_presigned_request;
 use crate::{
     make_delete_options, make_entry, make_list_options, make_read_options, make_restore_options,
-    make_stat_options,
-    make_write_options,
+    make_stat_options, make_write_options,
 };
 
 #[unsafe(no_mangle)]
@@ -635,14 +634,6 @@ fn intern_presign_stat(
     Ok(id)
 }
 
-/// Complete the Java `CompletableFuture` identified by `id`.
-///
-/// This runs on a `tokio` worker thread that was permanently attached to the
-/// JVM in `on_thread_start`, so `attach_current_thread` only pushes a scoped
-/// JNI frame here. The `build` closure turns the awaited operation result into a
-/// Java object within that frame; on error the future is completed
-/// exceptionally. All local references created during completion live and die
-/// within the frame.
 /// # Safety
 ///
 /// This function should not be called before the Operator is ready.
@@ -673,6 +664,14 @@ pub unsafe extern "system" fn Java_org_apache_opendal_AsyncOperator_restore<'loc
     .resolve::<ThrowException>()
 }
 
+/// Complete the Java `CompletableFuture` identified by `id`.
+///
+/// This runs on a `tokio` worker thread that was permanently attached to the
+/// JVM in `on_thread_start`, so `attach_current_thread` only pushes a scoped
+/// JNI frame here. The `build` closure turns the awaited operation result into a
+/// Java object within that frame; on error the future is completed
+/// exceptionally. All local references created during completion live and die
+/// within the frame.
 fn complete_future<F>(id: jlong, build: F)
 where
     F: for<'a> FnOnce(&mut Env<'a>) -> Result<JObject<'a>>,
