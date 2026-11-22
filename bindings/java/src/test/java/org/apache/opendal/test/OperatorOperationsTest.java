@@ -21,6 +21,8 @@ package org.apache.opendal.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
@@ -58,6 +60,28 @@ public class OperatorOperationsTest {
             op.write("present", "content");
             assertThat(op.exists("present")).isTrue();
             assertThat(async.exists("present").join()).isTrue();
+        }
+    }
+
+    @Test
+    void testExistsPropagatesNonNotFoundErrors() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/", exchange -> {
+            try {
+                exchange.sendResponseHeaders(403, -1);
+            } finally {
+                exchange.close();
+            }
+        });
+        server.start();
+        String endpoint = "http://127.0.0.1:" + server.getAddress().getPort();
+
+        try (AsyncOperator async = AsyncOperator.of("http", Collections.singletonMap("endpoint", endpoint));
+                Operator op = async.blocking()) {
+            assertThatThrownBy(() -> op.exists("file")).is(OpenDALExceptionCondition.ofSync(Code.PermissionDenied));
+            assertThatThrownBy(async.exists("file")::join).is(OpenDALExceptionCondition.ofAsync(Code.PermissionDenied));
+        } finally {
+            server.stop(0);
         }
     }
 
