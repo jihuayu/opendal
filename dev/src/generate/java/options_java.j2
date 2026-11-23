@@ -33,6 +33,8 @@ import lombok.Data;
 @Data
 @Builder(toBuilder = true)
 public class {{ class.name }} {
+{#- Keep StatOptions mutable so Lombok still generates the published setters. #}
+{%- set field_modifiers = "private" if class.name == "StatOptions" else "public final" %}
 {% for p in class.properties %}
     /**
      * {{ p.summary }}
@@ -45,9 +47,9 @@ public class {{ class.name }} {
      */
 {%- if p.default_value %}
     @Builder.Default
-    public final {{ p.java_type }} {{ p.camel }} = {{ p.default_value }};
+    {{ field_modifiers }} {{ p.java_type }} {{ p.camel }} = {{ p.default_value }};
 {%- else %}
-    public final {{ p.java_type }} {{ p.camel }};
+    {{ field_modifiers }} {{ p.java_type }} {{ p.camel }};
 {%- endif %}
 {% endfor -%}
 }

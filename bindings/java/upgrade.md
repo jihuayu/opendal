@@ -18,17 +18,6 @@ continues to accept duration strings.
 +Capability caps = operator.info().capability;
 ```
 
-### `StatOptions` fields are now immutable
-
-`StatOptions` is now generated from core with `public final` fields, matching `DeleteOptions`, `ListOptions`, `ReadOptions`, `ReaderOptions`, and `WriteOptions`. The Lombok-generated setter methods (`setVersion`, `setIfMatch`, etc.) have been removed. Use `StatOptions.builder()` or `options.toBuilder()` instead:
-
-```diff
--StatOptions options = StatOptions.builder().build();
--options.setVersion("v1");
-+StatOptions options = StatOptions.builder().version("v1").build();
-+StatOptions updated = options.toBuilder().ifMatch("\"etag\"").build();
-```
-
 # Upgrade to v0.49
 
 ## Breaking changes

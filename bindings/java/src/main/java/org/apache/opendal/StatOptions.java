@@ -37,62 +37,62 @@ public class StatOptions {
      *
      * @see Capability#statWithVersion
      */
-    public final String version;
+    private String version;
 
     /**
      * Stat only when the file has this exact ETag.
      *
      * @see Capability#statWithIfMatch
      */
-    public final String ifMatch;
+    private String ifMatch;
 
     /**
      * Stat only when the file does not have this ETag.
      *
      * @see Capability#statWithIfNoneMatch
      */
-    public final String ifNoneMatch;
+    private String ifNoneMatch;
 
     /**
      * Stat only when the file has this exact version.
      *
      * @see Capability#statWithIfVersionMatch
      */
-    public final String ifVersionMatch;
+    private String ifVersionMatch;
 
     /**
      * Stat only when the file does not have this version.
      *
      * @see Capability#statWithIfVersionNotMatch
      */
-    public final String ifVersionNotMatch;
+    private String ifVersionNotMatch;
 
     /**
      * Stat only when the file was modified after this timestamp.
      *
      * @see Capability#statWithIfModifiedSince
      */
-    public final Instant ifModifiedSince;
+    private Instant ifModifiedSince;
 
     /**
      * Stat only when the file was not modified after this timestamp.
      *
      * @see Capability#statWithIfUnmodifiedSince
      */
-    public final Instant ifUnmodifiedSince;
+    private Instant ifUnmodifiedSince;
 
     /**
      * Specify the content-type header that should be sent back by the operation.
      */
-    public final String overrideContentType;
+    private String overrideContentType;
 
     /**
      * Specify the {@code cache-control} header that should be sent back by the operation.
      */
-    public final String overrideCacheControl;
+    private String overrideCacheControl;
 
     /**
      * Specify the {@code content-disposition} header that should be sent back by the operation.
      */
-    public final String overrideContentDisposition;
+    private String overrideContentDisposition;
 }

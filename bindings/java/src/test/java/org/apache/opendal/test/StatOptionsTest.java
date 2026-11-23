@@ -57,4 +57,18 @@ public class StatOptionsTest {
                     .is(OpenDALExceptionCondition.ofSync(OpenDALException.Code.Unsupported));
         }
     }
+
+    @Test
+    public void testSetterChangesVersionCondition() {
+        try (Operator op = Operator.of(ServiceConfig.Memory.builder().build())) {
+            op.write("file", "content");
+            StatOptions options = StatOptions.builder().build();
+            assertThat(op.stat("file", options).isFile()).isTrue();
+
+            options.setIfVersionMatch("version");
+
+            assertThatThrownBy(() -> op.stat("file", options))
+                    .is(OpenDALExceptionCondition.ofSync(OpenDALException.Code.Unsupported));
+        }
+    }
 }
