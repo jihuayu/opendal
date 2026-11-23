@@ -45,6 +45,8 @@ public class ReadOptions {
 
     /**
      * Return at most this many bytes from the start of the selected range, accepting EOF after a valid starting byte.
+     *
+     * Use {@code -1L} to leave the limit unset. Only whole-buffer reads accept a limit.
      */
     @Builder.Default
     public final long limit = -1L;

@@ -99,6 +99,19 @@ public class OperatorInputOutputStreamTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(longs = {0L, 2L, -2L})
+    void testInputStreamRejectsReadLimit(long limit) {
+        try (Operator op = Operator.of(ServiceConfig.Memory.builder().build())) {
+            op.write("file", "0123456789");
+            ReadOptions options = ReadOptions.builder().offset(1).limit(limit).build();
+
+            assertThatThrownBy(() -> op.createInputStream("file", options))
+                    .is(OpenDALExceptionCondition.ofSync(OpenDALException.Code.ConfigInvalid))
+                    .hasMessageContaining("limit");
+        }
+    }
+
     @Test
     void testChunkedInputStream() throws Exception {
         final byte[] content = new byte[4 * 1024 + 13];

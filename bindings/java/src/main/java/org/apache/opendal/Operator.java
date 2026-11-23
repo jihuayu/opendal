@@ -157,6 +157,14 @@ public class Operator extends NativeObject {
         return createInputStream(path, ReadOptions.builder().build());
     }
 
+    /**
+     * Opens a stream over the requested byte range.
+     *
+     * @param path the path to read
+     * @param options the read options
+     * @return a stream over the selected range
+     * @throws OpenDALException if a read limit is set
+     */
     public OperatorInputStream createInputStream(String path, ReadOptions options) {
         return new OperatorInputStream(this, path, options);
     }

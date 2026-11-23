@@ -38,6 +38,10 @@ public class {{ class.name }} {
 {% for p in class.properties %}
     /**
      * {{ p.summary }}
+{%- if class.name == "ReadOptions" and p.camel == "limit" %}
+     *
+     * Use {@code -1L} to leave the limit unset. Only whole-buffer reads accept a limit.
+{%- endif %}
 {%- if p.see_also %}
      *
 {%- for cref in p.see_also %}
