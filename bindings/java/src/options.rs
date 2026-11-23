@@ -21,6 +21,7 @@ use crate::Result;
 use crate::convert;
 use jni::Env;
 use jni::objects::JObject;
+use opendal::ErrorKind;
 
 pub(crate) fn make_delete_options(
     env: &mut Env<'_>,
@@ -42,7 +43,7 @@ pub(crate) fn make_list_options(
     options: &JObject,
 ) -> Result<opendal::options::ListOptions> {
     Ok(opendal::options::ListOptions {
-        limit: convert::read_jlong_field_to_usize(env, options, "limit")?,
+        limit: convert::read_jlong_field_to_usize(env, options, "limit", ErrorKind::Unexpected)?,
         start_after: convert::read_string_field(env, options, "startAfter")?,
         recursive: convert::read_bool_field(env, options, "recursive")?,
         versions: convert::read_bool_field(env, options, "versions")?,
@@ -78,8 +79,13 @@ pub(crate) fn make_read_options(
             options,
             "contentLengthHint",
         )?,
-        concurrent: convert::read_positive_jint_to_usize(env, options, "concurrent")?,
-        chunk: convert::read_jlong_field_to_usize(env, options, "chunk")?,
+        concurrent: convert::read_positive_jint_to_usize(
+            env,
+            options,
+            "concurrent",
+            ErrorKind::ConfigInvalid,
+        )?,
+        chunk: convert::read_jlong_field_to_usize(env, options, "chunk", ErrorKind::ConfigInvalid)?,
         gap: convert::read_non_negative_jlong_to_usize(env, options, "gap")?,
         override_content_type: convert::read_string_field(env, options, "overrideContentType")?,
         override_cache_control: convert::read_string_field(env, options, "overrideCacheControl")?,
@@ -116,8 +122,13 @@ pub(crate) fn make_reader_options(
             options,
             "contentLengthHint",
         )?,
-        concurrent: convert::read_positive_jint_to_usize(env, options, "concurrent")?,
-        chunk: convert::read_jlong_field_to_usize(env, options, "chunk")?,
+        concurrent: convert::read_positive_jint_to_usize(
+            env,
+            options,
+            "concurrent",
+            ErrorKind::ConfigInvalid,
+        )?,
+        chunk: convert::read_jlong_field_to_usize(env, options, "chunk", ErrorKind::ConfigInvalid)?,
         gap: convert::read_non_negative_jlong_to_usize(env, options, "gap")?,
         prefetch: convert::read_non_negative_jint_to_usize(env, options, "prefetch")?,
     })
@@ -172,7 +183,12 @@ pub(crate) fn make_write_options(
         if_version_not_match: convert::read_string_field(env, options, "ifVersionNotMatch")?,
         if_not_exists: convert::read_bool_field(env, options, "ifNotExists")?,
         if_not_changed: convert::read_metadata_condition_field(env, options, "ifNotChanged")?,
-        concurrent: convert::read_positive_jint_to_usize(env, options, "concurrent")?,
-        chunk: convert::read_jlong_field_to_usize(env, options, "chunk")?,
+        concurrent: convert::read_positive_jint_to_usize(
+            env,
+            options,
+            "concurrent",
+            ErrorKind::Unexpected,
+        )?,
+        chunk: convert::read_jlong_field_to_usize(env, options, "chunk", ErrorKind::Unexpected)?,
     })
 }

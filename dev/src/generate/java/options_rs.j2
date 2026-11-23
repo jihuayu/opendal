@@ -21,6 +21,7 @@ use crate::Result;
 use crate::convert;
 use jni::Env;
 use jni::objects::JObject;
+use opendal::ErrorKind;
 {%- for class in classes %}
 
 pub(crate) fn make_{{ class.fn_name }}_options(

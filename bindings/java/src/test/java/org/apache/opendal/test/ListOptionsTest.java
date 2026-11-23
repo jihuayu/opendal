@@ -144,9 +144,8 @@ public class ListOptionsTest {
         ListOptions invalid = ListOptions.builder().limit(invalidLimit).build();
         try (AsyncOperator async = newOperator("memory");
                 Operator op = async.blocking()) {
-            assertThatThrownBy(() -> op.list("dir/", invalid)).is(OpenDALExceptionCondition.ofSync(Code.ConfigInvalid));
-            assertThatThrownBy(() -> async.list("dir/", invalid))
-                    .is(OpenDALExceptionCondition.ofSync(Code.ConfigInvalid));
+            assertThatThrownBy(() -> op.list("dir/", invalid)).is(OpenDALExceptionCondition.ofSync(Code.Unexpected));
+            assertThatThrownBy(() -> async.list("dir/", invalid)).is(OpenDALExceptionCondition.ofSync(Code.Unexpected));
         }
 
         assertThat(pendingBefore.containsAll(registry.keySet()))

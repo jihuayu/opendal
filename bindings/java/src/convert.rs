@@ -149,17 +149,14 @@ pub(crate) fn read_positive_jint_to_usize(
     env: &mut Env<'_>,
     obj: &JObject,
     field: &str,
+    invalid_kind: ErrorKind,
 ) -> Result<usize> {
     let value = read_int_field(env, obj, field)?;
     if value <= 0 {
-        return Err(Error::new(
-            ErrorKind::ConfigInvalid,
-            format!("{field} must be positive"),
-        )
-        .into());
+        return Err(Error::new(invalid_kind, format!("{field} must be positive")).into());
     }
     Ok(usize::try_from(value)
-        .map_err(|_| Error::new(ErrorKind::ConfigInvalid, format!("{field} is too large")))?)
+        .map_err(|_| Error::new(invalid_kind, format!("{field} is too large")))?)
 }
 
 pub(crate) fn read_non_negative_jint_to_usize(
@@ -239,20 +236,16 @@ pub(crate) fn read_jlong_field_to_usize(
     env: &mut Env<'_>,
     options: &JObject,
     field_name: &str,
+    invalid_kind: ErrorKind,
 ) -> Result<Option<usize>> {
     match read_int64_field(env, options, field_name)? {
         -1 => Ok(None),
-        value if value > 0 => Ok(Some(usize::try_from(value).map_err(|_| {
-            Error::new(
-                ErrorKind::ConfigInvalid,
-                format!("{field_name} is too large"),
-            )
-        })?)),
-        _ => Err(Error::new(
-            ErrorKind::ConfigInvalid,
-            format!("{field_name} must be -1 or positive"),
-        )
-        .into()),
+        value if value > 0 => {
+            Ok(Some(usize::try_from(value).map_err(|_| {
+                Error::new(invalid_kind, format!("{field_name} is too large"))
+            })?))
+        }
+        _ => Err(Error::new(invalid_kind, format!("{field_name} must be -1 or positive")).into()),
     }
 }
 

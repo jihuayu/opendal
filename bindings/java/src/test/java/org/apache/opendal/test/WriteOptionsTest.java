@@ -99,6 +99,24 @@ public class WriteOptionsTest {
         }
     }
 
+    static Stream<WriteOptions> invalidExecutionOptions() {
+        return Stream.of(
+                WriteOptions.builder().concurrent(0).build(),
+                WriteOptions.builder().chunk(0).build());
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidExecutionOptions")
+    void testInvalidExecutionOptionsKeepErrorCode(WriteOptions options) {
+        try (AsyncOperator async = AsyncOperator.of("memory", Collections.emptyMap());
+                Operator op = async.blocking()) {
+            assertThatThrownBy(() -> op.write("file", "content", options))
+                    .is(OpenDALExceptionCondition.ofSync(Code.Unexpected));
+            assertThatThrownBy(() -> async.write("file", "content", options))
+                    .is(OpenDALExceptionCondition.ofSync(Code.Unexpected));
+        }
+    }
+
     static Stream<Duration> invalidExpires() {
         return Stream.of(Duration.ZERO, Duration.ofSeconds(-1), Duration.ofNanos(-1));
     }

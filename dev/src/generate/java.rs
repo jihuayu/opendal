@@ -404,6 +404,13 @@ fn options_class(options: &OptionsStruct, fn_name: &str) -> OptionsClass {
     let mut properties = Vec::new();
     let mut rs_fields = Vec::new();
 
+    // Keep the error codes that Java exposed for list and write execution options.
+    let invalid_positive = if matches!(fn_name, "list" | "write") {
+        "ErrorKind::Unexpected"
+    } else {
+        "ErrorKind::ConfigInvalid"
+    };
+
     for f in &options.fields {
         let key = f.name.as_str();
         let camel = case_java_field_name(key);
@@ -414,16 +421,23 @@ fn options_class(options: &OptionsStruct, fn_name: &str) -> OptionsClass {
             summary: ctx.summary(&f.doc, Some(key)),
             see_also: capability_refs(&f.doc),
         };
-        let call_3 = |func: &str| {
-            let single = format!("{func}(env, options, \"{camel}\")?");
+        let field_arg = format!("\"{camel}\"");
+        let call = |func: &str, extra_arg: Option<&str>| {
+            let args = ["env", "options", field_arg.as_str()]
+                .into_iter()
+                .chain(extra_arg)
+                .collect::<Vec<_>>();
+            let single = format!("{func}({})?", args.join(", "));
             if 8 + key.len() + 2 + single.len() + 1 > 100 {
                 format!(
-                    "{func}(\n            env,\n            options,\n            \"{camel}\",\n        )?"
+                    "{func}(\n            {},\n        )?",
+                    args.join(",\n            ")
                 )
             } else {
                 single
             }
         };
+        let call_3 = |func| call(func, None);
 
         match f.kind {
             OptionKind::Bool => {
@@ -434,27 +448,33 @@ fn options_class(options: &OptionsStruct, fn_name: &str) -> OptionsClass {
                 });
             }
             OptionKind::Usize => {
-                let (default_value, func) = if key == "prefetch" {
-                    ("0", "convert::read_non_negative_jint_to_usize")
+                let (default_value, expr) = if key == "prefetch" {
+                    ("0", call_3("convert::read_non_negative_jint_to_usize"))
                 } else {
-                    ("1", "convert::read_positive_jint_to_usize")
+                    (
+                        "1",
+                        call(
+                            "convert::read_positive_jint_to_usize",
+                            Some(invalid_positive),
+                        ),
+                    )
                 };
                 properties.push(property("int", default_value));
                 rs_fields.push(OptionRsField {
                     name: key.to_string(),
-                    expr: call_3(func),
+                    expr,
                 });
             }
             OptionKind::OptionUsize => {
-                let func = if key == "gap" {
-                    "convert::read_non_negative_jlong_to_usize"
+                let expr = if key == "gap" {
+                    call_3("convert::read_non_negative_jlong_to_usize")
                 } else {
-                    "convert::read_jlong_field_to_usize"
+                    call("convert::read_jlong_field_to_usize", Some(invalid_positive))
                 };
                 properties.push(property("long", "-1L"));
                 rs_fields.push(OptionRsField {
                     name: key.to_string(),
-                    expr: call_3(func),
+                    expr,
                 });
             }
             OptionKind::OptionU64 => {
