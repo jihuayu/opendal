@@ -26,7 +26,7 @@ use jni::objects::JString;
 use jni::objects::JValue;
 use jni::strings::JNIString;
 use jni::sys::jlong;
-use opendal::{EntryMode, Error, ErrorKind};
+use opendal::{EntryMode, Error, ErrorKind, Metadata, MetadataBuilder};
 use std::collections::HashMap;
 use std::ops::Bound;
 
@@ -133,49 +133,6 @@ pub(crate) fn read_bool_field(env: &mut Env<'_>, obj: &JObject, field: &str) -> 
         .z()?)
 }
 
-pub(crate) fn read_boxed_bool_field(
-    env: &mut Env<'_>,
-    obj: &JObject,
-    field: &str,
-) -> Result<Option<bool>> {
-    let result = env
-        .get_field(obj, JNIString::new(field), jni_sig!("Ljava/lang/Boolean;"))?
-        .l()?;
-    if result.is_null() {
-        Ok(None)
-    } else {
-        Ok(Some(
-            env.call_method(&result, jni_str!("booleanValue"), jni_sig!("()Z"), &[])?
-                .z()?,
-        ))
-    }
-}
-
-pub(crate) fn read_entry_mode_field(
-    env: &mut Env<'_>,
-    obj: &JObject,
-    field: &str,
-) -> Result<EntryMode> {
-    let result = env
-        .get_field(
-            obj,
-            JNIString::new(field),
-            jni_sig!("Lorg/apache/opendal/Metadata$EntryMode;"),
-        )?
-        .l()?;
-    if result.is_null() {
-        return Ok(EntryMode::Unknown);
-    }
-    let ordinal = env
-        .call_method(&result, jni_str!("ordinal"), jni_sig!("()I"), &[])?
-        .i()?;
-    Ok(match ordinal {
-        0 => EntryMode::FILE,
-        1 => EntryMode::DIR,
-        _ => EntryMode::Unknown,
-    })
-}
-
 pub(crate) fn read_int64_field(env: &mut Env<'_>, obj: &JObject, field: &str) -> Result<i64> {
     Ok(env
         .get_field(obj, JNIString::new(field), jni_sig!("J"))?
@@ -203,6 +160,33 @@ pub(crate) fn read_string_field(
         let result = unsafe { JString::from_raw(env, result.into_raw()) };
         Ok(Some(jstring_to_string(env, &result)?))
     }
+}
+
+pub(crate) fn read_metadata_condition_field(
+    env: &mut Env<'_>,
+    obj: &JObject,
+    field: &str,
+) -> Result<Option<Metadata>> {
+    let snapshot = env
+        .get_field(
+            obj,
+            JNIString::new(field),
+            jni_sig!("Lorg/apache/opendal/Metadata;"),
+        )?
+        .l()?;
+    if snapshot.is_null() {
+        return Ok(None);
+    }
+
+    // Conditional operations use only the object identity from the snapshot.
+    let mut builder = MetadataBuilder::unknown();
+    if let Some(version) = read_string_field(env, &snapshot, "version")? {
+        builder.version(version);
+    }
+    if let Some(etag) = read_string_field(env, &snapshot, "etag")? {
+        builder.etag(etag);
+    }
+    Ok(Some(builder.build()))
 }
 
 pub(crate) fn read_map_field(

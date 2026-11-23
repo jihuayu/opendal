@@ -144,7 +144,7 @@ fn make_delete_options(
         if_none_match: convert::read_string_field(env, options, "ifNoneMatch")?,
         if_version_match: convert::read_string_field(env, options, "ifVersionMatch")?,
         if_version_not_match: convert::read_string_field(env, options, "ifVersionNotMatch")?,
-        if_not_changed: metadata::read_metadata_field(env, options, "ifNotChanged")?,
+        if_not_changed: convert::read_metadata_condition_field(env, options, "ifNotChanged")?,
     })
 }
 

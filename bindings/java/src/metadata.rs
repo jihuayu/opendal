@@ -24,11 +24,8 @@ use jni::jni_sig;
 use jni::jni_str;
 use jni::objects::JObject;
 use jni::objects::JValue;
-use jni::strings::JNIString;
 use jni::sys::jlong;
-use opendal::EntryMode;
 use opendal::Metadata;
-use opendal::MetadataBuilder;
 
 pub(crate) fn make_metadata<'a>(env: &mut Env<'a>, metadata: Metadata) -> Result<JObject<'a>> {
     let mode = convert::entry_mode_to_jobject(env, metadata.mode())?;
@@ -68,66 +65,4 @@ pub(crate) fn make_metadata<'a>(env: &mut Env<'a>, metadata: Metadata) -> Result
         ],
     )?;
     Ok(result)
-}
-
-pub(crate) fn jmetadata_to_metadata(env: &mut Env<'_>, obj: &JObject) -> Result<Metadata> {
-    let mode = convert::read_entry_mode_field(env, obj, "mode")?;
-    let content_length = convert::read_int64_field(env, obj, "contentLength")?.max(0) as u64;
-    let mut builder = match mode {
-        EntryMode::FILE => MetadataBuilder::file(content_length),
-        EntryMode::DIR => MetadataBuilder::dir(),
-        EntryMode::Unknown => MetadataBuilder::unknown(),
-    };
-    builder.is_current(convert::read_boxed_bool_field(env, obj, "current")?);
-    builder.is_deleted(convert::read_bool_field(env, obj, "deleted")?);
-    if let Some(value) = convert::read_string_field(env, obj, "cacheControl")? {
-        builder.cache_control(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "contentMd5")? {
-        builder.content_md5(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "contentType")? {
-        builder.content_type(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "contentEncoding")? {
-        builder.content_encoding(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "contentLanguage")? {
-        builder.content_language(value);
-    }
-    if let Some(value) = convert::read_instant_field_to_timestamp(env, obj, "lastModified")? {
-        builder.last_modified(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "etag")? {
-        builder.etag(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "contentDisposition")? {
-        builder.content_disposition(value);
-    }
-    if let Some(value) = convert::read_string_field(env, obj, "version")? {
-        builder.version(value);
-    }
-    if let Some(values) = convert::read_map_field(env, obj, "userMetadata")? {
-        builder.user_metadata(values);
-    }
-    Ok(builder.build())
-}
-
-pub(crate) fn read_metadata_field(
-    env: &mut Env<'_>,
-    obj: &JObject,
-    field: &str,
-) -> Result<Option<Metadata>> {
-    let result = env
-        .get_field(
-            obj,
-            JNIString::new(field),
-            jni_sig!("Lorg/apache/opendal/Metadata;"),
-        )?
-        .l()?;
-    if result.is_null() {
-        Ok(None)
-    } else {
-        Ok(Some(jmetadata_to_metadata(env, &result)?))
-    }
 }

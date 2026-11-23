@@ -16,7 +16,7 @@
 // under the License.
 
 use crate::generate::parser::{Config, ConfigType, Services, sorted_services};
-use anyhow::{Result, bail};
+use anyhow::Result;
 use minijinja::value::ViaDeserialize;
 use minijinja::{Environment, context};
 use serde::Serialize;
@@ -108,8 +108,6 @@ struct CapabilityField {
 /// Render model handed to the Java metadata templates.
 #[derive(Serialize)]
 struct MetadataField {
-    /// snake_case accessor name in core `opendal::Metadata`.
-    name: String,
     /// camelCase field name in Java `org.apache.opendal.Metadata`.
     camel: String,
     /// Java field type.
@@ -120,9 +118,6 @@ struct MetadataField {
     rs_bind: String,
     /// Rust `JValue` argument passed to `env.new_object`.
     rs_jvalue: String,
-    /// Rust statement applying the Java field to a `MetadataBuilder`, empty for
-    /// `mode` and `content_length`.
-    rs_rebuild: String,
     /// Java initializer expression used in the legacy 10-parameter constructor.
     legacy_expr: String,
     /// Single-line Javadoc text from core.
@@ -202,7 +197,6 @@ fn generate_metadata(workspace_dir: &Path) -> Result<()> {
         .into_iter()
         .map(metadata_field)
         .collect();
-    validate_metadata_rebuild(&fields, &metadata::parse_builder_setters(&source)?)?;
 
     let jni_sig: String = fields.iter().map(|f| f.jni_sig.as_str()).collect();
 
@@ -226,38 +220,6 @@ fn generate_metadata(workspace_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Check that native code can rebuild every metadata accessor.
-fn validate_metadata_rebuild(fields: &[MetadataField], setters: &[String]) -> Result<()> {
-    for required in ["mode", "content_length"] {
-        if !fields.iter().any(|f| f.name == required) {
-            bail!(
-                "metadata accessor `{required}` is gone; \
-                 update the builder construction in java/metadata_rs.j2"
-            );
-        }
-    }
-
-    for f in fields {
-        if f.rs_rebuild.is_empty() {
-            if !matches!(f.name.as_str(), "mode" | "content_length") {
-                bail!(
-                    "metadata accessor `{}` is not rebuilt; \
-                     teach dev/src/generate/java.rs how to apply it",
-                    f.name
-                );
-            }
-        } else if !setters.contains(&f.name) {
-            bail!(
-                "metadata accessor `{}` has no `MetadataBuilder` setter of the same name; \
-                 teach dev/src/generate/java.rs how to rebuild it",
-                f.name
-            );
-        }
-    }
-
-    Ok(())
-}
-
 fn metadata_camel(name: &str) -> String {
     match name {
         "is_current" => "current".to_string(),
@@ -269,13 +231,12 @@ fn metadata_camel(name: &str) -> String {
 fn metadata_field(f: metadata::MetadataField) -> MetadataField {
     let name = &f.name;
     let camel = metadata_camel(name);
-    let (java_type, jni_sig, rs_bind, rs_jvalue, rs_rebuild, default_expr) = match f.kind {
+    let (java_type, jni_sig, rs_bind, rs_jvalue, default_expr) = match f.kind {
         MetadataKind::Mode => (
             "EntryMode",
             "Lorg/apache/opendal/Metadata$EntryMode;",
             format!("let {name} = convert::entry_mode_to_jobject(env, metadata.{name}())?;"),
             format!("JValue::Object(&{name})"),
-            String::new(),
             "EntryMode.UNKNOWN",
         ),
         MetadataKind::Bool => (
@@ -283,7 +244,6 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
             "Z",
             String::new(),
             format!("JValue::Bool(metadata.{name}())"),
-            format!("builder.{name}(convert::read_bool_field(env, obj, \"{camel}\")?);"),
             "false",
         ),
         MetadataKind::U64 => (
@@ -291,11 +251,6 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
             "J",
             String::new(),
             format!("JValue::Long(metadata.{name}() as jlong)"),
-            if name == "content_length" {
-                String::new()
-            } else {
-                format!("builder.{name}(convert::read_int64_field(env, obj, \"{camel}\")? as u64);")
-            },
             "0L",
         ),
         MetadataKind::OptionBool => (
@@ -303,7 +258,6 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
             "Ljava/lang/Boolean;",
             format!("let {name} = convert::option_bool_to_jboolean(env, metadata.{name}())?;"),
             format!("JValue::Object(&{name})"),
-            format!("builder.{name}(convert::read_boxed_bool_field(env, obj, \"{camel}\")?);"),
             "null",
         ),
         MetadataKind::OptionStr => (
@@ -311,9 +265,6 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
             "Ljava/lang/String;",
             format!("let {name} = convert::string_to_jstring(env, metadata.{name}())?;"),
             format!("JValue::Object(&{name})"),
-            format!(
-                "if let Some(value) = convert::read_string_field(env, obj, \"{camel}\")? {{\n        builder.{name}(value);\n    }}"
-            ),
             "null",
         ),
         MetadataKind::OptionTimestamp => (
@@ -321,9 +272,6 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
             "Ljava/time/Instant;",
             format!("let {name} = convert::timestamp_to_jinstant(env, metadata.{name}())?;"),
             format!("JValue::Object(&{name})"),
-            format!(
-                "if let Some(value) = convert::read_instant_field_to_timestamp(env, obj, \"{camel}\")? {{\n        builder.{name}(value);\n    }}"
-            ),
             "null",
         ),
         MetadataKind::OptionUserMetadata => (
@@ -333,9 +281,6 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
                 "let {name} =\n        convert::hashmap_to_jmap(env, metadata.{name}().into_iter().flatten())?;"
             ),
             format!("JValue::Object(&{name})"),
-            format!(
-                "if let Some(values) = convert::read_map_field(env, obj, \"{camel}\")? {{\n        builder.{name}(values);\n    }}"
-            ),
             "Collections.emptyMap()",
         ),
     };
@@ -353,10 +298,8 @@ fn metadata_field(f: metadata::MetadataField) -> MetadataField {
         jni_sig: jni_sig.to_string(),
         rs_bind,
         rs_jvalue,
-        rs_rebuild,
         legacy_expr,
         camel,
-        name: f.name,
         doc: f.doc,
     }
 }
@@ -482,16 +425,10 @@ mod tests {
     }
 
     #[test]
-    fn test_legacy_10_metadata_fields_and_rebuild() {
+    fn test_legacy_10_metadata_fields_exist_in_core() {
         let path = crate::workspace_dir().join("core/core/src/types/metadata.rs");
-        let fields: Vec<MetadataField> = metadata::parse(&path)
-            .expect("core metadata must parse")
-            .into_iter()
-            .map(metadata_field)
-            .collect();
-        let setters = metadata::parse_builder_setters(&path).expect("core builder must parse");
+        let fields = metadata::parse(&path).expect("core metadata must parse");
 
-        validate_metadata_rebuild(&fields, &setters).expect("metadata rebuild must be valid");
         assert_eq!(LEGACY_10_METADATA_FIELDS.len(), 10);
         for &legacy in LEGACY_10_METADATA_FIELDS {
             assert!(
